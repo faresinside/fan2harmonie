@@ -1,0 +1,351 @@
+import { test, expect, type Page, type Route } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { site } from '../../src/config/site';
+import { lienMailto } from '../../src/lib/contact';
+
+/**
+ * Formulaire de contact (#contact) et page /mentions-legales.
+ * L'adresse d'envoi (`site.formEndpoint`) reste une valeur de substitution jusqu'à la mise en ligne :
+ * les envois sont donc toujours interceptés ici (page.route), jamais transmis à un vrai service.
+ */
+
+// Défilement doux désactivé : les clics sur le formulaire, en bas de page, ne visent pas une cible en mouvement.
+test.use({ contextOptions: { reducedMotion: 'reduce' } });
+
+const formulaire = (page: Page) => page.locator('#contact form');
+const bouton = (page: Page) => formulaire(page).getByRole('button', { name: 'Envoyer mon message' });
+
+/** Adresse d'envoi résolue par le navigateur (attribut action du formulaire). */
+async function adresseEnvoi(page: Page): Promise<string> {
+  return formulaire(page).evaluate((f) => (f as HTMLFormElement).action);
+}
+
+/** Compte les requêtes POST vers l'adresse d'envoi ; `reponse` décide de la suite. */
+async function intercepter(page: Page, reponse: (route: Route) => Promise<void>) {
+  const action = await adresseEnvoi(page);
+  const envois: { corps: string; accept: string | undefined }[] = [];
+  await page.route(
+    (url) => url.href === action,
+    async (route) => {
+      if (route.request().method() !== 'POST') return route.continue();
+      envois.push({ corps: route.request().postData() ?? '', accept: route.request().headers()['accept'] });
+      await reponse(route);
+    },
+  );
+  return envois;
+}
+
+async function remplir(page: Page, { consentement = true } = {}) {
+  const f = formulaire(page);
+  await f.getByLabel('Votre nom').fill('Camille Martin');
+  await f.getByLabel('Votre adresse e-mail').fill('camille@example.org');
+  await f.getByLabel('Votre message').fill('Bonjour, la séance de samedi est-elle maintenue ?');
+  if (consentement) await f.getByRole('checkbox').check();
+}
+
+async function sansViolationAxe(page: Page, zone?: string) {
+  let axe = new AxeBuilder({ page });
+  if (zone) axe = axe.include(zone);
+  const { violations } = await axe.analyze();
+  expect(violations.map((v) => `${v.id} : ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+}
+
+async function sansDebordement(page: Page) {
+  const deborde = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(deborde).toBe(false);
+}
+
+test.describe('formulaire de contact : structure', () => {
+  test('envoi POST vers site.formEndpoint, sans novalidate', async ({ page }) => {
+    await page.goto('/');
+    const f = formulaire(page);
+    await expect(f).toHaveCount(1);
+    await expect(f).toHaveAttribute('method', 'post');
+    await expect(f).toHaveAttribute('action', site.formEndpoint);
+    await expect(f).not.toHaveAttribute('novalidate', /.*/);
+    await expect(f.locator('input[type="hidden"][name="_subject"]')).toHaveValue(
+      'Message depuis le site Fan 2 Harmonie',
+    );
+  });
+
+  test('chaque champ a une étiquette visible et est obligatoire', async ({ page }) => {
+    await page.goto('/');
+    const f = formulaire(page);
+    const champs = [
+      { label: 'Votre nom', name: 'nom', autocomplete: 'name' },
+      { label: 'Votre adresse e-mail', name: 'email', autocomplete: 'email' },
+      { label: 'Votre message', name: 'message', autocomplete: null },
+    ];
+    for (const { label, name, autocomplete } of champs) {
+      const champ = f.getByLabel(label);
+      await expect(champ, label).toHaveAttribute('name', name);
+      await expect(champ, label).toHaveAttribute('required', '');
+      if (autocomplete) await expect(champ, label).toHaveAttribute('autocomplete', autocomplete);
+      await expect(f.locator(`label[for="${await champ.getAttribute('id')}"]`), label).toBeVisible();
+    }
+    await expect(f.getByLabel('Votre adresse e-mail')).toHaveAttribute('type', 'email');
+    await expect(f.getByLabel('Votre message')).toHaveJSProperty('tagName', 'TEXTAREA');
+
+    const consentement = f.getByLabel(/J’accepte que mon nom, mon adresse e-mail et mon message/);
+    await expect(consentement).toHaveAttribute('type', 'checkbox');
+    await expect(consentement).toHaveAttribute('name', 'consentement');
+    await expect(consentement).toHaveAttribute('required', '');
+    await expect(bouton(page)).toHaveClass(/bouton--rose/);
+  });
+
+  test('texte d’accueil : mots de Stéphanie et adresse e-mail', async ({ page }) => {
+    await page.goto('/');
+    const contact = page.locator('#contact');
+    await expect(contact).toContainText('Si besoin, n’hésitez pas à me contacter');
+    await expect(contact).toContainText('Je vous réponds dès que possible.');
+    await expect(contact.locator(`a[href="${lienMailto(site.email)}"]`).first()).toBeVisible();
+  });
+});
+
+test.describe('champ piège anti-spam (_gotcha)', () => {
+  test('masqué aux technologies d’assistance, hors de la tabulation', async ({ page }) => {
+    await page.goto('/');
+    const piege = formulaire(page).locator('input[name="_gotcha"]');
+    await expect(piege).toHaveCount(1);
+    await expect(piege).toHaveAttribute('tabindex', '-1');
+    await expect(piege).toHaveAttribute('autocomplete', 'off');
+    expect(await piege.evaluate((e) => e.closest('[aria-hidden="true"]') !== null)).toBe(true);
+
+    // Parcours au clavier depuis le premier champ jusqu'au bouton : le piège n'est jamais atteint.
+    await formulaire(page).getByLabel('Votre nom').focus();
+    const atteints: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      atteints.push(await page.evaluate(() => document.activeElement?.getAttribute('name') ?? document.activeElement?.tagName ?? ''));
+      await page.keyboard.press('Tab');
+    }
+    expect(atteints).not.toContain('_gotcha');
+    expect(atteints).toContain('consentement');
+  });
+
+  test('hors de l’écran (pas display:none), sans débordement à 360 px', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.goto('/');
+    const piege = formulaire(page).locator('input[name="_gotcha"]');
+    expect(await piege.evaluate((e) => getComputedStyle(e).display)).not.toBe('none');
+    const boite = await piege.boundingBox();
+    expect(boite).not.toBeNull();
+    expect(boite!.x + boite!.width).toBeLessThanOrEqual(0);
+    await sansDebordement(page);
+  });
+});
+
+test.describe('validation native', () => {
+  test('formulaire vide : envoi bloqué, aucune requête, premier champ invalide ciblé', async ({ page }) => {
+    await page.goto('/');
+    const envois = await intercepter(page, (r) => r.fulfill({ status: 200, json: { ok: true } }));
+    const adresse = page.url();
+    await bouton(page).click();
+    const nom = formulaire(page).getByLabel('Votre nom');
+    await expect(nom).toBeFocused();
+    expect(await nom.evaluate((e) => e.matches(':invalid'))).toBe(true);
+    await page.waitForTimeout(300);
+    expect(envois).toHaveLength(0);
+    expect(page.url()).toBe(adresse);
+  });
+
+  test('consentement non coché : envoi bloqué', async ({ page }) => {
+    await page.goto('/');
+    const envois = await intercepter(page, (r) => r.fulfill({ status: 200, json: { ok: true } }));
+    await remplir(page, { consentement: false });
+    await bouton(page).click();
+    const consentement = formulaire(page).getByRole('checkbox');
+    await expect(consentement).toBeFocused();
+    expect(await consentement.evaluate((e) => e.matches(':invalid'))).toBe(true);
+    await page.waitForTimeout(300);
+    expect(envois).toHaveLength(0);
+  });
+
+  test('après une saisie invalide, une indication écrite accompagne la couleur', async ({ page }) => {
+    await page.goto('/');
+    const email = formulaire(page).getByLabel('Votre adresse e-mail');
+    await email.fill('pas-une-adresse');
+    await email.blur();
+    await expect(formulaire(page).getByText('Indiquez une adresse e-mail valide')).toBeVisible();
+  });
+});
+
+test.describe('envoi avec JavaScript', () => {
+  test('succès : « Envoi en cours… », puis message de remerciement, formulaire vidé', async ({ page }) => {
+    await page.goto('/');
+    let liberer: () => void = () => {};
+    const attente = new Promise<void>((r) => (liberer = r));
+    const envois = await intercepter(page, async (route) => {
+      await attente;
+      await route.fulfill({ status: 200, json: { ok: true } });
+    });
+    await remplir(page);
+    await bouton(page).click();
+
+    const enCours = formulaire(page).getByRole('button', { name: 'Envoi en cours…' });
+    await expect(enCours).toBeDisabled();
+    liberer();
+
+    const statut = page.locator('#contact').getByRole('status');
+    await expect(statut).toHaveText('Merci, votre message est bien parti. Je vous répondrai dès que possible.');
+    await expect(statut).toHaveAttribute('aria-live', 'polite');
+    await expect(bouton(page)).toBeEnabled();
+    await expect(formulaire(page).getByLabel('Votre message')).toHaveValue('');
+    await expect(formulaire(page).getByLabel('Votre nom')).toHaveValue('');
+    await expect(formulaire(page).getByRole('checkbox')).not.toBeChecked();
+
+    expect(envois).toHaveLength(1);
+    expect(envois[0]!.accept).toBe('application/json');
+    for (const nom of ['nom', 'email', 'message', 'consentement', '_gotcha', '_subject']) {
+      expect(envois[0]!.corps, nom).toContain(`name="${nom}"`);
+    }
+    expect(envois[0]!.corps).toContain('Camille Martin');
+  });
+
+  for (const [cas, reponse] of [
+    ['réponse 500', (r: Route) => r.fulfill({ status: 500, json: { error: 'x' } })],
+    ['requête interrompue', (r: Route) => r.abort('failed')],
+  ] as const) {
+    test(`erreur (${cas}) : message d’erreur avec lien e-mail, message conservé`, async ({ page }) => {
+      await page.goto('/');
+      await intercepter(page, reponse);
+      await remplir(page);
+      await bouton(page).click();
+
+      const alerte = page.locator('#contact').getByRole('alert');
+      await expect(alerte).toContainText('Le message n’a pas pu être envoyé.');
+      await expect(alerte).toContainText('Vous pouvez réessayer, ou m’écrire directement à');
+      await expect(alerte.getByRole('link', { name: site.email })).toHaveAttribute('href', lienMailto(site.email));
+      await expect(formulaire(page).getByLabel('Votre message')).toHaveValue(
+        'Bonjour, la séance de samedi est-elle maintenue ?',
+      );
+      await expect(bouton(page)).toBeEnabled();
+      await expect(page.locator('#contact').getByRole('status')).toHaveText('');
+    });
+  }
+
+  test('nouvel essai après une erreur : l’erreur disparaît, le succès s’affiche', async ({ page }) => {
+    await page.goto('/');
+    let echec = true;
+    await intercepter(page, (r) => (echec ? r.fulfill({ status: 500 }) : r.fulfill({ status: 200, json: { ok: true } })));
+    await remplir(page);
+    await bouton(page).click();
+    await expect(page.locator('#contact').getByRole('alert')).toContainText('n’a pas pu être envoyé');
+    echec = false;
+    await bouton(page).click();
+    await expect(page.locator('#contact').getByRole('status')).toContainText('Merci');
+    await expect(page.locator('#contact').getByRole('alert')).toHaveText('');
+  });
+});
+
+test.describe('sans JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  test('le formulaire rempli part en POST natif vers l’adresse d’envoi', async ({ page }) => {
+    await page.goto('/');
+    const envois = await intercepter(page, (r) =>
+      r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Merci</title><p>Merci</p>' }),
+    );
+    await remplir(page);
+    await bouton(page).click();
+    await expect(page).toHaveTitle('Merci');
+    expect(envois).toHaveLength(1);
+    expect(envois[0]!.corps).toContain('nom=Camille+Martin');
+  });
+});
+
+test.describe('mentions légales', () => {
+  test('la page répond, un seul h1, contenu légal issu de la configuration', async ({ page }) => {
+    const reponse = await page.goto('/mentions-legales');
+    expect(reponse?.status()).toBe(200);
+    await expect(page).toHaveTitle('Mentions légales — Fan 2 Harmonie');
+    expect((await page.locator('meta[name="description"]').getAttribute('content'))?.trim()).toBeTruthy();
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+    await expect(page.locator('main#contenu')).toHaveCount(1);
+    await expect(page.locator('h1')).toHaveCount(1);
+    await expect(page.locator('h1')).toHaveText('Mentions légales');
+
+    const main = page.locator('main');
+    const valeur = (terme: string) => main.locator('dt', { hasText: terme }).locator('xpath=following-sibling::dd[1]');
+    await expect(valeur('Nom commercial')).toHaveText(site.nom);
+    await expect(valeur('Forme')).toHaveText('Entrepreneur individuel (micro-entreprise)');
+    await expect(valeur('SIRET')).toHaveText(site.siret);
+    await expect(valeur('Responsable de la publication')).toHaveText(site.editeur);
+    await expect(valeur('Ville')).toHaveText(site.ville);
+    await expect(valeur('Contact')).toHaveText(site.email);
+    await expect(valeur('Contact').locator('a')).toHaveAttribute('href', lienMailto(site.email));
+
+    await expect(main).toContainText('Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis');
+    await expect(main).toContainText('Formspree');
+    await expect(main).toContainText('consentement');
+    await expect(main).toContainText('SIL Open Font License');
+    await expect(main.getByRole('link', { name: /cnil\.fr/ })).toHaveAttribute('href', 'https://www.cnil.fr');
+    await expect(main).toContainText('CNIL');
+    await expect(main.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+
+  test('section « Données personnelles » ciblée depuis le formulaire', async ({ page }) => {
+    await page.goto('/');
+    const lien = formulaire(page).getByRole('link', { name: /données personnelles/i });
+    await expect(lien).toHaveAttribute('href', '/mentions-legales#donnees-personnelles');
+    await page.goto('/mentions-legales');
+    await expect(page.locator('[id="donnees-personnelles"]')).toHaveCount(1);
+  });
+
+  test('navigation de l’en-tête : ancres absolues vers l’accueil', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/mentions-legales');
+    const liens = page.locator('header nav a');
+    expect(await liens.count()).toBeGreaterThanOrEqual(5);
+    const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''));
+    for (const href of hrefs) expect(href).toMatch(/^\/#[a-z]+$/);
+    for (const attendu of ['/#rdv', '/#pratique', '/#qigong', '/#qui', '/#contact']) expect(hrefs).toContain(attendu);
+
+    await page.locator('header nav a[href="/#pratique"]').click();
+    await expect(page).toHaveURL(/\/#pratique$/);
+    await expect(page.locator('#pratique')).toBeInViewport();
+
+    // Toutes les ancres existent bien sur l'accueil.
+    for (const href of hrefs) await expect(page.locator(`[id="${href.slice(2)}"]`), href).toHaveCount(1);
+  });
+
+  test('le lien du pied de page « Mentions légales » mène à la page', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('footer a', { hasText: 'Mentions légales' }).click();
+    await expect(page).toHaveURL(/\/mentions-legales\/?$/);
+    await expect(page.locator('h1')).toHaveText('Mentions légales');
+  });
+});
+
+for (const largeur of [390, 1280]) {
+  test.describe(`accessibilité et mise en page (${largeur} px)`, () => {
+    test.use({ viewport: { width: largeur, height: 900 } });
+
+    test('section contact : zéro violation axe, y compris en état d’erreur', async ({ page }) => {
+      await page.goto('/');
+      await sansViolationAxe(page, '#contact');
+      await intercepter(page, (r) => r.fulfill({ status: 500 }));
+      await remplir(page);
+      await bouton(page).click();
+      await expect(page.locator('#contact').getByRole('alert')).not.toHaveText('');
+      await sansViolationAxe(page, '#contact');
+    });
+
+    test('mentions légales : zéro violation axe', async ({ page }) => {
+      expect((await page.goto('/mentions-legales'))?.status()).toBe(200);
+      await sansViolationAxe(page);
+    });
+  });
+}
+
+test.describe('360 px', () => {
+  test.use({ viewport: { width: 360, height: 780 } });
+
+  for (const chemin of ['/', '/mentions-legales']) {
+    test(`aucun défilement horizontal (${chemin})`, async ({ page }) => {
+      expect((await page.goto(chemin))?.status()).toBe(200);
+      await sansDebordement(page);
+    });
+  }
+});

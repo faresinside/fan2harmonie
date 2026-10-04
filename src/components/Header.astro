@@ -11,23 +11,31 @@ import logo from '../assets/logo/logo.png';
 interface Props {
   /** Faux quand il n'y a aucune actualité : la section est retirée de la page, le lien aussi. */
   actualites?: boolean;
+  /**
+   * Faux sur les autres pages (mentions légales) : les liens visent alors les sections de l'accueil
+   * (« /#rdv ») au lieu d'ancres de la page courante (« #rdv »).
+   */
+  surAccueil?: boolean;
 }
 
-const { actualites = true } = Astro.props;
+const { actualites = true, surAccueil = true } = Astro.props;
+const prefixe = surAccueil ? '' : '/';
 
 const liens = [
-  { href: '#rdv', libelle: 'Rendez-vous' },
-  { href: '#pratique', libelle: 'La pratique' },
-  { href: '#qigong', libelle: 'Le Qi Gong' },
-  { href: '#qui', libelle: 'Qui est Fan 2 Harmonie' },
-  { href: '#actualites', libelle: 'Actualités' },
-  { href: '#contact', libelle: 'Contact' },
-].filter(({ href }) => actualites || href !== '#actualites');
+  { ancre: 'rdv', libelle: 'Rendez-vous' },
+  { ancre: 'pratique', libelle: 'La pratique' },
+  { ancre: 'qigong', libelle: 'Le Qi Gong' },
+  { ancre: 'qui', libelle: 'Qui est Fan 2 Harmonie' },
+  { ancre: 'actualites', libelle: 'Actualités' },
+  { ancre: 'contact', libelle: 'Contact' },
+]
+  .filter(({ ancre }) => actualites || ancre !== 'actualites')
+  .map(({ ancre, libelle }) => ({ href: `${prefixe}#${ancre}`, libelle }));
 ---
 
 <header class="entete" data-entete>
   <div class="entete__barre container">
-    <a class="entete__marque" href="#accueil">
+    <a class="entete__marque" href={surAccueil ? '#accueil' : '/'}>
       <Image src={logo} alt="" width={64} class="entete__logo" loading="eager" />
       <span class="entete__nom">Fan 2 Harmonie</span>
     </a>

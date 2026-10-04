@@ -1,0 +1,218 @@
+---
+/**
+ * Mentions légales (obligatoires pour une entreprise) et politique de données personnelles du formulaire.
+ * Toutes les informations propres à l'entreprise viennent de src/config/site.ts : rien n'est écrit en dur ici.
+ * Même en-tête et même pied de page que l'accueil ; les liens de navigation visent les sections de l'accueil.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Separateur from '../components/Separateur.astro';
+import { site } from '../config/site';
+import { lienMailto } from '../lib/contact';
+
+const avecActualites = (await getCollection('actualites')).length > 0;
+const mailto = lienMailto(site.email);
+---
+
+<Base
+  titre="Mentions légales — Fan 2 Harmonie"
+  description="Mentions légales du site Fan 2 Harmonie : éditeur, hébergeur, propriété intellectuelle et protection des données personnelles."
+>
+  <Header actualites={avecActualites} surAccueil={false} />
+
+  <main id="contenu" class="legal">
+    <div class="legal__entete">
+      <div class="container">
+        <Separateur class="legal__ornement" />
+        <p class="script legal__accent">Fan&nbsp;2&nbsp;Harmonie</p>
+        <h1>Mentions légales</h1>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="legal__corps prose">
+        <section aria-labelledby="editeur">
+          <h2 id="editeur">Éditeur du site</h2>
+          <dl class="legal__fiche">
+            <div>
+              <dt>Nom commercial</dt>
+              <dd>{site.nom}</dd>
+            </div>
+            <div>
+              <dt>Forme</dt>
+              <dd>Entrepreneur individuel (micro-entreprise)</dd>
+            </div>
+            <div>
+              <dt>SIRET</dt>
+              <dd>{site.siret}</dd>
+            </div>
+            <div>
+              <dt>Responsable de la publication</dt>
+              <dd>{site.editeur}</dd>
+            </div>
+            <div>
+              <dt>Ville</dt>
+              <dd>{site.ville}</dd>
+            </div>
+            <div>
+              <dt>Contact</dt>
+              <dd><a href={mailto}>{site.email}</a></dd>
+            </div>
+          </dl>
+        </section>
+
+        <section aria-labelledby="hebergement">
+          <h2 id="hebergement">Hébergement</h2>
+          <p>
+            Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis<br />
+            Site : <a href="https://www.cloudflare.com">cloudflare.com</a>
+          </p>
+        </section>
+
+        <section aria-labelledby="propriete">
+          <h2 id="propriete">Propriété intellectuelle</h2>
+          <p>
+            Les logos, textes et photos de ce site sont protégés : © 2026 Fan 2 Harmonie, hors photos sous licence
+            libre, mentionnées le cas échéant dans les crédits ci-dessous. Toute reproduction sans accord préalable est
+            interdite.
+          </p>
+        </section>
+
+        <section id="donnees-personnelles" aria-labelledby="donnees-titre">
+          <h2 id="donnees-titre">Données personnelles</h2>
+          <p>
+            Le formulaire de contact sert uniquement à vous permettre d’envoyer un message et à vous répondre.
+          </p>
+          <ul>
+            <li><strong>Données recueillies :</strong> votre nom, votre adresse e-mail et votre message.</li>
+            <li><strong>Finalité unique :</strong> répondre au message envoyé depuis le formulaire.</li>
+            <li>
+              <strong>Base légale :</strong> votre consentement, donné en cochant la case prévue avant l’envoi.
+            </li>
+            <li>
+              <strong>Destinataires :</strong> l’éditrice du site et le prestataire qui reçoit les messages du
+              formulaire (Formspree).
+            </li>
+            <li>
+              <strong>Durée de conservation :</strong> aucune conservation au-delà du traitement de votre demande.
+            </li>
+            <li>
+              <strong>Cookies :</strong> ce site ne dépose aucun cookie et n’utilise aucun traceur, ni publicitaire ni
+              de mesure d’audience.
+            </li>
+          </ul>
+          <p>
+            Vous disposez d’un droit d’accès, de rectification, d’effacement, d’opposition, de limitation et de
+            portabilité de vos données. Pour l’exercer, écrivez à <a href={mailto}>{site.email}</a>.
+          </p>
+          <p>
+            Vous pouvez aussi adresser une réclamation à la Commission nationale de l’informatique et des libertés
+            (CNIL) : <a href="https://www.cnil.fr">cnil.fr</a>.
+          </p>
+        </section>
+
+        <section aria-labelledby="credits">
+          <h2 id="credits">Crédits</h2>
+          <ul>
+            <li>
+              <strong>Polices de caractères :</strong> Allura, Cormorant et Source Sans 3, sous licence SIL Open Font
+              License.
+            </li>
+            <li><strong>Conception :</strong> site conçu sur mesure.</li>
+          </ul>
+        </section>
+
+        <p class="legal__retour">
+          <a class="bouton bouton--contour" href="/">Retour à l’accueil</a>
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .legal {
+    padding-bottom: var(--s-section);
+    background-color: var(--creme);
+  }
+
+  .legal__entete {
+    padding-block: var(--s-6) var(--s-5);
+    background-color: var(--creme-fonce);
+    text-align: center;
+  }
+
+  .legal__entete :global(.legal__ornement) {
+    margin-bottom: var(--s-3);
+  }
+
+  .legal__accent {
+    color: var(--rose);
+    font-size: clamp(2.125rem, 1.8rem + 1.4vw, 2.875rem);
+    margin-bottom: 0.15em;
+  }
+
+  .legal__corps {
+    margin-inline: auto;
+    padding-top: var(--s-6);
+  }
+
+  .legal__corps section + section {
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+    background: var(--trait-onde) top left / min(12rem, 60%) 6px no-repeat;
+  }
+
+  /* Le rythme de .prose ne s'applique qu'à ses enfants directs : on le reprend dans chaque section. */
+  .legal__corps section > * + * {
+    margin-top: 1.1em;
+  }
+
+  .legal__corps h2 {
+    font-size: var(--fs-h3);
+    font-weight: 600;
+  }
+
+  /* Fiche de l'éditeur : intitulé en petites capitales, valeur en regard sur grand écran. */
+  .legal__fiche {
+    display: grid;
+    gap: var(--s-2);
+  }
+
+  .legal__fiche dt {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--encre-doux);
+  }
+
+  .legal__fiche dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .legal__retour {
+    margin-top: var(--s-8);
+    text-align: center;
+  }
+
+  @media (min-width: 40rem) {
+    .legal__fiche {
+      gap: var(--s-1);
+    }
+
+    .legal__fiche > div {
+      display: grid;
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: var(--s-2);
+      align-items: baseline;
+      padding-block: var(--s-1);
+      border-bottom: 1px solid color-mix(in srgb, var(--dore) 25%, transparent);
+    }
+  }
+</style>

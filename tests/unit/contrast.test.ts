@@ -61,6 +61,13 @@ describe('jetons de la charte (lus dans tokens.css)', () => {
     ['encre', 'creme-fonce'],
     ['blanc', 'rose-fonce'],
     ['rose', 'creme'],
+    // Formulaire de contact : textes sur la carte (entre blanc et crème), indications d'erreur, messages.
+    ['encre', 'blanc'],
+    ['encre-doux', 'blanc'],
+    ['rose-fonce', 'blanc'],
+    ['rose-fonce', 'creme'],
+    ['encre', 'rose-doux'],
+    ['foret', 'blanc'],
   ];
   for (const [texte, fond] of paires) {
     it(`texte ${texte} sur fond ${fond} ≥ 4,5:1`, () => {
@@ -73,9 +80,13 @@ describe('jetons de la charte (lus dans tokens.css)', () => {
     ['rose-fonce', 'creme'],
     ['focus-sur-fonce', 'foret'],
     ['focus-sur-fonce', 'foret-profond'],
+    // Contour des champs (composant d'interface, WCAG 1.4.11) et contour d'un champ invalide.
+    ['bordure-champ', 'blanc'],
+    ['bordure-champ', 'creme'],
+    ['rose-fonce', 'blanc'],
   ];
   for (const [anneau, fond] of anneaux) {
-    it(`anneau de focus ${anneau} sur ${fond} ≥ 3:1`, () => {
+    it(`élément d’interface ${anneau} sur ${fond} ≥ 3:1`, () => {
       expect(contrastRatio(jeton(anneau), jeton(fond))).toBeGreaterThanOrEqual(3);
     });
   }

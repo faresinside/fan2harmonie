@@ -18,6 +18,7 @@
   --encre: #26331f;
   --encre-doux: #4b5844;
   --blanc: #ffffff;
+  --bordure-champ: #7a8872; /* contour des champs de formulaire : ≥ 3:1 sur blanc et sur crème (WCAG 1.4.11) */
 
   /* Rôles */
   --fond: var(--creme);

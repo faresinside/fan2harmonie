@@ -13,6 +13,7 @@ import Section from '../components/Section.astro';
 import RdvList from '../components/RdvList.astro';
 import ActualiteCard from '../components/ActualiteCard.astro';
 import LienCarte from '../components/LienCarte.astro';
+import ContactForm from '../components/ContactForm.astro';
 import Footer from '../components/Footer.astro';
 import IconSilhouette from '../components/IconSilhouette.astro';
 import IconSouffle from '../components/IconSouffle.astro';
@@ -91,7 +92,9 @@ const actualites = await Promise.all(
       )
     }
 
-    <Section id="contact" titre="Contactez-moi" accent="n’hésitez pas" mise="centree" />
+    <Section id="contact" titre="Contactez-moi" accent={'une question ?'} mise="centree">
+      <ContactForm />
+    </Section>
   </main>
 
   <Footer />
