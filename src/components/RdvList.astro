@@ -1,0 +1,350 @@
+---
+/**
+ * Prochains rendez-vous, en feuillets de calendrier : jour de la semaine en petites capitales, grand
+ * numéro du jour, mois à l'écriture manuscrite. Le premier (le prochain) est mis en avant, les suivants
+ * sont plus discrets. Un rendez-vous annulé reste affiché, avec la mention « Annulé » écrite en toutes lettres.
+ * `items` arrive déjà filtré et trié (`upcoming`). Liste vide : « Prochaines dates bientôt ».
+ * Tous les champs sont modifiables dans l'administration : affichés comme du texte, jamais comme du HTML.
+ */
+import type { Rendezvous } from '../lib/schemas';
+import { formatDateFr, heureFr, isCancelled } from '../lib/rendezvous';
+
+interface Props {
+  items: Rendezvous[];
+}
+
+const { items } = Astro.props;
+
+const feuillets = items.map((r, i) => ({
+  ...r,
+  ...formatDateFr(r.date),
+  iso: r.date.toISOString().slice(0, 10),
+  heureAffichee: heureFr(r.heure),
+  annule: isCancelled(r),
+  prochain: i === 0,
+}));
+---
+
+<div class="rdv-bloc">
+  {
+    feuillets.length === 0 ? (
+      <p class="rdv-vide">Prochaines dates bientôt</p>
+    ) : (
+      <ul class:list={['rdv-liste', { 'rdv-liste--plusieurs': feuillets.length > 1 }]} role="list">
+        {feuillets.map((r) => (
+          <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]}>
+            <time class="rdv__date" datetime={r.iso}>
+              <span class="rdv__semaine">{r.jourSemaine}</span>{' '}
+              <span class="rdv__jour">
+                {r.jour}
+                {r.jour === '1' && <sup>er</sup>}
+              </span>{' '}
+              <span class="rdv__mois">{r.mois}</span>
+            </time>
+
+            <svg
+              class="rdv__trait"
+              viewBox="0 0 8 100"
+              preserveAspectRatio="none"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.1"
+              stroke-linecap="round"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M4.2 3c-1.6 14 1.4 27-.2 41.5-1.3 12.6 1.6 25.4.3 38.5-.6 6 .1 10.4-.3 14" vector-effect="non-scaling-stroke" />
+            </svg>
+
+            <div class="rdv__infos">
+              {(r.prochain || r.annule) && (
+                <p class="rdv__mentions">
+                  {r.prochain && <span class="rdv__etiquette">Prochain rendez-vous</span>}
+                  {r.annule && <span class="rdv__annule">Annulé</span>}
+                </p>
+              )}
+              <p class="rdv__heure">
+                <time datetime={r.heure}>{r.heureAffichee}</time>
+              </p>
+              <p class="rdv__lieu">{r.lieu}</p>
+              {r.remarque && <p class="rdv__remarque">{r.remarque}</p>}
+            </div>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <p class="rdv-liens">
+    <a href="#pratique">Toutes les infos pratiques</a>
+    <span class="rdv-liens__point" aria-hidden="true">·</span>
+    <a href="#contact">Une question ?</a>
+  </p>
+</div>
+
+<style>
+  .rdv-bloc {
+    --rdv-halo: 0 1px 2px rgb(38 51 31 / 0.05), 0 24px 48px -26px rgb(151 62 86 / 0.42),
+      0 0 0 6px rgb(241 217 220 / 0.45);
+    max-width: 40rem;
+    margin-inline: auto;
+    text-align: left;
+  }
+
+  .rdv-liste {
+    display: grid;
+    gap: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* ---------- Feuillet : date | trait dessiné | informations ---------- */
+  .rdv {
+    display: grid;
+    grid-template-columns: 4.75rem auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--s-2);
+    padding: var(--s-3) var(--s-2);
+    overflow-wrap: anywhere;
+  }
+
+  /* Les feuillets discrets sont séparés par un fil doré ondoyant, dessiné à la main. */
+  .rdv:not(.rdv--prochain) + .rdv {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 6' preserveAspectRatio='none' fill='none' stroke='%23c9a24a' stroke-opacity='.7' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M2 3.4c40-1.8 74 1.5 118 .2 46-1.4 82-2.2 128-.4 50 1.9 98 .9 150-.6'/%3E%3C/svg%3E")
+      top center / calc(100% - 2rem) 6px no-repeat;
+  }
+
+  .rdv__date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: var(--foret);
+  }
+
+  .rdv__semaine {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    color: var(--encre-doux);
+  }
+
+  .rdv__jour {
+    font-family: var(--police-titre);
+    font-size: 3rem;
+    font-weight: 500;
+    line-height: 0.95;
+    font-variant-numeric: lining-nums;
+  }
+
+  .rdv__jour sup {
+    font-size: 0.4em;
+    vertical-align: super;
+    line-height: 0;
+  }
+
+  /* Accent manuscrit ≥ 24 px : texte « grand » au sens WCAG (rose contrasté ≥ 3:1 sur les deux crèmes). */
+  .rdv__mois {
+    font-family: var(--police-script);
+    font-size: 1.625rem;
+    line-height: 1;
+    margin-top: 0.1em;
+    color: var(--rose);
+  }
+
+  .rdv__trait {
+    align-self: stretch;
+    width: 8px;
+    height: auto;
+    min-height: 4rem;
+    color: var(--dore);
+  }
+
+  .rdv__infos {
+    min-width: 0;
+  }
+
+  .rdv__infos > * + * {
+    margin-top: 0.15rem;
+  }
+
+  .rdv__mentions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem var(--s-1);
+    margin-bottom: 0.25rem;
+  }
+
+  .rdv__etiquette {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.18em;
+    color: var(--rose-fonce);
+  }
+
+  .rdv__annule {
+    display: inline-block;
+    padding: 0.125rem 0.625rem 0.1875rem;
+    border: 1px solid var(--rose-fonce);
+    border-radius: var(--r-pilule);
+    background: var(--rose-doux);
+    color: var(--rose-fonce);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+  }
+
+  .rdv__heure {
+    font-family: var(--police-titre);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--foret);
+    font-variant-numeric: lining-nums;
+  }
+
+  .rdv__lieu {
+    color: var(--encre);
+  }
+
+  .rdv__remarque {
+    font-family: var(--police-titre);
+    font-size: var(--fs-lg);
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--encre-doux);
+  }
+
+  /* ---------- Le prochain : feuillet mis en avant, halo rose très doux ---------- */
+  .rdv--prochain {
+    grid-template-columns: 5.75rem auto minmax(0, 1fr);
+    padding: var(--s-4) var(--s-3);
+    border: 1px solid color-mix(in srgb, var(--rose) 22%, transparent);
+    border-radius: var(--r-3);
+    background-color: var(--creme);
+    box-shadow: var(--rdv-halo);
+  }
+
+  .rdv--prochain .rdv__jour {
+    font-size: 4.25rem;
+  }
+
+  .rdv--prochain .rdv__mois {
+    font-size: 2.125rem;
+  }
+
+  .rdv--prochain .rdv__heure {
+    font-size: 2rem;
+  }
+
+  .rdv--prochain + .rdv {
+    margin-top: var(--s-3);
+  }
+
+  /* ---------- Annulé : date et heure barrées, encore lisibles ; la mention écrite porte l'information ---------- */
+  .rdv--annule .rdv__date,
+  .rdv--annule .rdv__heure {
+    color: var(--encre-doux);
+  }
+
+  .rdv--annule .rdv__jour,
+  .rdv--annule .rdv__heure time {
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    text-decoration-color: color-mix(in srgb, var(--rose-fonce) 75%, transparent);
+  }
+
+  .rdv--annule .rdv__mois {
+    color: var(--rose-fonce);
+  }
+
+  .rdv--annule.rdv--prochain {
+    box-shadow: var(--ombre-douce);
+  }
+
+  /* ---------- Aucun rendez-vous à venir ---------- */
+  .rdv-vide {
+    max-width: 26rem;
+    margin-inline: auto;
+    padding: var(--s-5) var(--s-4);
+    border: 1px solid color-mix(in srgb, var(--dore) 45%, transparent);
+    border-radius: var(--r-3);
+    background-color: var(--creme);
+    box-shadow: var(--ombre-douce);
+    font-family: var(--police-titre);
+    font-size: var(--fs-h3);
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.3;
+    text-align: center;
+    color: var(--foret);
+  }
+
+  /* ---------- Liens d'information ---------- */
+  .rdv-liens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-1) var(--s-2);
+    margin-top: var(--s-5);
+    font-size: var(--fs-sm);
+  }
+
+  .rdv-liens a {
+    display: inline-block;
+    padding-block: 0.375rem;
+    font-weight: 600;
+  }
+
+  .rdv-liens__point {
+    align-self: center;
+    color: var(--dore);
+  }
+
+  @media (min-width: 30rem) {
+    .rdv {
+      column-gap: var(--s-3);
+      padding-inline: var(--s-3);
+    }
+
+    .rdv--prochain {
+      grid-template-columns: 7rem auto minmax(0, 1fr);
+      padding: var(--s-5) var(--s-5) var(--s-5) var(--s-4);
+    }
+
+    .rdv--prochain .rdv__jour {
+      font-size: 5.25rem;
+    }
+  }
+
+  /* ---------- Grand écran : le prochain à gauche, les suivants en colonne à droite ---------- */
+  @media (min-width: 60rem) {
+    .rdv-bloc:has(.rdv-liste--plusieurs) {
+      max-width: 62rem;
+    }
+
+    .rdv-liste--plusieurs {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      column-gap: var(--s-6);
+      align-items: center;
+    }
+
+    .rdv-liste--plusieurs .rdv--prochain {
+      grid-row: 1 / span 6;
+      align-self: start;
+    }
+
+    .rdv-liste--plusieurs .rdv--prochain + .rdv {
+      margin-top: 0;
+    }
+
+    .rdv-liste--plusieurs .rdv:not(.rdv--prochain) {
+      grid-column: 2;
+    }
+  }
+</style>

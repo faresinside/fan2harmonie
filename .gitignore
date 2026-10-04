@@ -6,5 +6,6 @@ dist
 .DS_Store
 /texteSite.odt
 dist-fixture
+dist-fixture-*
 test-results
 playwright-report

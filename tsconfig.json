@@ -4,6 +4,7 @@
   "exclude": [
     "dist",
     "dist-fixture",
+    "dist-fixture-*",
     "node_modules",
     "source",
     "maquette",

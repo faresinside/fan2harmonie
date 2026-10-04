@@ -2,17 +2,23 @@
 /**
  * Page unique : Accueil, Prochains rendez-vous, La pratique, Le Qi Gong, Qui est Fan 2 Harmonie,
  * Actualités, Contact. Les textes viennent de la collection « pages » (modifiables dans l'administration).
+ * Rendez-vous et actualités sont choisis à la construction du site (`new Date()`) : la reconstruction
+ * quotidienne retire les rendez-vous passés. Sans aucune actualité, la section et son lien disparaissent.
  */
-import { getEntry, render } from 'astro:content';
+import { getCollection, getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import Header from '../components/Header.astro';
 import Hero from '../components/Hero.astro';
 import Section from '../components/Section.astro';
+import RdvList from '../components/RdvList.astro';
+import ActualiteCard from '../components/ActualiteCard.astro';
 import LienCarte from '../components/LienCarte.astro';
 import Footer from '../components/Footer.astro';
 import IconSilhouette from '../components/IconSilhouette.astro';
 import IconSouffle from '../components/IconSouffle.astro';
 import IconLotus from '../components/IconLotus.astro';
+import { upcoming } from '../lib/rendezvous';
+import { dernieresActualites } from '../lib/actualites';
 
 async function page(id: 'pratique' | 'qigong' | 'parcours') {
   const entree = await getEntry('pages', id);
@@ -22,18 +28,32 @@ async function page(id: 'pratique' | 'qigong' | 'parcours') {
 }
 
 const [pratique, qigong, parcours] = await Promise.all([page('pratique'), page('qigong'), page('parcours')]);
+
+const rendezvous = upcoming(
+  (await getCollection('rendezvous')).map((r) => r.data),
+  new Date(),
+);
+
+const actualites = await Promise.all(
+  dernieresActualites(await getCollection('actualites')).map(async (a) => ({
+    ...a.data,
+    Content: (await render(a)).Content,
+  })),
+);
 ---
 
 <Base
   titre="Fan 2 Harmonie — Qi Gong au parc de Rambouillet"
   description="Qi Gong gratuit en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Accessible à tous, à tout âge et à tous niveaux."
 >
-  <Header />
+  <Header actualites={actualites.length > 0} />
 
   <main id="contenu">
     <Hero />
 
-    <Section id="rdv" titre="Prochains rendez-vous" accent="Rejoignez-moi" ton="chaud" mise="centree" />
+    <Section id="rdv" titre="Prochains rendez-vous" accent="Rejoignez-moi" ton="chaud" mise="centree">
+      <RdvList items={rendezvous} />
+    </Section>
 
     <Section id="pratique" titre={pratique.titre} accent="au cœur de la nature">
       <IconSilhouette slot="illustration" />
@@ -57,10 +77,29 @@ const [pratique, qigong, parcours] = await Promise.all([page('pratique'), page('
       </div>
     </Section>
 
-    <Section id="actualites" titre="Actualités" ton="chaud" mise="centree" />
+    {
+      actualites.length > 0 && (
+        <Section id="actualites" titre="Actualités" ton="chaud" mise="centree">
+          <div class="actualites">
+            {actualites.map(({ titre, date, image, Content }) => (
+              <ActualiteCard titre={titre} date={date} image={image}>
+                <Content />
+              </ActualiteCard>
+            ))}
+          </div>
+        </Section>
+      )
+    }
 
     <Section id="contact" titre="Contactez-moi" accent="n’hésitez pas" mise="centree" />
   </main>
 
   <Footer />
 </Base>
+
+<style>
+  .actualites {
+    max-width: 42rem;
+    margin-inline: auto;
+  }
+</style>

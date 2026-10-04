@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { rendezvousSchema } from '../../src/lib/schemas';
-import { formatDateFr, isCancelled, upcoming } from '../../src/lib/rendezvous';
+import { formatDateFr, heureFr, isCancelled, upcoming } from '../../src/lib/rendezvous';
 
 const rdv = (date: string, heure = '16:00', extra: Record<string, unknown> = {}) =>
   rendezvousSchema.parse({ date, heure, ...extra });
@@ -56,5 +56,15 @@ describe('formatDateFr', () => {
       jour: '10',
       mois: 'octobre',
     });
+  });
+});
+
+describe('heureFr', () => {
+  it.each([
+    ['16:00', '16h00'],
+    ['09:30', '9h30'],
+    ['00:05', '0h05'],
+  ])('%s → %s', (heure, attendu) => {
+    expect(heureFr(heure)).toBe(attendu);
   });
 });

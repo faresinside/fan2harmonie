@@ -1,0 +1,121 @@
+---
+/**
+ * Une actualité : date, titre, image facultative, texte (Markdown rendu, passé dans le slot).
+ * Sans image, aucun élément <img> et aucun emplacement vide. Le titre et le texte se coupent
+ * au besoin (titres de 90 caractères, mots très longs) sans jamais déborder.
+ * Le titre est affiché comme du texte (échappement d'Astro) ; le HTML brut du Markdown est neutralisé
+ * dans astro.config.mjs (remarkHtmlEnTexte).
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { formatDateLongueFr } from '../lib/actualites';
+
+interface Props {
+  titre: string;
+  date: Date;
+  image?: ImageMetadata | undefined;
+  /** Texte alternatif de l'image : le titre par défaut. */
+  imageAlt?: string | undefined;
+}
+
+const { titre, date, image, imageAlt = titre } = Astro.props;
+---
+
+<article class:list={['actu', { 'actu--image': image }]}>
+  <div class="actu__texte">
+    <h3 class="actu__titre">{titre}</h3>
+    <time class="actu__date" datetime={date.toISOString().slice(0, 10)}>{formatDateLongueFr(date)}</time>
+    <div class="prose actu__corps">
+      <slot />
+    </div>
+  </div>
+  {
+    image && (
+      <Image
+        src={image}
+        alt={imageAlt}
+        width={960}
+        widths={[480, 960]}
+        sizes="(min-width: 48rem) 18rem, calc(100vw - 2rem)"
+        loading="lazy"
+        decoding="async"
+        class="actu__image"
+      />
+    )
+  }
+</article>
+
+<style>
+  .actu {
+    display: grid;
+    gap: var(--s-3);
+    padding-block: var(--s-5);
+    text-align: left;
+    /* Coupure seulement pour un mot plus long que la ligne (pas de césure automatique dans le texte). */
+    overflow-wrap: anywhere;
+  }
+
+  .actu:first-child {
+    padding-top: 0;
+  }
+
+  /* Entre deux actualités : le fil doré ondoyant des rendez-vous. */
+  .actu + .actu {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 6' preserveAspectRatio='none' fill='none' stroke='%23c9a24a' stroke-opacity='.7' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M2 3.4c40-1.8 74 1.5 118 .2 46-1.4 82-2.2 128-.4 50 1.9 98 .9 150-.6'/%3E%3C/svg%3E")
+      top center / 100% 6px no-repeat;
+  }
+
+  .actu__texte {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* La date se lit au-dessus du titre, mais vient après lui dans l'ordre du document. */
+  .actu__date {
+    order: -1;
+    margin-bottom: var(--s-1);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    font-variant-caps: all-small-caps;
+    letter-spacing: 0.18em;
+    color: var(--rose-fonce);
+  }
+
+  .actu__titre {
+    font-size: var(--fs-h3);
+    text-wrap: balance;
+  }
+
+  .actu__corps {
+    margin-top: var(--s-2);
+  }
+
+  /* L'image vient avant le texte à l'écran, comme une photo de une. */
+  .actu__image {
+    order: -1;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: var(--r-3);
+    box-shadow: var(--ombre-douce);
+  }
+
+  @media (min-width: 48rem) {
+    .actu--image {
+      grid-template-columns: 17rem minmax(0, 1fr);
+      gap: var(--s-5);
+      align-items: start;
+    }
+
+    .actu--image .actu__image {
+      grid-row: 1;
+      grid-column: 1;
+      aspect-ratio: 4 / 5;
+    }
+
+    .actu--image .actu__texte {
+      grid-column: 2;
+    }
+  }
+</style>

@@ -8,6 +8,13 @@
 import { Image } from 'astro:assets';
 import logo from '../assets/logo/logo.png';
 
+interface Props {
+  /** Faux quand il n'y a aucune actualité : la section est retirée de la page, le lien aussi. */
+  actualites?: boolean;
+}
+
+const { actualites = true } = Astro.props;
+
 const liens = [
   { href: '#rdv', libelle: 'Rendez-vous' },
   { href: '#pratique', libelle: 'La pratique' },
@@ -15,7 +22,7 @@ const liens = [
   { href: '#qui', libelle: 'Qui est Fan 2 Harmonie' },
   { href: '#actualites', libelle: 'Actualités' },
   { href: '#contact', libelle: 'Contact' },
-];
+].filter(({ href }) => actualites || href !== '#actualites');
 ---
 
 <header class="entete" data-entete>

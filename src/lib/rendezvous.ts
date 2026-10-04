@@ -46,6 +46,12 @@ export function formatDateFr(date: Date): { jourSemaine: string; jour: string; m
   };
 }
 
+/** Heure à la française : « 16:00 » → « 16h00 », « 09:30 » → « 9h30 ». */
+export function heureFr(heure: string): string {
+  const [h = '', m = ''] = heure.split(':');
+  return `${Number(h)}h${m}`;
+}
+
 export function isCancelled(r: Rendezvous): boolean {
   return r.annule;
 }
