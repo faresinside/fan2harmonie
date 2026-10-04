@@ -6,6 +6,7 @@
     "dist-fixture",
     "dist-fixture-*",
     "node_modules",
+    "public/admin/sveltia-cms.js",
     "source",
     "maquette",
     "test-results",

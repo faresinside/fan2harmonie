@@ -1,0 +1,179 @@
+# Configuration de Sveltia CMS (espace d'administration /admin).
+# Les champs correspondent exactement aux schémas Zod de src/lib/schemas.ts (vérifié par tests/unit/cms-config.test.ts).
+# Valeurs À_COMPLÉTER : dépôt GitHub (« propriétaire/dépôt ») et adresse du relais d'authentification (Task 11).
+
+backend:
+  name: github
+  repo: À_COMPLÉTER
+  branch: main
+  base_url: À_COMPLÉTER
+
+publish_mode: simple
+app_title: Administration Fan 2 Harmonie
+# site_url / display_url omis : par défaut l'adresse du site qui sert /admin (Sveltia exige une URL absolue).
+
+# Noms de fichiers simples (sans accents ni guillemets), pour les actualités et les photos.
+slug:
+  encoding: ascii
+  clean_accents: true
+
+# Champ facultatif laissé vide : non écrit dans le fichier, pour que le site applique sa valeur par défaut
+# (lieu habituel) et qu'une actualité sans photo n'ait pas de chemin d'image vide.
+output:
+  omit_empty_optional_fields: true
+
+# Médias : un seul dossier, celui des photos des actualités (traitées par Astro).
+media_folder: src/assets/actualites
+public_folder: /src/assets/actualites
+media_libraries:
+  default:
+    config:
+      # Noms de fichiers sans espaces ni accents ; photos converties en WebP et réduites à 2000 px.
+      slugify_filename: true
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 2000
+          height: 2000
+  # Pas de banques d'images en ligne : seulement les photos de Stéphanie.
+  stock_assets: false
+
+collections:
+  - name: rendezvous
+    label: Rendez-vous
+    label_singular: Rendez-vous
+    description: >-
+      Les séances de Qi Gong, une fiche par séance. Pour annuler une séance, cochez « Séance annulée » ;
+      pour la retirer du site, supprimez-la. Les rendez-vous passés disparaissent seuls du site.
+    folder: src/content/rendezvous
+    create: true
+    delete: true
+    extension: md
+    format: frontmatter
+    identifier_field: date
+    # Nom du fichier : la date (AAAA-MM-JJ.md), calculée automatiquement. Deuxième séance le même jour :
+    # Sveltia ajoute un suffixe (AAAA-MM-JJ-1.md), aucun fichier n'est écrasé.
+    slug:
+      template: '{{fields.date}}'
+      editable: false
+    summary: "{{date | date('DD/MM/YYYY')}} — {{heure}}{{annule | ternary(' — annulée', '')}}"
+    sortable_fields:
+      fields: [date]
+      default:
+        field: date
+        direction: descending
+    editor:
+      preview: false
+    fields:
+      - name: date
+        label: Date
+        widget: datetime
+        type: date
+        format: YYYY-MM-DD
+        time_format: false
+        hint: Choisissez le jour de la séance dans le calendrier.
+      - name: heure
+        label: Heure
+        widget: string
+        default: '16:00'
+        pattern: ['^([01]\d|2[0-3]):[0-5]\d$', 'Écrivez l’heure sous la forme 16:00']
+        hint: Écrivez l’heure sous la forme 16:00 (heures, deux-points, minutes).
+      - name: lieu
+        label: Lieu
+        widget: string
+        required: false
+        default: Parc de Rambouillet, près de la bergerie
+        hint: Laissez le lieu habituel, sauf si la séance a lieu ailleurs.
+      - name: remarque
+        label: Remarque
+        widget: string
+        required: false
+        hint: 'Facultatif, par exemple : annulé en cas de pluie'
+      - name: annule
+        label: Séance annulée
+        widget: boolean
+        default: false
+        hint: Cochez si la séance n’a pas lieu. Elle reste affichée sur le site avec la mention « Annulé ».
+
+  - name: actualites
+    label: Actualités
+    label_singular: Actualité
+    description: Les nouvelles de Fan 2 Harmonie, de la plus récente à la plus ancienne.
+    folder: src/content/actualites
+    create: true
+    delete: true
+    extension: md
+    format: frontmatter
+    identifier_field: titre
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    summary: "{{titre}} ({{date | date('DD/MM/YYYY')}})"
+    sortable_fields:
+      fields: [date, titre]
+      default:
+        field: date
+        direction: descending
+    # Photos : fichiers dans src/assets/actualites, chemin écrit relatif au fichier .md (exigé par Astro).
+    media_folder: /src/assets/actualites
+    public_folder: ../../assets/actualites
+    editor:
+      preview: false
+    fields:
+      - name: titre
+        label: Titre
+        widget: string
+        maxlength: 90
+        pattern: ['^.{1,90}$', 'Le titre doit faire 90 caractères au maximum']
+        hint: Un titre court, 90 caractères au maximum.
+      - name: date
+        label: Date
+        widget: datetime
+        type: date
+        format: YYYY-MM-DD
+        time_format: false
+        hint: Date de l’actualité ; les plus récentes s’affichent en premier.
+      - name: image
+        label: Photo
+        widget: image
+        required: false
+        choose_url: false
+        accept: image/jpeg,image/png,image/webp
+        hint: Facultatif. Une photo JPEG, PNG ou WebP, de préférence en format paysage ; elle est réduite automatiquement.
+      - name: body
+        label: Texte
+        widget: markdown
+        modes: [rich_text]
+        buttons: [bold, italic, link, bulleted-list, numbered-list]
+        editor_components: []
+        hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+
+  - name: pages
+    label: Textes des pages
+    label_singular: Texte
+    description: Les textes des sections du site. On peut les corriger, mais pas en ajouter ni en supprimer.
+    editor:
+      preview: false
+    files:
+      - name: pratique
+        label: La pratique
+        file: src/content/pages/pratique.md
+        fields: &champs_page
+          - name: titre
+            label: Titre de la section
+            widget: string
+            hint: Le titre affiché en haut de la section.
+          - name: body
+            label: Texte
+            widget: markdown
+            modes: [rich_text]
+            buttons: [bold, italic, link, heading-three, bulleted-list, numbered-list]
+            editor_components: []
+            hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+      - name: qigong
+        label: Le Qi Gong
+        file: src/content/pages/qigong.md
+        fields: *champs_page
+      - name: parcours
+        label: Mon parcours
+        file: src/content/pages/parcours.md
+        fields: *champs_page
