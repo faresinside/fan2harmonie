@@ -10,6 +10,8 @@ export const JEUX = {
   xss: 4325,
   'sans-image': 4326,
   'titre-long': 4327,
+  'annule-premier': 4328,
+  'tout-annule': 4329,
 } as const;
 
 export type Jeu = keyof typeof JEUX;

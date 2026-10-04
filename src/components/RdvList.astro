@@ -1,8 +1,9 @@
 ---
 /**
  * Prochains rendez-vous, en feuillets de calendrier : jour de la semaine en petites capitales, grand
- * numéro du jour, mois à l'écriture manuscrite. Le premier (le prochain) est mis en avant, les suivants
- * sont plus discrets. Un rendez-vous annulé reste affiché, avec la mention « Annulé » écrite en toutes lettres.
+ * numéro du jour, mois à l'écriture manuscrite. Le premier non annulé (le prochain) est mis en avant, les
+ * autres sont plus discrets, dans l'ordre chronologique. Un rendez-vous annulé reste affiché, avec la mention
+ * « Annulé » écrite en toutes lettres, et n'est jamais mis en avant.
  * `items` arrive déjà filtré et trié (`upcoming`). Liste vide : « Prochaines dates bientôt ».
  * Tous les champs sont modifiables dans l'administration : affichés comme du texte, jamais comme du HTML.
  */
@@ -15,13 +16,16 @@ interface Props {
 
 const { items } = Astro.props;
 
+// Le prochain rendez-vous mis en avant est le premier non annulé (aucun si tous sont annulés).
+const indexProchain = items.findIndex((r) => !isCancelled(r));
+
 const feuillets = items.map((r, i) => ({
   ...r,
   ...formatDateFr(r.date),
   iso: r.date.toISOString().slice(0, 10),
   heureAffichee: heureFr(r.heure),
   annule: isCancelled(r),
-  prochain: i === 0,
+  prochain: i === indexProchain,
 }));
 ---
 
@@ -30,7 +34,7 @@ const feuillets = items.map((r, i) => ({
     feuillets.length === 0 ? (
       <p class="rdv-vide">Prochaines dates bientôt</p>
     ) : (
-      <ul class:list={['rdv-liste', { 'rdv-liste--plusieurs': feuillets.length > 1 }]} role="list">
+      <ul class:list={['rdv-liste', { 'rdv-liste--plusieurs': feuillets.length > 1 && indexProchain !== -1 }]} role="list">
         {feuillets.map((r) => (
           <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]}>
             <time class="rdv__date" datetime={r.iso}>
@@ -109,9 +113,8 @@ const feuillets = items.map((r, i) => ({
   }
 
   /* Les feuillets discrets sont séparés par un fil doré ondoyant, dessiné à la main. */
-  .rdv:not(.rdv--prochain) + .rdv {
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 6' preserveAspectRatio='none' fill='none' stroke='%23c9a24a' stroke-opacity='.7' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M2 3.4c40-1.8 74 1.5 118 .2 46-1.4 82-2.2 128-.4 50 1.9 98 .9 150-.6'/%3E%3C/svg%3E")
-      top center / calc(100% - 2rem) 6px no-repeat;
+  .rdv:not(.rdv--prochain) + .rdv:not(.rdv--prochain) {
+    background: var(--trait-onde) top center / calc(100% - 2rem) 6px no-repeat;
   }
 
   .rdv__date {
@@ -242,7 +245,8 @@ const feuillets = items.map((r, i) => ({
     font-size: 2rem;
   }
 
-  .rdv--prochain + .rdv {
+  .rdv--prochain + .rdv,
+  .rdv + .rdv--prochain {
     margin-top: var(--s-3);
   }
 
@@ -261,10 +265,6 @@ const feuillets = items.map((r, i) => ({
 
   .rdv--annule .rdv__mois {
     color: var(--rose-fonce);
-  }
-
-  .rdv--annule.rdv--prochain {
-    box-shadow: var(--ombre-douce);
   }
 
   /* ---------- Aucun rendez-vous à venir ---------- */
@@ -339,8 +339,14 @@ const feuillets = items.map((r, i) => ({
       align-self: start;
     }
 
-    .rdv-liste--plusieurs .rdv--prochain + .rdv {
+    .rdv-liste--plusieurs .rdv--prochain + .rdv,
+    .rdv-liste--plusieurs .rdv + .rdv--prochain {
       margin-top: 0;
+    }
+
+    /* Colonne de droite : fil ondoyant entre deux feuillets discrets, même si le prochain les sépare dans le code. */
+    .rdv-liste--plusieurs .rdv:not(.rdv--prochain) ~ .rdv:not(.rdv--prochain) {
+      background: var(--trait-onde) top center / calc(100% - 2rem) 6px no-repeat;
     }
 
     .rdv-liste--plusieurs .rdv:not(.rdv--prochain) {

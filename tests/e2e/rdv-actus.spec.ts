@@ -124,6 +124,40 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
   }
 });
 
+test.describe('premier rendez-vous annulé (jeu « annule-premier »)', () => {
+  test.use({ baseURL: urlJeu('annule-premier') });
+
+  test('« Prochain rendez-vous » va au premier non annulé, l’annulé garde sa place et sa mention', async ({ page }) => {
+    await page.goto('/');
+    await expect(rendezvous(page)).toHaveCount(3);
+    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(1);
+    const premier = rendezvous(page).nth(0);
+    await expect(premier.locator('time[datetime="2099-03-14"]')).toBeVisible();
+    await expect(premier.getByText('Annulé', { exact: true })).toBeVisible();
+    await expect(premier.getByText('Prochain rendez-vous', { exact: true })).toHaveCount(0);
+    const second = rendezvous(page).nth(1);
+    await expect(second.locator('time[datetime="2099-03-15"]')).toBeVisible();
+    await expect(second.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+    // Mise en avant (carte, halo) : sur le second seulement.
+    await expect(premier).not.toHaveClass(/rdv--prochain/);
+    await expect(second).toHaveClass(/rdv--prochain/);
+  });
+});
+
+test.describe('tous les rendez-vous annulés (jeu « tout-annule »)', () => {
+  test.use({ baseURL: urlJeu('tout-annule') });
+
+  test('aucune mention « Prochain rendez-vous », chacun marqué « Annulé »', async ({ page }) => {
+    await page.goto('/');
+    await expect(rendezvous(page)).toHaveCount(2);
+    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(0);
+    await expect(page.locator('#rdv .rdv--prochain')).toHaveCount(0);
+    for (const item of await rendezvous(page).all()) {
+      await expect(item.getByText('Annulé', { exact: true })).toBeVisible();
+    }
+  });
+});
+
 test.describe('tri et rendez-vous passés (jeu « melange »)', () => {
   test.use({ baseURL: urlJeu('melange') });
 

@@ -1,5 +1,10 @@
 /* Styles globaux : réinitialisation, typographie, utilitaires. Les jetons sont dans tokens.css. */
 
+/* Fil doré ondoyant, dessiné à la main : séparateur entre feuillets de rendez-vous et entre actualités. */
+:root {
+  --trait-onde: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 6' preserveAspectRatio='none' fill='none' stroke='%23c9a24a' stroke-opacity='.7' stroke-width='1' stroke-linecap='round'%3E%3Cpath d='M2 3.4c40-1.8 74 1.5 118 .2 46-1.4 82-2.2 128-.4 50 1.9 98 .9 150-.6'/%3E%3C/svg%3E");
+}
+
 /* ---------- Réinitialisation moderne ---------- */
 *,
 *::before,
