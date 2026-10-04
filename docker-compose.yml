@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+      - fan2harmonie_node_modules:/app/node_modules
+    ports:
+      - "4321:4321"
+      - "4322:4322"
+    ipc: host
+    command: npm run dev -- --host 0.0.0.0
+
+volumes:
+  fan2harmonie_node_modules:

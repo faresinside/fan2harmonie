@@ -5,3 +5,6 @@ dist
 .superpowers/
 .DS_Store
 /texteSite.odt
+dist-fixture
+test-results
+playwright-report
