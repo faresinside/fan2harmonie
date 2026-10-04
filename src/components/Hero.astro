@@ -1,0 +1,271 @@
+---
+/**
+ * Accueil : photo d'ambiance sous un voile crème (texte lisible avec une photo floue comme nette),
+ * mots de l'affiche de Stéphanie, un seul appel à l'action, quatre bienfaits illustrés.
+ */
+import { Image } from 'astro:assets';
+import logo from '../assets/logo/logo.png';
+import photo from '../assets/photos/hero.jpg';
+import IconSouffle from './IconSouffle.astro';
+import IconLotus from './IconLotus.astro';
+import IconSilhouette from './IconSilhouette.astro';
+import IconYinYang from './IconYinYang.astro';
+
+const bienfaits = [
+  { Icone: IconSouffle, libelle: 'Faire circuler l’énergie' },
+  { Icone: IconLotus, libelle: 'Calmer l’esprit' },
+  { Icone: IconSilhouette, libelle: 'Travailler les muscles profonds' },
+  { Icone: IconYinYang, libelle: 'Souplesse' },
+];
+---
+
+<section id="accueil" class="accueil" aria-labelledby="accueil-titre">
+  <div class="accueil__scene">
+    <Image
+      src={photo}
+      alt=""
+      class="accueil__photo"
+      widths={[640, 960, 1280, 1600]}
+      sizes="100vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+    <div class="accueil__voile" aria-hidden="true"></div>
+
+    <div class="accueil__contenu container">
+      <div class="accueil__texte">
+        <p class="script accueil__accent apparait" style="--retard: 0ms">1 heure pour vous…</p>
+        <h1 id="accueil-titre" class="accueil__titre apparait" style="--retard: 120ms">
+          <span class="accueil__titre-principal">Qi Gong</span><span class="sr-only"> : </span>
+          <span class="accueil__titre-second">Animation découverte</span>
+        </h1>
+        <p class="accueil__devise apparait" style="--retard: 240ms">Respirez, Bougez, Équilibrez-vous</p>
+        <p class="accueil__infos apparait" style="--retard: 360ms">
+          Parc de Rambouillet <span aria-hidden="true">·</span> samedis ou dimanches à 16h00
+          <span aria-hidden="true">·</span> gratuit
+        </p>
+        <div class="apparait" style="--retard: 480ms">
+          <a class="bouton bouton--rose accueil__appel" href="#rdv">Venez essayer</a>
+        </div>
+      </div>
+
+      <div class="accueil__embleme apparait" style="--retard: 200ms">
+        <Image src={logo} alt="Fan 2 Harmonie" widths={[200, 320, 440]} sizes="(min-width: 56rem) 22rem, 11rem" class="accueil__logo" loading="eager" />
+      </div>
+    </div>
+  </div>
+
+  <div class="accueil__bienfaits">
+    <ul class="bienfaits container" role="list">
+      {
+        bienfaits.map(({ Icone, libelle }, i) => (
+          <li class="bienfaits__item apparait" style={`--retard: ${600 + i * 120}ms`}>
+            <Icone />
+            <span>{libelle}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .accueil__scene {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .accueil__photo {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 60% 40%;
+  }
+
+  /*
+   * Voile crème : opaque à ≥ 82 % derrière le texte (contraste garanti même sur une photo nette et sombre),
+   * plus léger côté emblème pour laisser respirer la photo.
+   */
+  .accueil__voile {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(circle at 50% 30%, rgb(250 245 232 / 0.9) 0 28%, transparent 62%),
+      linear-gradient(180deg, rgb(250 245 232 / 0.84), rgb(250 245 232 / 0.9) 55%, var(--creme));
+  }
+
+  .accueil__contenu {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: var(--s-3);
+    padding-block: var(--s-6) var(--s-8);
+    text-align: center;
+  }
+
+  .accueil__texte {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .accueil__accent {
+    color: var(--rose);
+    margin-bottom: var(--s-1);
+  }
+
+  .accueil__titre {
+    display: flex;
+    flex-direction: column;
+    align-items: inherit;
+    gap: 0.35em;
+  }
+
+  .accueil__titre-principal {
+    font-size: clamp(3.25rem, 2.4rem + 4vw, 5.75rem);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+
+  .accueil__titre-second {
+    font-family: var(--police-texte);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--encre-doux);
+  }
+
+  .accueil__devise {
+    margin-top: var(--s-3);
+    font-family: var(--police-titre);
+    font-size: var(--fs-h3);
+    font-style: italic;
+    font-weight: 500;
+    color: var(--foret);
+  }
+
+  .accueil__infos {
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    color: var(--encre-doux);
+  }
+
+  .accueil__appel {
+    margin-top: var(--s-4);
+  }
+
+  .accueil__logo {
+    width: clamp(8.5rem, 5rem + 14vw, 11rem);
+  }
+
+  @media (min-width: 56rem) {
+    .accueil__voile {
+      background:
+        linear-gradient(180deg, transparent 70%, var(--creme)),
+        radial-gradient(circle at 74% 48%, rgb(250 245 232 / 0.88) 0 22%, transparent 46%),
+        linear-gradient(90deg, rgb(250 245 232 / 0.94) 0 40%, rgb(250 245 232 / 0.62) 72%, rgb(250 245 232 / 0.5));
+    }
+
+    .accueil__contenu {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      align-items: center;
+      min-height: min(40rem, calc(100svh - var(--hauteur-entete) - 9rem));
+      padding-block: var(--s-10);
+      text-align: left;
+    }
+
+    .accueil__texte {
+      align-items: flex-start;
+    }
+
+    .accueil__embleme {
+      justify-self: center;
+    }
+
+    .accueil__logo {
+      width: 22rem;
+    }
+  }
+
+  /* ---------- Bienfaits ---------- */
+  .accueil__bienfaits {
+    background: var(--creme);
+    padding-block: var(--s-2) var(--s-8);
+  }
+
+  .bienfaits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-5) var(--s-2);
+    list-style: none;
+  }
+
+  .bienfaits__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s-1);
+    text-align: center;
+    font-family: var(--police-titre);
+    font-size: 1.3125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--foret);
+    --taille-icone: 4rem;
+  }
+
+  .bienfaits__item :global(.icone) {
+    color: var(--foret);
+  }
+
+  @media (min-width: 48rem) {
+    .bienfaits {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .bienfaits__item + .bienfaits__item {
+      border-left: 1px solid color-mix(in srgb, var(--dore) 40%, transparent);
+    }
+
+    .bienfaits__item {
+      padding-inline: var(--s-2);
+      font-size: 1.375rem;
+      --taille-icone: 4.5rem;
+    }
+  }
+
+  /* ---------- Apparition lente, décalée (désactivée si mouvement réduit) ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .apparait {
+      animation: apparition 900ms var(--ease-sortie) var(--retard, 0ms) both;
+    }
+
+    .accueil__embleme.apparait {
+      animation-name: apparition-embleme;
+      animation-duration: 1400ms;
+    }
+  }
+
+  @keyframes apparition {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+  }
+
+  @keyframes apparition-embleme {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+      filter: blur(2px);
+    }
+  }
+</style>

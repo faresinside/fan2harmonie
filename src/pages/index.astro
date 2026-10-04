@@ -1,99 +1,66 @@
 ---
-// Vitrine provisoire du système de design (remplacée par la page d'accueil en Task 6).
-import { Image } from 'astro:assets';
+/**
+ * Page unique : Accueil, Prochains rendez-vous, La pratique, Le Qi Gong, Qui est Fan 2 Harmonie,
+ * Actualités, Contact. Les textes viennent de la collection « pages » (modifiables dans l'administration).
+ */
+import { getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import Section from '../components/Section.astro';
+import LienCarte from '../components/LienCarte.astro';
+import Footer from '../components/Footer.astro';
+import IconSilhouette from '../components/IconSilhouette.astro';
 import IconSouffle from '../components/IconSouffle.astro';
 import IconLotus from '../components/IconLotus.astro';
-import IconSilhouette from '../components/IconSilhouette.astro';
-import IconYinYang from '../components/IconYinYang.astro';
-import logo from '../assets/logo/logo.png';
+
+async function page(id: 'pratique' | 'qigong' | 'parcours') {
+  const entree = await getEntry('pages', id);
+  if (!entree) throw new Error(`Texte manquant : src/content/pages/${id}.md`);
+  const { Content } = await render(entree);
+  return { titre: entree.data.titre, Content };
+}
+
+const [pratique, qigong, parcours] = await Promise.all([page('pratique'), page('qigong'), page('parcours')]);
 ---
 
 <Base
   titre="Fan 2 Harmonie — Qi Gong au parc de Rambouillet"
-  description="Séances de Qi Gong gratuites en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Tous âges, tous niveaux."
+  description="Qi Gong gratuit en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Accessible à tous, à tout âge et à tous niveaux."
 >
-  <main id="contenu" class="vitrine container">
-    <Image src={logo} alt="Logo Fan 2 Harmonie" width={240} class="vitrine__logo" loading="eager" />
-    <p class="script vitrine__accent">Une heure pour vous…</p>
-    <h1>Qi Gong au parc de Rambouillet</h1>
-    <p class="vitrine__texte mesure">
-      Respirer, s’étirer, retrouver de la souplesse : chaque séance se déroule en plein air, près de la
-      bergerie, les samedis ou dimanches à 16h00. C’est gratuit, ouvert à tous les âges et à tous les
-      niveaux ; prévoyez simplement des vêtements souples.
-    </p>
-    <ul class="vitrine__bienfaits" role="list">
-      <li><IconSouffle /><span>Faire circuler l’énergie</span></li>
-      <li><IconLotus /><span>Calmer l’esprit</span></li>
-      <li><IconSilhouette /><span>Travailler les muscles profonds</span></li>
-      <li><IconYinYang /><span>Gagner en souplesse</span></li>
-    </ul>
-    <div class="vitrine__actions">
-      <a class="bouton bouton--rose" href="#contenu">Venez essayer</a>
-      <a class="bouton bouton--contour" href="#contenu">Prochains rendez-vous</a>
-    </div>
+  <Header />
+
+  <main id="contenu">
+    <Hero />
+
+    <Section id="rdv" titre="Prochains rendez-vous" accent="Rejoignez-moi" ton="chaud" mise="centree" />
+
+    <Section id="pratique" titre={pratique.titre} accent="au cœur de la nature">
+      <IconSilhouette slot="illustration" />
+      <div class="prose">
+        <pratique.Content />
+      </div>
+      <LienCarte />
+    </Section>
+
+    <Section id="qigong" titre={qigong.titre} accent="le souffle vital" ton="chaud">
+      <IconSouffle slot="illustration" />
+      <div class="prose">
+        <qigong.Content />
+      </div>
+    </Section>
+
+    <Section id="qui" titre={parcours.titre} accent="un projet qui me ressemble">
+      <IconLotus slot="illustration" />
+      <div class="prose">
+        <parcours.Content />
+      </div>
+    </Section>
+
+    <Section id="actualites" titre="Actualités" ton="chaud" mise="centree" />
+
+    <Section id="contact" titre="Contactez-moi" accent="n’hésitez pas" mise="centree" />
   </main>
+
+  <Footer />
 </Base>
-
-<style>
-  .vitrine {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-block: var(--s-section);
-    text-align: center;
-  }
-
-  .vitrine__logo {
-    width: clamp(9rem, 6rem + 12vw, 15rem);
-    margin-bottom: var(--s-4);
-  }
-
-  .vitrine__accent {
-    color: var(--rose);
-    margin-bottom: var(--s-1);
-  }
-
-  .vitrine__texte {
-    margin-top: var(--s-3);
-    color: var(--texte-doux);
-  }
-
-  .vitrine__bienfaits {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--s-4) var(--s-3);
-    max-width: 52rem;
-    margin-top: var(--s-8);
-    padding: var(--s-6) 0 0;
-    border-top: 1px solid var(--filet);
-    list-style: none;
-  }
-
-  .vitrine__bienfaits li {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--s-2);
-    font-family: var(--police-titre);
-    font-size: var(--fs-lg);
-    font-weight: 500;
-    line-height: 1.25;
-    color: var(--foret);
-    --taille-icone: 4.75rem;
-  }
-
-  @media (min-width: 48rem) {
-    .vitrine__bienfaits {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  .vitrine__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--s-2);
-    margin-top: var(--s-8);
-  }
-</style>

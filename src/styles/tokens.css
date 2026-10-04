@@ -65,6 +65,7 @@
   /* Mise en page */
   --largeur-max: 72rem;
   --gouttiere: clamp(1rem, 0.4rem + 2.7vw, 2.5rem);
+  --hauteur-entete: 4.25rem;
 
   /* Formes */
   --r-1: 4px;

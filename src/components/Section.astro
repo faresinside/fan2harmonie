@@ -1,0 +1,114 @@
+---
+/**
+ * Section de la page unique : ornement, accent manuscrit facultatif, titre h2, contenu.
+ * `ton` alterne les bandes crème / crème chaud ; `mise` choisit la mise en page :
+ * « texte » (titre à gauche, texte long à droite sur grand écran) ou « centree » (sections courtes).
+ */
+import Separateur from './Separateur.astro';
+
+interface Props {
+  id: string;
+  titre: string;
+  accent?: string | undefined;
+  ton?: 'clair' | 'chaud';
+  mise?: 'texte' | 'centree';
+}
+
+const { id, titre, accent, ton = 'clair', mise = 'texte' } = Astro.props;
+const idTitre = `${id}-titre`;
+// Le nom ne se coupe jamais entre « Fan », « 2 » et « Harmonie ».
+const titreAffiche = titre.replaceAll('Fan 2 Harmonie', 'Fan\u00a02\u00a0Harmonie');
+---
+
+<section id={id} class:list={['section', `section--${ton}`, `section--${mise}`]} aria-labelledby={idTitre}>
+  <div class="container section__grille">
+    <div class="section__entete">
+      <Separateur class="section__ornement" />
+      {accent && <p class="script section__accent">{accent}</p>}
+      <h2 id={idTitre}>{titreAffiche}</h2>
+      <slot name="illustration" />
+    </div>
+    {
+      Astro.slots.has('default') && (
+        <div class="section__corps">
+          <slot />
+        </div>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  .section {
+    padding-block: var(--s-6) var(--s-section);
+  }
+
+  .section--clair {
+    background-color: var(--creme);
+  }
+
+  .section--chaud {
+    background-color: var(--creme-fonce);
+  }
+
+  .section__entete :global(.section__ornement) {
+    margin-bottom: var(--s-4);
+  }
+
+  /* Textes longs : l'ornement s'aligne sur le titre, à gauche. */
+  .section--texte :global(.section__ornement) {
+    width: 10rem;
+    margin-inline: -0.375rem 0;
+  }
+
+  .section__accent {
+    color: var(--rose);
+    font-size: clamp(2.125rem, 1.8rem + 1.4vw, 2.875rem);
+    margin-bottom: 0.15em;
+  }
+
+  .section__entete {
+    margin-bottom: var(--s-5);
+  }
+
+  .section__entete :global(.icone) {
+    display: none;
+  }
+
+  /* Sections courtes : tout est centré, rythme plus serré. */
+  .section--centree {
+    padding-block: var(--s-6) var(--s-8);
+    text-align: center;
+  }
+
+  .section--centree .section__entete {
+    margin-bottom: 0;
+  }
+
+  .section--centree .section__corps {
+    margin-top: var(--s-4);
+  }
+
+  @media (min-width: 60rem) {
+    .section--texte .section__grille {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: var(--s-8);
+      align-items: start;
+    }
+
+    /* Le titre accompagne la lecture des textes longs. */
+    .section--texte .section__entete {
+      position: sticky;
+      top: calc(var(--hauteur-entete) + var(--s-4));
+      margin-bottom: 0;
+    }
+
+    .section__entete :global(.icone) {
+      display: block;
+      margin-top: var(--s-4);
+      color: var(--foret-doux);
+      --taille-icone: 6.5rem;
+    }
+  }
+</style>

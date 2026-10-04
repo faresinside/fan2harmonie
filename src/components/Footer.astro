@@ -1,0 +1,66 @@
+---
+/** Pied de page sur vert forêt profond : logo clair, signature, mentions légales. */
+import { Image } from 'astro:assets';
+import logoBlanc from '../assets/logo/logo-blanc.png';
+---
+
+<footer class="pied sur-fonce">
+  <div class="container pied__contenu">
+    <Image src={logoBlanc} alt="" width={160} class="pied__logo" />
+    <p class="pied__signature">Fan 2 Harmonie <span aria-hidden="true">·</span> Qi Gong à Rambouillet</p>
+    <p class="pied__legal">
+      <a href="/mentions-legales">Mentions légales</a>
+      <span aria-hidden="true">·</span>
+      <span>© 2026 Fan 2 Harmonie</span>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .pied {
+    background-color: var(--foret-profond);
+    color: var(--creme);
+    padding-block: var(--s-8) var(--s-6);
+  }
+
+  .pied__contenu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .pied__logo {
+    width: 5.5rem;
+    opacity: 0.92;
+  }
+
+  .pied__signature {
+    margin-top: var(--s-3);
+    font-family: var(--police-titre);
+    font-size: var(--fs-lg);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .pied__legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 var(--s-1);
+    margin-top: var(--s-4);
+    padding-top: var(--s-3);
+    border-top: 1px solid color-mix(in srgb, var(--dore) 35%, transparent);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+  }
+
+  .pied a {
+    color: var(--creme);
+    text-decoration-color: color-mix(in srgb, var(--creme) 50%, transparent);
+  }
+
+  .pied a:hover {
+    text-decoration-color: var(--creme);
+  }
+</style>

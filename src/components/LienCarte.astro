@@ -1,0 +1,53 @@
+---
+/** Lieu de la pratique : coordonnées GPS en texte et lien OpenStreetMap, construits depuis `site.gps`. */
+import { site } from '../config/site';
+import { coordonneesFr, lienCarte } from '../lib/carte';
+---
+
+<div class="lieu">
+  <p class="lieu__titre">Le lieu</p>
+  <p class="lieu__gps">
+    Coordonnées GPS : <span class="lieu__coordonnees">{coordonneesFr(site.gps)}</span>
+  </p>
+  <a class="lieu__lien" href={lienCarte(site.gps)} target="_blank" rel="noopener">
+    Voir la carte <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
+  </a>
+</div>
+
+<style>
+  .lieu {
+    max-width: var(--mesure);
+    margin-top: var(--s-6);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--filet);
+  }
+
+  .lieu__titre {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--encre-doux);
+  }
+
+  .lieu__gps {
+    margin-top: var(--s-1);
+  }
+
+  .lieu__coordonnees {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .lieu__lien {
+    display: inline-block;
+    margin-top: var(--s-1);
+    font-weight: 600;
+  }
+
+  .lieu__aide {
+    font-size: var(--fs-xs);
+    font-weight: 400;
+    color: var(--encre-doux);
+  }
+</style>
