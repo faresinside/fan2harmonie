@@ -35,6 +35,8 @@ export const rendezvousSchema = z.object({
   annule: z.boolean().default(false),
 });
 
+export type Rendezvous = z.infer<typeof rendezvousSchema>;
+
 export const actualiteSchema = z.object({
   titre: z.string().max(90),
   date: dateSchema,
