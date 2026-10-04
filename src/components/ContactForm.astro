@@ -35,8 +35,8 @@ const mailto = lienMailto(site.email);
       <div class="formulaire__ligne">
         <div class="champ">
           <label class="champ__libelle" for="contact-nom">Votre nom</label>
-          <input class="champ__saisie" id="contact-nom" name="nom" type="text" autocomplete="name" required />
-          <p class="champ__aide">Indiquez votre nom.</p>
+          <input class="champ__saisie" id="contact-nom" name="nom" type="text" autocomplete="name" aria-describedby="contact-nom-aide" required />
+          <p class="champ__aide" id="contact-nom-aide">Indiquez votre nom.</p>
         </div>
 
         <div class="champ">
@@ -49,17 +49,18 @@ const mailto = lienMailto(site.email);
             autocomplete="email"
             inputmode="email"
             spellcheck="false"
+            aria-describedby="contact-email-aide"
             required
           />
-          <p class="champ__aide">Indiquez une adresse e-mail valide, par exemple nom@exemple.fr.</p>
+          <p class="champ__aide" id="contact-email-aide">Indiquez une adresse e-mail valide, par exemple nom@exemple.fr.</p>
         </div>
       </div>
 
       <div class="champ">
         <label class="champ__libelle" for="contact-message">Votre message</label>
-        <textarea class="champ__saisie champ__saisie--message" id="contact-message" name="message" rows="6" required
+        <textarea class="champ__saisie champ__saisie--message" id="contact-message" name="message" rows="6" aria-describedby="contact-message-aide" required
         ></textarea>
-        <p class="champ__aide">Écrivez votre message.</p>
+        <p class="champ__aide" id="contact-message-aide">Écrivez votre message.</p>
       </div>
 
       <!-- Champ piège : invisible et inatteignable pour une personne, rempli par les robots. -->
@@ -69,14 +70,22 @@ const mailto = lienMailto(site.email);
       </div>
 
       <div class="champ champ--case">
-        <input class="champ__case" id="contact-consentement" name="consentement" type="checkbox" value="oui" required />
+        <input
+          class="champ__case"
+          id="contact-consentement"
+          name="consentement"
+          type="checkbox"
+          value="oui"
+          aria-describedby="contact-consentement-aide contact-consentement-precision"
+          required
+        />
         <label class="champ__libelle-case" for="contact-consentement">
           J’accepte que mon nom, mon adresse e-mail et mon message soient utilisés uniquement pour répondre à ma
           demande.
         </label>
-        <p class="champ__aide">Cochez cette case pour pouvoir envoyer votre message.</p>
-        <p class="champ__precision">
-          Ces informations ne sont pas conservées au-delà. En savoir plus :
+        <p class="champ__aide" id="contact-consentement-aide">Cochez cette case pour pouvoir envoyer votre message.</p>
+        <p class="champ__precision" id="contact-consentement-precision">
+          Ces informations ne sont conservées que le temps de répondre à ma demande. En savoir plus :
           <a href="/mentions-legales#donnees-personnelles">données personnelles</a>.
         </p>
       </div>
@@ -86,8 +95,8 @@ const mailto = lienMailto(site.email);
           <span data-libelle>Envoyer mon message</span>
         </button>
         <!-- Zones annoncées par les lecteurs d'écran : présentes dès le chargement, vides jusqu'à l'envoi. -->
-        <p class="formulaire__retour formulaire__retour--succes" role="status" aria-live="polite" data-succes></p>
-        <div class="formulaire__retour formulaire__retour--erreur" role="alert" data-erreur></div>
+        <p class="formulaire__retour formulaire__retour--succes" role="status" aria-live="polite" tabindex="-1" data-succes></p>
+        <div class="formulaire__retour formulaire__retour--erreur" role="alert" tabindex="-1" data-erreur></div>
       </div>
 
       <!--
@@ -191,6 +200,7 @@ const mailto = lienMailto(site.email);
   }
 
   .champ {
+    position: relative;
     display: grid;
     align-content: start;
     gap: 0.375rem;
@@ -236,14 +246,29 @@ const mailto = lienMailto(site.email);
     box-shadow: 0 0 0 4px var(--rose-doux);
   }
 
-  /* Saisie invalide (après interaction seulement) : contour rose foncé et indication écrite. */
-  .champ__saisie:user-invalid {
+  /*
+   * Saisie invalide (après interaction seulement) : contour rose foncé et indication écrite.
+   * Sans JavaScript : `:user-invalid`. Avec : le script pose aria-invalid="true" (annoncé par les lecteurs d'écran)
+   * et marque le formulaire [data-validation] ; seul aria-invalid compte alors (pas de décalage pendant un clic).
+   */
+  .formulaire:not([data-validation]) .champ__saisie:user-invalid,
+  .champ__saisie[aria-invalid='true'] {
     border-color: var(--rose-fonce);
     box-shadow: inset 0 0 0 1px var(--rose-fonce);
   }
 
+  /*
+   * Indication reliée au champ par aria-describedby : toujours dans l'arbre d'accessibilité (jamais display:none),
+   * visuellement masquée tant que le champ n'est pas en erreur.
+   */
   .champ__aide {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
     font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--rose-fonce);
@@ -260,8 +285,15 @@ const mailto = lienMailto(site.email);
     vertical-align: 0.1em;
   }
 
-  .champ:has(:user-invalid) .champ__aide {
-    display: block;
+  .formulaire:not([data-validation]) .champ:has(:user-invalid) .champ__aide,
+  .champ:has([aria-invalid='true']) .champ__aide {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
   }
 
   /* ---------- Consentement ---------- */
@@ -281,7 +313,8 @@ const mailto = lienMailto(site.email);
     cursor: pointer;
   }
 
-  .champ__case:user-invalid {
+  .formulaire:not([data-validation]) .champ__case:user-invalid,
+  .champ__case[aria-invalid='true'] {
     outline: 2px solid var(--rose-fonce);
     outline-offset: 2px;
   }
@@ -324,6 +357,11 @@ const mailto = lienMailto(site.email);
     cursor: progress;
     background-color: var(--rose-fonce);
     box-shadow: none;
+  }
+
+  /* Les messages reçoivent le focus après l'envoi : anneau un peu écarté de leur bordure. */
+  .formulaire__retour:focus-visible {
+    outline-offset: 4px;
   }
 
   .formulaire__retour:not(:empty) {

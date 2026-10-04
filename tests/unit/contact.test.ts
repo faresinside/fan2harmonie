@@ -45,6 +45,47 @@ describe('envoyerFormulaire', () => {
     expect(await envoyerFormulaire('/x', donnees(), async () => new Response('{}', { status }))).toBe('erreur');
   });
 
+  const json = (corps: string) =>
+    async () => new Response(corps, { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+
+  it('200 + JSON { ok: true } : succès', async () => {
+    expect(await envoyerFormulaire('/x', donnees(), json('{"ok":true}'))).toBe('succes');
+  });
+
+  it('200 + JSON { ok: false, errors: […] } : erreur', async () => {
+    const corps = '{"ok":false,"errors":[{"message":"x"}]}';
+    expect(await envoyerFormulaire('/x', donnees(), json(corps))).toBe('erreur');
+  });
+
+  it('200 + JSON { ok: false } : erreur', async () => {
+    expect(await envoyerFormulaire('/x', donnees(), json('{"ok":false}'))).toBe('erreur');
+  });
+
+  it.each(['{"errors":[{"message":"x"}]}', '{"errors":{"email":"invalide"}}'])(
+    '200 + JSON avec erreurs non vides (%s) : erreur',
+    async (corps) => {
+      expect(await envoyerFormulaire('/x', donnees(), json(corps))).toBe('erreur');
+    },
+  );
+
+  it('200 + JSON avec liste d’erreurs vide : succès', async () => {
+    expect(await envoyerFormulaire('/x', donnees(), json('{"ok":true,"errors":[]}'))).toBe('succes');
+  });
+
+  it('200 + JSON mal formé (en-tête JSON) : erreur', async () => {
+    expect(await envoyerFormulaire('/x', donnees(), json('{ok: tru'))).toBe('erreur');
+  });
+
+  it('200 + corps vide, en-tête JSON : erreur', async () => {
+    expect(await envoyerFormulaire('/x', donnees(), json(''))).toBe('erreur');
+  });
+
+  it('200 + corps non JSON ou vide (sans en-tête JSON) : succès', async () => {
+    const html = async () => new Response('<p>Merci</p>', { status: 200, headers: { 'Content-Type': 'text/html' } });
+    expect(await envoyerFormulaire('/x', donnees(), html)).toBe('succes');
+    expect(await envoyerFormulaire('/x', donnees(), async () => new Response(null, { status: 200 }))).toBe('succes');
+  });
+
   it('erreur réseau (requête rejetée) : erreur, jamais d’exception', async () => {
     const envoi = async () => {
       throw new TypeError('Failed to fetch');

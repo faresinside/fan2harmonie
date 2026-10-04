@@ -21,6 +21,50 @@ function brancher(formulaire: HTMLFormElement) {
 
   const texteBouton = libelle.textContent ?? '';
 
+  /*
+   * État invalide exposé aux lecteurs d'écran (aria-invalid) : posé quand le navigateur refuse un champ
+   * (envoi bloqué) ou quand on quitte un champ mal rempli ; retiré dès que la saisie devient valide.
+   * L'indication écrite est reliée au champ par aria-describedby dans le HTML.
+   */
+  const marquer = (champ: EventTarget | null, invalide: boolean) => {
+    if (!(champ instanceof HTMLInputElement || champ instanceof HTMLTextAreaElement)) return;
+    if (!champ.hasAttribute('aria-describedby')) return;
+    if (invalide) champ.setAttribute('aria-invalid', 'true');
+    else champ.removeAttribute('aria-invalid');
+  };
+  formulaire.addEventListener('invalid', (e) => marquer(e.target, true), true);
+
+  /*
+   * Clic sur « Envoyer » depuis un champ mal rempli : le champ perd le focus pendant le clic. Afficher son
+   * indication à ce moment décalerait le bouton sous le pointeur et le clic serait perdu. Pendant un appui
+   * sur le bouton, on laisse donc la validation de l'envoi marquer les champs (événements « invalid »).
+   */
+  let appuiSurBouton = false;
+  bouton.addEventListener('pointerdown', () => (appuiSurBouton = true));
+  const finAppui = () => (appuiSurBouton = false);
+  document.addEventListener('pointerup', () => setTimeout(finAppui), true);
+  document.addEventListener('pointercancel', finAppui, true);
+
+  formulaire.addEventListener('focusout', (e) => {
+    const champ = e.target;
+    if (appuiSurBouton) return;
+    if (champ instanceof HTMLInputElement || champ instanceof HTMLTextAreaElement) {
+      // Un champ vide jamais touché n'est pas signalé en quittant (comme :user-invalid).
+      if (!champ.validity.valid && (champ.value !== '' || champ.hasAttribute('aria-invalid'))) marquer(champ, true);
+    }
+  });
+  const reverifier = (e: Event) => {
+    const champ = e.target;
+    if ((champ instanceof HTMLInputElement || champ instanceof HTMLTextAreaElement) && champ.validity.valid) {
+      marquer(champ, false);
+    }
+  };
+  formulaire.addEventListener('input', reverifier);
+  formulaire.addEventListener('change', reverifier);
+
+  // Désormais l'état invalide affiché suit aria-invalid (piloté ici), et non plus :user-invalid (voir le CSS).
+  formulaire.setAttribute('data-validation', '');
+
   formulaire.addEventListener('submit', async (evenement) => {
     evenement.preventDefault();
     if (bouton.disabled) return;
@@ -37,14 +81,17 @@ function brancher(formulaire: HTMLFormElement) {
     libelle.textContent = texteBouton;
     bouton.disabled = false;
 
+    // Le bouton désactivé a perdu le focus : il va au message (tabindex="-1"), lu aussitôt au clavier ou au
+    // lecteur d'écran. En cas d'échec, la saisie reste intacte.
     if (issue === 'succes') {
       formulaire.reset();
+      for (const champ of formulaire.querySelectorAll('[aria-invalid]')) champ.removeAttribute('aria-invalid');
       zoneSucces.replaceChildren(...copie(modeleSucces));
+      zoneSucces.focus();
     } else {
       zoneErreur.replaceChildren(...copie(modeleErreur));
+      zoneErreur.focus();
     }
-    // Le bouton désactivé a perdu le focus : on le lui rend pour ne pas renvoyer l'utilisateur en haut de page.
-    bouton.focus();
   });
 }
 

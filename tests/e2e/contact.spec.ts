@@ -150,6 +150,49 @@ test.describe('validation native', () => {
     expect(page.url()).toBe(adresse);
   });
 
+  test('champ invalide : aria-invalid et indication reliée par aria-describedby', async ({ page }) => {
+    await page.goto('/');
+    await bouton(page).click();
+    const nom = formulaire(page).getByLabel('Votre nom');
+    await expect(nom).toHaveAttribute('aria-invalid', 'true');
+    const ids = ((await nom.getAttribute('aria-describedby')) ?? '').split(/\s+/).filter(Boolean);
+    expect(ids.length).toBeGreaterThan(0);
+    for (const id of ids) {
+      const aide = page.locator(`[id="${id}"]`);
+      await expect(aide).toHaveCount(1);
+      expect((await aide.textContent())?.trim()).toBeTruthy();
+    }
+    await expect(nom).toHaveAccessibleDescription('Indiquez votre nom.');
+    await expect(page.locator(`[id="${ids[0]}"]`)).toBeVisible();
+
+    // Corrigé : l'état invalide disparaît.
+    await nom.fill('Camille');
+    await expect(nom).not.toHaveAttribute('aria-invalid', 'true');
+  });
+
+  test('quitter un champ invalide en cliquant sur « Envoyer » : le clic n’est pas perdu', async ({ page }) => {
+    // Régression : l'indication apparaissait au moment où le champ perdait le focus, décalait le bouton
+    // sous le pointeur, et le clic n'aboutissait pas (aucune validation, aucun envoi).
+    await page.goto('/');
+    const f = formulaire(page);
+    await f.getByLabel('Votre adresse e-mail').fill('camille@');
+    await bouton(page).click();
+    await expect(f.getByLabel('Votre nom')).toBeFocused();
+    for (const champ of [f.getByLabel('Votre nom'), f.getByLabel('Votre adresse e-mail'), f.getByLabel('Votre message')]) {
+      await expect(champ).toHaveAttribute('aria-invalid', 'true');
+    }
+  });
+
+  test('chaque indication est reliée à son champ (aria-describedby)', async ({ page }) => {
+    await page.goto('/');
+    const f = formulaire(page);
+    for (const champ of [f.getByLabel('Votre nom'), f.getByLabel('Votre adresse e-mail'), f.getByLabel('Votre message'), f.getByRole('checkbox')]) {
+      const ids = ((await champ.getAttribute('aria-describedby')) ?? '').split(/\s+/).filter(Boolean);
+      expect(ids.length).toBeGreaterThan(0);
+      for (const id of ids) await expect(page.locator(`[id="${id}"]`)).toHaveCount(1);
+    }
+  });
+
   test('consentement non coché : envoi bloqué', async ({ page }) => {
     await page.goto('/');
     const envois = await intercepter(page, (r) => r.fulfill({ status: 200, json: { ok: true } }));
@@ -190,6 +233,7 @@ test.describe('envoi avec JavaScript', () => {
     const statut = page.locator('#contact').getByRole('status');
     await expect(statut).toHaveText('Merci, votre message est bien parti. Je vous répondrai dès que possible.');
     await expect(statut).toHaveAttribute('aria-live', 'polite');
+    await expect(statut).toBeFocused();
     await expect(bouton(page)).toBeEnabled();
     await expect(formulaire(page).getByLabel('Votre message')).toHaveValue('');
     await expect(formulaire(page).getByLabel('Votre nom')).toHaveValue('');
@@ -206,6 +250,7 @@ test.describe('envoi avec JavaScript', () => {
   for (const [cas, reponse] of [
     ['réponse 500', (r: Route) => r.fulfill({ status: 500, json: { error: 'x' } })],
     ['requête interrompue', (r: Route) => r.abort('failed')],
+    ['réponse 200 signalant un échec', (r: Route) => r.fulfill({ status: 200, json: { ok: false, errors: [{ message: 'x' }] } })],
   ] as const) {
     test(`erreur (${cas}) : message d’erreur avec lien e-mail, message conservé`, async ({ page }) => {
       await page.goto('/');
@@ -217,6 +262,9 @@ test.describe('envoi avec JavaScript', () => {
       await expect(alerte).toContainText('Le message n’a pas pu être envoyé.');
       await expect(alerte).toContainText('Vous pouvez réessayer, ou m’écrire directement à');
       await expect(alerte.getByRole('link', { name: site.email })).toHaveAttribute('href', lienMailto(site.email));
+      await expect(alerte).toBeFocused();
+      await expect(formulaire(page).getByLabel('Votre nom')).toHaveValue('Camille Martin');
+      await expect(formulaire(page).getByRole('checkbox')).toBeChecked();
       await expect(formulaire(page).getByLabel('Votre message')).toHaveValue(
         'Bonjour, la séance de samedi est-elle maintenue ?',
       );
@@ -283,6 +331,34 @@ test.describe('mentions légales', () => {
     await expect(main.getByRole('link', { name: /cnil\.fr/ })).toHaveAttribute('href', 'https://www.cnil.fr');
     await expect(main).toContainText('CNIL');
     await expect(main.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
+  });
+
+  test('données personnelles : transfert hors UE, engagements vérifiables seulement', async ({ page }) => {
+    await page.goto('/mentions-legales');
+    const donnees = page.locator('#donnees-personnelles');
+    await expect(donnees).toContainText('sont des sociétés établies aux États-Unis');
+    await expect(donnees).toContainText('peuvent donc être transférées hors de l’Union européenne');
+    const formspree = donnees.getByRole('link', { name: 'politique de confidentialité de Formspree' });
+    await expect(formspree).toHaveAttribute('href', 'https://formspree.io/legal/privacy-policy');
+    await expect(formspree).toHaveAttribute('rel', /noopener/);
+    const cloudflare = donnees.getByRole('link', { name: 'politique de confidentialité de Cloudflare' });
+    await expect(cloudflare).toHaveAttribute('href', 'https://www.cloudflare.com/privacypolicy/');
+    await expect(cloudflare).toHaveAttribute('rel', /noopener/);
+    await expect(donnees).toContainText(
+      'Vos données sont conservées uniquement le temps nécessaire pour répondre à votre demande, puis supprimées.',
+    );
+    await expect(donnees).toContainText('Ce site ne dépose aucun cookie de mesure d’audience ni de publicité.');
+    const main = page.locator('main');
+    await expect(main).toContainText('Les logos, textes et visuels de ce site sont © 2026 Fan 2 Harmonie, sauf éléments de tiers mentionnés.');
+    for (const affirmation of ['aucune conservation', 'ne dépose aucun cookie et', 'licence libre', 'clauses contractuelles']) {
+      await expect(main, affirmation).not.toContainText(affirmation);
+    }
+  });
+
+  test('formulaire : mention de conservation vérifiable', async ({ page }) => {
+    await page.goto('/');
+    await expect(formulaire(page)).toContainText('Ces informations ne sont conservées que le temps de répondre à ma demande.');
+    await expect(formulaire(page)).not.toContainText('pas conservées au-delà');
   });
 
   test('section « Données personnelles » ciblée depuis le formulaire', async ({ page }) => {

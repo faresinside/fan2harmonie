@@ -1,7 +1,8 @@
 /**
  * Formulaire de contact : fonctions pures, sans dépendance au DOM (testées dans tests/unit/contact.test.ts).
  * Le service de réception (Formspree) répond en JSON quand on le lui demande (en-tête Accept) :
- * 2xx = message reçu ; tout le reste (4xx, 5xx, réseau coupé, délai dépassé) = échec.
+ * 2xx sans échec signalé dans le corps JSON = message reçu ; tout le reste (4xx, 5xx, 2xx avec `ok: false` ou
+ * `errors`, JSON illisible, réseau coupé, délai dépassé) = échec.
  */
 
 /** Sujet de l'e-mail reçu par Stéphanie (champ caché « _subject ») et des liens mailto de secours. */
@@ -33,8 +34,21 @@ export async function envoyerFormulaire(
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(delaiMs),
     });
-    return reponse.ok ? 'succes' : 'erreur';
+    if (!reponse.ok) return 'erreur';
+    // Corps non JSON (page HTML, corps vide sans en-tête JSON) : le statut 2xx fait foi.
+    if (!(reponse.headers.get('content-type') ?? '').includes('json')) return 'succes';
+    // Corps annoncé JSON : il doit se lire et ne signaler aucun échec (JSON illisible = échec).
+    return echecSignale(await reponse.json()) ? 'erreur' : 'succes';
   } catch {
     return 'erreur';
   }
+}
+
+/** Vrai si la réponse JSON du service signale un échec : `ok: false` ou une liste/un objet `errors` non vide. */
+function echecSignale(corps: unknown): boolean {
+  if (typeof corps !== 'object' || corps === null) return false;
+  const { ok, errors } = corps as { ok?: unknown; errors?: unknown };
+  if (ok === false) return true;
+  if (Array.isArray(errors)) return errors.length > 0;
+  return typeof errors === 'object' && errors !== null && Object.keys(errors).length > 0;
 }
