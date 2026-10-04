@@ -1,0 +1,39 @@
+---
+/**
+ * Enveloppe commune des icônes dessinées au trait (viewBox 48, trait 1,5, extrémités arrondies).
+ * Sans `titre` : décorative (aria-hidden). Avec `titre` : role="img" + <title> relié par un id unique.
+ */
+import { idUnique } from '../lib/ids';
+
+export interface IconeProps {
+  titre?: string | undefined;
+  class?: string | undefined;
+}
+
+interface Props extends IconeProps {
+  nom: string;
+}
+
+const { nom, titre, class: classe } = Astro.props;
+const idTitre = titre ? idUnique(`icone-${nom}`) : undefined;
+---
+
+<svg
+  class:list={['icone', `icone--${nom}`, classe]}
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 48 48"
+  width="48"
+  height="48"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  focusable="false"
+  role={titre ? 'img' : undefined}
+  aria-labelledby={idTitre}
+  aria-hidden={titre ? undefined : 'true'}
+>
+  {titre && <title id={idTitre}>{titre}</title>}
+  <slot />
+</svg>

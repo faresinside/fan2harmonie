@@ -1,0 +1,86 @@
+/*
+ * Jetons du système de design Fan 2 Harmonie.
+ * Les couleurs sont lues par tests/unit/contrast.test.ts : garder la forme « --nom: #hex; ».
+ * Le doré est décoratif uniquement (filets, ornements) : jamais pour du texte.
+ */
+:root {
+  /* Couleurs de la charte */
+  --foret: #2c4a2e;
+  --foret-profond: #1d3220;
+  --foret-doux: #6f8a68; /* décoratif (traits, ornements) : contraste insuffisant pour du texte */
+  --dore: #c9a24a;
+  --dore-pale: #e6d4a5; /* décoratif */
+  --rose: #b4506a;
+  --rose-fonce: #973e56;
+  --rose-doux: #f1d9dc;
+  --creme: #faf5e8;
+  --creme-fonce: #f2e9d6;
+  --encre: #26331f;
+  --encre-doux: #4b5844;
+  --blanc: #ffffff;
+
+  /* Rôles */
+  --fond: var(--creme);
+  --texte: var(--encre);
+  --texte-doux: var(--encre-doux);
+  --lien: var(--foret);
+  --filet: color-mix(in srgb, var(--dore) 55%, transparent);
+  --focus: var(--rose-fonce);
+
+  /* Polices */
+  --police-script: 'Allura', 'Segoe Script', cursive;
+  --police-titre: 'Cormorant Variable', 'Cormorant Garamond', 'Garamond', 'Times New Roman', serif;
+  --police-texte: 'Source Sans 3 Variable', 'Source Sans Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Échelle typographique fluide (360 px → 1280 px) */
+  --fs-xs: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --fs-sm: clamp(0.9375rem, 0.91rem + 0.12vw, 1rem);
+  --fs-base: clamp(1.0625rem, 1.03rem + 0.14vw, 1.125rem);
+  --fs-lg: clamp(1.1875rem, 1.11rem + 0.34vw, 1.375rem);
+  --fs-h3: clamp(1.4375rem, 1.27rem + 0.74vw, 1.875rem);
+  --fs-h2: clamp(1.875rem, 1.53rem + 1.52vw, 2.75rem);
+  --fs-h1: clamp(2.5rem, 1.94rem + 2.5vw, 4rem);
+  --fs-script: clamp(2.5rem, 1.82rem + 3vw, 4.25rem);
+
+  --lh-texte: 1.65;
+  --lh-titre: 1.1;
+  --mesure: 65ch;
+
+  /* Espacements : grille de 8 px */
+  --s-1: 0.5rem;
+  --s-2: 1rem;
+  --s-3: 1.5rem;
+  --s-4: 2rem;
+  --s-5: 2.5rem;
+  --s-6: 3rem;
+  --s-7: 3.5rem;
+  --s-8: 4rem;
+  --s-9: 4.5rem;
+  --s-10: 5rem;
+  --s-11: 5.5rem;
+  --s-12: 6rem;
+  --s-section: clamp(var(--s-8), 4rem + 4vw, var(--s-12));
+
+  /* Mise en page */
+  --largeur-max: 72rem;
+  --gouttiere: clamp(1rem, 0.4rem + 2.7vw, 2.5rem);
+
+  /* Formes */
+  --r-1: 4px;
+  --r-2: 10px;
+  --r-3: 20px;
+  --r-pilule: 999px;
+  --trait: 1.5px;
+
+  /* Ombres chaudes et diffuses (teinte encre, jamais noir pur) */
+  --ombre-douce: 0 1px 2px rgb(38 51 31 / 0.05), 0 10px 30px -18px rgb(38 51 31 / 0.22);
+  --ombre-levee: 0 2px 4px rgb(38 51 31 / 0.06), 0 22px 48px -24px rgb(38 51 31 / 0.3);
+
+  /* Mouvement : lent, respiré */
+  --ease-souffle: cubic-bezier(0.45, 0.05, 0.25, 1);
+  --ease-sortie: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duree-rapide: 180ms;
+  --duree: 420ms;
+  --duree-lente: 900ms;
+  --duree-respiration: 6s;
+}

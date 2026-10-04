@@ -1,0 +1,84 @@
+---
+/**
+ * Mise en page de base : métadonnées SEO, Open Graph, JSON-LD LocalBusiness, polices, styles globaux.
+ * Chaque page fournit son propre <main id="contenu"> (cible du lien d'évitement).
+ */
+import '../styles/fonts.css';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import { getImage } from 'astro:assets';
+import { site } from '../config/site';
+import favicon from '../assets/logo/favicon.png';
+import hero from '../assets/photos/hero.jpg';
+import cormorantLatin from '@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2?url';
+import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
+
+interface Props {
+  titre: string;
+  description: string;
+}
+
+const { titre, description } = Astro.props;
+
+const absolue = (chemin: string) => new URL(chemin, site.url).href;
+const canonique = absolue(Astro.url.pathname);
+
+const [icone32, icone180, imageOg] = await Promise.all([
+  getImage({ src: favicon, width: 32, height: 32, format: 'png' }),
+  getImage({ src: favicon, width: 180, height: 180, format: 'png' }),
+  getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 }),
+]);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: site.nom,
+  description,
+  url: absolue('/'),
+  image: absolue(imageOg.src),
+  priceRange: 'Gratuit',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Rambouillet',
+    postalCode: '78120',
+    addressCountry: 'FR',
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: site.gps.lat, longitude: site.gps.lon },
+  areaServed: { '@type': 'City', name: 'Rambouillet' },
+};
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titre}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonique} />
+    <meta name="theme-color" content="#faf5e8" />
+
+    <link rel="preload" href={cormorantLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={sourceSansLatin} as="font" type="font/woff2" crossorigin />
+
+    <link rel="icon" href={icone32.src} type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href={icone180.src} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.nom} />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content={titre} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonique} />
+    <meta property="og:image" content={absolue(imageOg.src)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <slot />
+  </body>
+</html>
