@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const ANCRES = ['accueil', 'rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'];
 
@@ -119,14 +119,42 @@ test.describe('menu mobile (390 px)', () => {
   });
 });
 
-test.describe('sans JavaScript (390 px)', () => {
-  test.use({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
+/** Tous les liens de la navigation sont visibles et mènent à une ancre existante ; aucun bouton de menu inutile. */
+async function navigationUtilisable(page: Page) {
+  const liens = page.locator('header nav a[href^="#"]');
+  expect(await liens.count()).toBeGreaterThanOrEqual(6);
+  for (const lien of await liens.all()) {
+    await expect(lien).toBeVisible();
+    const href = (await lien.getAttribute('href')) ?? '';
+    await expect(page.locator(`[id="${href.slice(1)}"]`), href).toHaveCount(1);
+  }
+  await expect(page.locator('button[aria-controls]')).toBeHidden();
+}
 
-  test('les liens de navigation restent visibles', async ({ page }) => {
+for (const largeur of [390, 1280]) {
+  test.describe(`sans JavaScript (${largeur} px)`, () => {
+    test.use({ javaScriptEnabled: false, viewport: { width: largeur, height: 844 } });
+
+    test('la navigation reste visible et utilisable', async ({ page }) => {
+      await page.goto('/');
+      await navigationUtilisable(page);
+    });
+  });
+}
+
+test.describe('script du menu en échec (390 px)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('la navigation reste visible si le script ne se charge pas', async ({ page }) => {
+    // Script externe : requête annulée. Script en ligne (classique ou module) : retiré de la réponse HTML.
+    await page.route('**/*.js', (route) => route.abort());
+    await page.route('**/', async (route) => {
+      const reponse = await route.fetch();
+      const html = (await reponse.text()).replace(/<script(?![^>]*ld\+json)[^>]*>[\s\S]*?<\/script>/g, '');
+      await route.fulfill({ response: reponse, body: html });
+    });
     await page.goto('/');
-    for (const id of ['rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact']) {
-      await expect(page.locator(`header nav a[href="#${id}"]`)).toBeVisible();
-    }
+    await navigationUtilisable(page);
   });
 });
 
