@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check": "astro check"
+    "check": "astro check",
+    "assets": "node scripts/prepare-assets.mjs"
   },
   "dependencies": {
     "@astrojs/check": "0.9.10",
