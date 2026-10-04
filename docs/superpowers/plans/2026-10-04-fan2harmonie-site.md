@@ -23,6 +23,7 @@
 - Lighthouse ≥ 95 (performance, accessibilité, bonnes pratiques, SEO) ; zéro violation axe ; aucun défilement horizontal dès 360 px de large.
 - Aucun traceur ; carte en simple lien ; formulaire avec champ piège anti-spam et mention RGPD ; aucun secret dans le dépôt.
 - Aucune valeur de substitution (`À_COMPLÉTER`) ne peut subsister au déploiement (Task 11).
+- **Docker uniquement** : rien n'est installé sur le PC de l'utilisatrice (ni Node, ni paquets npm, ni navigateurs Playwright). Toute commande `npm …`, `npx …`, `node …` du plan s'exécute via `docker compose run --rm app <commande>`. `node_modules` vit dans un volume Docker nommé, pas dans le dossier du projet. Image de base : `mcr.microsoft.com/playwright` (Node + navigateurs inclus), version épinglée alignée sur `@playwright/test`. Seul `git` tourne sur l'hôte.
 
 ## Review Focus
 
@@ -61,11 +62,12 @@ docs/GUIDE-STEPHANIE.md
 ### Task 1: Socle du projet et outillage
 
 **Files:**
-- Create: `package.json`, `astro.config.mjs`, `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, `.gitignore`, `src/pages/index.astro` (page minimale)
+- Create: `Dockerfile`, `docker-compose.yml`, `.dockerignore`, `package.json`, `astro.config.mjs`, `tsconfig.json`, `vitest.config.ts`, `playwright.config.ts`, `.gitignore`, `src/pages/index.astro` (page minimale)
 - Test: `tests/e2e/smoke.spec.ts`
 
 **Interfaces:**
 - Produces: scripts npm `dev`, `build`, `preview`, `test` (Vitest), `test:e2e` (Playwright sur `astro preview`, port 4321), `check` (`astro check`).
+- Produces: service Docker Compose `app` (image `mcr.microsoft.com/playwright`, dossier du projet monté, `node_modules` dans le volume nommé `fan2harmonie_node_modules`, ports 4321 et 4322 publiés). Usage : `docker compose run --rm app npm run test`, `docker compose up` pour le serveur de développement.
 
 - [ ] **Step 1:** `git init` dans `D:\Projet\qigong`, créer `.gitignore` (`node_modules`, `dist`, `.astro`, `.env`), déplacer les 5 JPEG et `texteSite.odt` dans `source/` (originaux conservés). Le dossier `maquette/` est supprimé une fois le rendu final accepté par Stéphanie.
 - [ ] **Step 2:** Initialiser Astro 5 (gabarit « minimal », TypeScript « strictest »), installer `vitest`, `@playwright/test`, `@axe-core/playwright`, `sharp`, `@astrojs/sitemap`. `output: 'static'`.
