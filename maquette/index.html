@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAQUETTE — Fan 2 Harmonie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --vert:#3f5a2a; --vert-clair:#8aa56a; --dore:#e0b84a; --rose:#d97a86; --creme:#fbf5e3; --texte:#2d3a22;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:Lato,sans-serif;color:var(--texte);background:var(--creme);line-height:1.7}
+  .logo-img{mix-blend-mode:multiply} /* le fond blanc devient transparent */
+
+  .bandeau{background:#222;color:#fff;font-size:.8rem;text-align:center;padding:.4rem}
+
+  header{position:sticky;top:0;z-index:10;background:rgba(251,245,227,.92);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:space-between;padding:.5rem 1.5rem;border-bottom:1px solid #e8dfc2}
+  header img{height:56px}
+  nav a{color:var(--vert);text-decoration:none;margin-left:1.4rem;font-weight:700;font-size:.95rem}
+  nav a:hover{color:var(--rose)}
+  @media(max-width:700px){nav{display:none}}
+
+  .hero{position:relative;text-align:center;padding:4rem 1.5rem 5rem;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,236,150,.85), transparent 45%),
+      radial-gradient(circle at 85% 30%, rgba(255,255,255,.7), transparent 40%),
+      linear-gradient(180deg,#c9d9a8 0%,#e9efcf 55%,var(--creme) 100%);}
+  .hero img.logo-img{width:220px;max-width:55%}
+  .hero h1{font-family:Caveat,cursive;font-size:clamp(2.2rem,6vw,3.6rem);color:var(--vert);font-weight:700;margin-top:.5rem}
+  .hero .grand{font-family:Caveat,cursive;font-size:clamp(4rem,14vw,8rem);color:var(--vert);line-height:1;font-weight:700}
+  .hero .sous{letter-spacing:.2em;text-transform:uppercase;font-size:.95rem;margin-top:.3rem}
+  .trait{width:200px;height:4px;background:var(--dore);margin:.8rem auto;border-radius:3px}
+  .hero .devise{font-family:Caveat,cursive;font-size:1.7rem;margin:1rem 0 1.6rem}
+  .btn{display:inline-block;background:var(--rose);color:#fff;text-decoration:none;font-family:Caveat,cursive;
+    font-size:1.8rem;padding:.4rem 2rem;border-radius:4px 14px 4px 14px;box-shadow:0 4px 14px rgba(217,122,134,.4)}
+  .btn:hover{filter:brightness(1.05)}
+
+  .pastilles{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-top:2.5rem}
+  .pastille{width:130px;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}
+  .pastille i{width:78px;height:78px;border-radius:50%;margin:0 auto .5rem;
+    display:flex;align-items:center;justify-content:center;font-size:2rem;font-style:normal;color:#fff}
+
+  section{padding:4rem 1.5rem}
+  .contenu{max-width:820px;margin:0 auto}
+  h2{font-family:Caveat,cursive;color:var(--vert);font-size:2.8rem;text-align:center;margin-bottom:.3rem}
+  h2::after{content:"";display:block;width:90px;height:4px;background:var(--dore);margin:.4rem auto 1.8rem;border-radius:3px}
+  p+p{margin-top:1rem}
+  ul.programme{list-style:none;text-align:center;margin:1.2rem 0}
+  ul.programme li{display:inline-block;margin:.3rem .5rem;padding:.3rem 1rem;background:#fff;border-radius:20px;border:1px solid var(--vert-clair)}
+  .alt{background:#fff}
+
+  .rdv-liste{display:grid;gap:1rem;max-width:620px;margin:0 auto}
+  .rdv{display:flex;gap:1.2rem;align-items:center;background:var(--creme);border-left:6px solid var(--dore);
+    padding:1rem 1.4rem;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .rdv .date{font-family:Caveat,cursive;font-size:2rem;color:var(--vert);line-height:1;text-align:center;min-width:90px}
+  .rdv .date small{display:block;font-size:1.1rem;color:var(--rose)}
+  .rdv .note{font-size:.85rem;color:#6b7a5a}
+  .exemple{font-size:.75rem;color:#999;text-align:center;margin-top:.8rem}
+
+  .carte{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-top:1.6rem}
+  .carte a{color:var(--vert);font-weight:700}
+
+  form{max-width:520px;margin:0 auto;display:grid;gap:.8rem}
+  input,textarea{font:inherit;padding:.7rem;border:1px solid #cfd6bd;border-radius:8px;background:#fff}
+  textarea{min-height:120px}
+  button{font:inherit;cursor:pointer;border:0;background:var(--vert);color:#fff;padding:.8rem;border-radius:8px;font-weight:700}
+
+  footer{background:var(--vert);color:#e9efcf;text-align:center;padding:2rem 1rem;font-size:.85rem}
+  footer img{height:110px;filter:invert(1);mix-blend-mode:screen;opacity:.85}
+  footer a{color:var(--dore)}
+</style>
+</head>
+<body>
+
+<div class="bandeau">MAQUETTE JETABLE — pour valider l'ambiance. Le vrai site aura la photo de forêt en fond et les rendez-vous modifiables depuis l'espace d'administration.</div>
+
+<header>
+  <img class="logo-img" src="../Logo_FondBlanc3.jpeg" alt="Fan 2 Harmonie">
+  <nav>
+    <a href="#accueil">Accueil</a>
+    <a href="#pratique">La pratique</a>
+    <a href="#qigong">Le Qi Gong</a>
+    <a href="#qui">Qui est Fan 2 Harmonie</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+<section class="hero" id="accueil">
+  <img class="logo-img" src="../Logo_FondBlanc3.jpeg" alt="Logo Fan 2 Harmonie">
+  <h1>1 heure pour vous…</h1>
+  <div class="grand">Qi Gong</div>
+  <div class="sous">Animation découverte</div>
+  <div class="trait"></div>
+  <p class="devise">Respirez, Bougez, Équilibrez-vous ♡</p>
+  <a class="btn" href="#rdv">Venez essayer !</a>
+
+  <div class="pastilles">
+    <div class="pastille"><i style="background:var(--vert-clair)">〰</i>Faire circuler l'énergie</div>
+    <div class="pastille"><i style="background:var(--dore)">✿</i>Calmer l'esprit</div>
+    <div class="pastille"><i style="background:var(--rose)">☺</i>Travailler les muscles profonds</div>
+    <div class="pastille"><i style="background:var(--vert-clair)">☯</i>Souplesse</div>
+  </div>
+</section>
+
+<section id="rdv" class="alt">
+  <div class="contenu">
+    <h2>Prochains rendez-vous</h2>
+    <div class="rdv-liste">
+      <div class="rdv">
+        <div class="date"><small>Samedi</small>10 oct.</div>
+        <div>16h00 — Parc de Rambouillet<div class="note">J'espère que le temps le permettra.</div></div>
+      </div>
+      <div class="rdv">
+        <div class="date"><small>Dimanche</small>18 oct.</div>
+        <div>16h00 — Parc de Rambouillet<div class="note">Annulé en cas de pluie.</div></div>
+      </div>
+    </div>
+    <p class="exemple">Dates d'exemple — elles seront gérées par Stéphanie depuis son espace d'administration.</p>
+  </div>
+</section>
+
+<section id="pratique">
+  <div class="contenu">
+    <h2>La pratique</h2>
+    <p>Envie de prendre du temps pour vous, de vous détendre, de faire union entre votre corps et son environnement, de respirer profondément et de retrouver votre énergie intérieure ?</p>
+    <p>Je vous invite à un moment de bien-être et d'harmonie à travers la pratique du Qi Gong, au cœur de la nature à Rambouillet.</p>
+    <ul class="programme">
+      <li>Mouvements doux</li><li>Respiration consciente</li><li>Relaxation</li>
+    </ul>
+    <p><strong>Gratuit et accessible à tous</strong>, à tout âge et à tous niveaux. Rendez-vous les samedis ou dimanches à 16h00, dans le parc de Rambouillet, en allant à la bergerie.</p>
+    <p>Stationnement au parking de la rue de la Ferme. Le lieu se trouve juste à gauche, indiqué par le fanion « Fan 2 Harmonie ». Des vêtements souples sont conseillés.</p>
+    <div class="carte">
+      <a href="https://www.openstreetmap.org/?mlat=48.64703&mlon=1.811268#map=17/48.64703/1.811268" target="_blank" rel="noopener">📍 Voir sur la carte</a>
+      <span>GPS : 48,64703°N, 1,811268°E</span>
+    </div>
+  </div>
+</section>
+
+<section id="qigong" class="alt">
+  <div class="contenu">
+    <h2>Le Qi Gong</h2>
+    <p>Le Qi Gong est une pratique ancestrale chinoise, à la fois art martial, médecine traditionnelle et courant philosophique du taoïsme, pour lequel le corps humain est indissociable de la nature et de l'univers.</p>
+    <p>Il allie le corps (la matière), l'énergie (les souffles) et la conscience (l'esprit). Il invite à vivre au présent et à porter son attention sur le corps, pour agir en pleine conscience.</p>
+  </div>
+</section>
+
+<section id="qui">
+  <div class="contenu">
+    <h2>Qui est Fan 2 Harmonie</h2>
+    <p style="font-family:Caveat,cursive;font-size:1.8rem;text-align:center;color:var(--rose)">De l'énergie à l'équilibre</p>
+    <p>Pendant plus de 30 ans, j'ai mené une vie très active, entre mon travail, ma famille et de nombreuses activités. Puis j'ai ressenti le besoin de ralentir, et j'ai découvert le Qi Gong.</p>
+    <p>J'ai compris que ralentir ne signifie pas renoncer à son énergie, mais apprendre à mieux la canaliser. Aujourd'hui, j'ai à cœur de partager cette expérience, de manière simple, accessible et bienveillante.</p>
+  </div>
+</section>
+
+<section id="contact" class="alt">
+  <div class="contenu">
+    <h2>Contactez-moi</h2>
+    <form onsubmit="return false">
+      <input type="text" placeholder="Votre nom">
+      <input type="email" placeholder="Votre e-mail">
+      <textarea placeholder="Votre message"></textarea>
+      <button>Envoyer</button>
+    </form>
+  </div>
+</section>
+</main>
+
+<footer>
+  <img src="../LogoLong.jpeg" alt="">
+  <p>© 2026 Fan 2 Harmonie · <a href="#">Mentions légales</a></p>
+</footer>
+
+</body>
+</html>
