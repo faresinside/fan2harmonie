@@ -1,6 +1,6 @@
 ---
 /**
- * Enveloppe commune des icônes dessinées au trait (viewBox 48, trait 1,5, extrémités arrondies).
+ * Enveloppe commune des icônes dessinées au trait (viewBox 48, trait 1,2 proche du délié du logo, extrémités arrondies).
  * Sans `titre` : décorative (aria-hidden). Avec `titre` : role="img" + <title> relié par un id unique.
  */
 import { idUnique } from '../lib/ids';
@@ -26,7 +26,7 @@ const idTitre = titre ? idUnique(`icone-${nom}`) : undefined;
   height="48"
   fill="none"
   stroke="currentColor"
-  stroke-width="1.5"
+  stroke-width="1.2"
   stroke-linecap="round"
   stroke-linejoin="round"
   focusable="false"

@@ -141,7 +141,11 @@ a:hover {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
-  border-radius: var(--r-1);
+}
+
+/* Sections sur fond sombre (vert forêt) : anneau clair. */
+.sur-fonce :focus-visible {
+  outline-color: var(--focus-sur-fonce);
 }
 
 /* ---------- Utilitaires ---------- */

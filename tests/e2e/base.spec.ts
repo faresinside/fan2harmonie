@@ -46,6 +46,14 @@ test.describe('mise en page de base', () => {
     expect(await og('locale')).toBe('fr_FR');
     expect(await og('url')).toMatch(/^https?:\/\//);
     expect(await og('image')).toMatch(/^https?:\/\//);
+    expect((await og('image:alt'))?.trim()).toBeTruthy();
+  });
+
+  test('JSON-LD : aucun « < » brut (ne peut pas fermer la balise script)', async ({ page }) => {
+    const html = await (await page.request.get('/')).text();
+    const bloc = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(html)?.[1] ?? '';
+    expect(bloc.length).toBeGreaterThan(0);
+    expect(bloc).not.toContain('<');
   });
 
   test("lien d'évitement vers #contenu, cible présente", async ({ page }) => {

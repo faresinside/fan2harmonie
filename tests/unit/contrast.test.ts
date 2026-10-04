@@ -60,10 +60,23 @@ describe('jetons de la charte (lus dans tokens.css)', () => {
     ['encre-doux', 'creme'],
     ['encre', 'creme-fonce'],
     ['blanc', 'rose-fonce'],
+    ['rose', 'creme'],
   ];
   for (const [texte, fond] of paires) {
     it(`texte ${texte} sur fond ${fond} ≥ 4,5:1`, () => {
       expect(contrastRatio(jeton(texte), jeton(fond))).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+
+  // Anneau de focus (élément non textuel, WCAG 1.4.11) : ≥ 3:1 contre le fond.
+  const anneaux: Array<[anneau: string, fond: string]> = [
+    ['rose-fonce', 'creme'],
+    ['focus-sur-fonce', 'foret'],
+    ['focus-sur-fonce', 'foret-profond'],
+  ];
+  for (const [anneau, fond] of anneaux) {
+    it(`anneau de focus ${anneau} sur ${fond} ≥ 3:1`, () => {
+      expect(contrastRatio(jeton(anneau), jeton(fond))).toBeGreaterThanOrEqual(3);
     });
   }
 });

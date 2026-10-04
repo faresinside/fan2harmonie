@@ -10,7 +10,7 @@
   --foret-doux: #6f8a68; /* décoratif (traits, ornements) : contraste insuffisant pour du texte */
   --dore: #c9a24a;
   --dore-pale: #e6d4a5; /* décoratif */
-  --rose: #b4506a;
+  --rose: #ae4c66; /* charte #b4506a assombri : 4,49:1 sur crème, insuffisant pour l'accent écrit */
   --rose-fonce: #973e56;
   --rose-doux: #f1d9dc;
   --creme: #faf5e8;
@@ -26,6 +26,7 @@
   --lien: var(--foret);
   --filet: color-mix(in srgb, var(--dore) 55%, transparent);
   --focus: var(--rose-fonce);
+  --focus-sur-fonce: #f4e6c4; /* anneau de focus clair sur fonds vert forêt */
 
   /* Polices */
   --police-script: 'Allura', 'Segoe Script', cursive;
