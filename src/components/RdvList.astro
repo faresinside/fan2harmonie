@@ -34,7 +34,7 @@ const feuillets = items.map((r, i) => ({
     feuillets.length === 0 ? (
       <p class="rdv-vide">Prochaines dates bientôt</p>
     ) : (
-      <ul class:list={['rdv-liste', { 'rdv-liste--plusieurs': feuillets.length > 1 && indexProchain !== -1 }]} role="list">
+      <ul class:list={['rdv-liste', { 'rdv-liste--deux-colonnes': indexProchain === 0 && feuillets.length > 1 }]} role="list">
         {feuillets.map((r) => (
           <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]}>
             <time class="rdv__date" datetime={r.iso}>
@@ -322,35 +322,34 @@ const feuillets = items.map((r, i) => ({
     }
   }
 
-  /* ---------- Grand écran : le prochain à gauche, les suivants en colonne à droite ---------- */
+  /*
+   * ---------- Grand écran, seulement quand le prochain est le premier de la liste ----------
+   * Le prochain à gauche, les suivants empilés à droite : l'ordre de lecture (colonne de gauche, puis
+   * de droite, de haut en bas) reste l'ordre chronologique du document. Dans tous les autres cas
+   * (premier annulé, un seul feuillet, tous annulés), une seule colonne, dans l'ordre du document.
+   */
   @media (min-width: 60rem) {
-    .rdv-bloc:has(.rdv-liste--plusieurs) {
+    .rdv-bloc:has(.rdv-liste--deux-colonnes) {
       max-width: 62rem;
     }
 
-    .rdv-liste--plusieurs {
+    .rdv-liste--deux-colonnes {
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
       column-gap: var(--s-6);
       align-items: center;
     }
 
-    .rdv-liste--plusieurs .rdv--prochain {
+    .rdv-liste--deux-colonnes > .rdv--prochain:first-child {
       grid-row: 1 / span 6;
       align-self: start;
     }
 
-    .rdv-liste--plusieurs .rdv--prochain + .rdv,
-    .rdv-liste--plusieurs .rdv + .rdv--prochain {
-      margin-top: 0;
-    }
-
-    /* Colonne de droite : fil ondoyant entre deux feuillets discrets, même si le prochain les sépare dans le code. */
-    .rdv-liste--plusieurs .rdv:not(.rdv--prochain) ~ .rdv:not(.rdv--prochain) {
-      background: var(--trait-onde) top center / calc(100% - 2rem) 6px no-repeat;
-    }
-
-    .rdv-liste--plusieurs .rdv:not(.rdv--prochain) {
+    .rdv-liste--deux-colonnes > .rdv:not(:first-child) {
       grid-column: 2;
+    }
+
+    .rdv-liste--deux-colonnes > .rdv--prochain + .rdv {
+      margin-top: 0;
     }
   }
 </style>

@@ -144,6 +144,56 @@ test.describe('premier rendez-vous annulé (jeu « annule-premier »)', () => {
   });
 });
 
+/** Boîtes des feuillets, dans l'ordre du document. */
+async function boites(page: Page) {
+  const liste = [];
+  for (const li of await rendezvous(page).all()) {
+    const b = await li.boundingBox();
+    if (!b) throw new Error('feuillet invisible');
+    liste.push(b);
+  }
+  return liste;
+}
+
+test.describe('premier rendez-vous annulé, grand écran (jeu « annule-premier », 1280 px)', () => {
+  test.use({ baseURL: urlJeu('annule-premier'), viewport: { width: 1280, height: 900 } });
+
+  test('une seule colonne : ordre visuel = ordre chronologique du document', async ({ page }) => {
+    await page.goto('/');
+    const dates = await rendezvous(page).locator('time[datetime*="-"]').evaluateAll((els) =>
+      els.map((e) => e.getAttribute('datetime')),
+    );
+    expect(dates).toEqual(['2099-03-14', '2099-03-15', '2099-03-21']);
+    const b = await boites(page);
+    for (let i = 1; i < b.length; i++) {
+      const prec = b[i - 1]!;
+      const cour = b[i]!;
+      // Strictement en dessous du précédent, jamais côte à côte.
+      expect(cour.y, `feuillet ${i + 1}`).toBeGreaterThanOrEqual(prec.y + prec.height);
+    }
+    const second = rendezvous(page).nth(1);
+    await expect(second).toHaveClass(/rdv--prochain/);
+    await expect(second.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+  });
+});
+
+test.describe('prochain en premier, grand écran (jeu « annule », 1280 px)', () => {
+  test.use({ baseURL: urlJeu('annule'), viewport: { width: 1280, height: 900 } });
+
+  test('deux colonnes : le prochain à gauche, les suivants empilés à droite, dans l’ordre', async ({ page }) => {
+    await page.goto('/');
+    const dates = await rendezvous(page).locator('time[datetime*="-"]').evaluateAll((els) =>
+      els.map((e) => e.getAttribute('datetime')),
+    );
+    expect(dates).toEqual(['2099-03-14', '2099-03-15', '2099-03-21']);
+    await expect(rendezvous(page).first()).toHaveClass(/rdv--prochain/);
+    const [prochain, deuxieme, troisieme] = await boites(page);
+    expect(deuxieme!.x).toBeGreaterThanOrEqual(prochain!.x + prochain!.width);
+    expect(troisieme!.x).toBe(deuxieme!.x);
+    expect(troisieme!.y).toBeGreaterThanOrEqual(deuxieme!.y + deuxieme!.height);
+  });
+});
+
 test.describe('tous les rendez-vous annulés (jeu « tout-annule »)', () => {
   test.use({ baseURL: urlJeu('tout-annule') });
 
