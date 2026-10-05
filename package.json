@@ -15,7 +15,7 @@
     "test:e2e": "playwright test",
     "test:php": "docker compose run --rm php php tests/php/run.php",
     "test:php81": "docker compose run --rm php81 php tests/php/run.php",
-    "test:apache": "docker compose --profile apache up --build --force-recreate --attach apache-tests --abort-on-container-exit --exit-code-from apache-tests apache apache-sans-rewrite apache-sans-headers apache-tests",
+    "test:apache": "docker compose --profile apache up --build --force-recreate --attach apache-tests --abort-on-container-exit --exit-code-from apache-tests apache apache-sans-rewrite apache-sans-headers apache-sans-refus-rewrite apache-tests && docker compose --profile apache down --remove-orphans || (docker compose --profile apache down --remove-orphans && exit 1)",
     "check": "astro check",
     "lighthouse": "node scripts/lighthouse.mjs",
     "assets": "node scripts/prepare-assets.mjs"

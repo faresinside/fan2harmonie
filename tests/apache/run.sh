@@ -1,8 +1,6 @@
 #!/bin/sh
 # Tests du site construit (dist/) sur un VRAI Apache 2.4 + PHP 8.3, par de vraies requêtes HTTP(S) (curl).
-# Lancement : `npm run test:apache` (après `npm run build`), c'est-à-dire
-#   docker compose --profile apache up --build --force-recreate --abort-on-container-exit \
-#     --exit-code-from apache-tests apache apache-tests
+# Lancement : `npm run test:apache` (après `npm run build`) ; commande Docker complète dans package.json.
 # Le serveur « apache » (tests/apache/Dockerfile, demarrer.sh) sert une copie de dist/ et des fichiers pièges ;
 # ce script tourne dans le conteneur « apache-tests », sur un réseau Docker interne sans accès à Internet.
 # Tout nom d'hôte (fan2harmonie.fr, www.…) est envoyé vers le conteneur « apache » (curl --connect-to).
@@ -92,6 +90,18 @@ poster() {
 }
 
 echo "== Redirections : HTTPS et nom canonique =="
+# info LIBELLÉ : constat affiché sans être compté (comportement qui ne dépend pas des règles du projet).
+info() { printf 'ℹ %s\n' "$1"; }
+
+# refus_sans_source CHEMIN [LIBELLÉ] : 403 ou 404, et ni piège, ni source PHP, ni liste de dossier.
+refus_sans_source() {
+    requete GET "https://$DOMAINE$1"
+    attendre_statut "${2:-$1}" "403|404"
+    for piege in PIEGE '<?php' 'namespace Fan2Harmonie' 'Index of' 'OAUTH-'; do
+        if grep -Fq -- "$piege" "$TMP/corps"; then ko "${2:-$1}" "« $piege » dans le corps"; fi
+    done
+}
+
 requete GET "http://$DOMAINE/mentions-legales/?a=1"
 attendre_statut "http://$DOMAINE/mentions-legales/?a=1" 301
 attendre_entete "http → https" Location "https://$DOMAINE/mentions-legales/?a=1"
@@ -103,9 +113,23 @@ attendre_statut "https://www.$DOMAINE/?b=2" 301
 attendre_entete "https www → https sans www" Location "https://$DOMAINE/?b=2"
 requete GET "https://WWW.FAN2HARMONIE.FR/"
 attendre_statut "https://WWW.FAN2HARMONIE.FR/ (majuscules)" 301
+attendre_entete "https www en majuscules → domaine canonique" Location "https://$DOMAINE/"
+requete GET "https://FAN2HARMONIE.FR/"
+attendre_statut "https://FAN2HARMONIE.FR/ (domaine en majuscules : déjà canonique)" 200
 requete GET "http://autre-nom.example/x"
 attendre_statut "http://autre-nom.example/x (Host quelconque)" 301
 attendre_entete "Host quelconque en http → domaine canonique" Location "https://$DOMAINE/x"
+requete GET "https://autre-nom.example/x?y=1"
+attendre_statut "https://autre-nom.example/x?y=1 (Host étranger en HTTPS)" 301
+attendre_entete "Host étranger en HTTPS → domaine canonique, nom jamais repris" Location "https://$DOMAINE/x?y=1"
+requete GET "https://hebergeur-provisoire.example:443/"
+attendre_entete "adresse provisoire de l'hébergeur → domaine canonique" Location "https://$DOMAINE/"
+requete GET "https://$DOMAINE/admin"
+attendre_statut "/admin (sans barre finale)" 301
+attendre_entete "/admin → /admin/ (mod_dir) sur le domaine canonique" Location "https://$DOMAINE/admin/"
+requete GET "https://autre-nom.example/admin"
+attendre_statut "/admin avec un Host étranger" 301
+attendre_entete "/admin avec un Host étranger : jamais renvoyé vers ce Host" Location "https://$DOMAINE/admin"
 requete GET "http://$DOMAINE/a%0d%0aSet-Cookie:%20piege=1"
 attendre_statut "http avec CR LF encodés dans le chemin" "301|400|403|404"
 attendre_absent "pas d'injection d'en-tête par le chemin" "Set-Cookie"
@@ -139,41 +163,64 @@ requete GET "https://$DOMAINE/_astro/nexiste-pas.js"
 attendre_statut "/_astro/nexiste-pas.js" 404
 attendre_entete "404 sous /_astro/ : jamais gardée un an" Cache-Control "no-cache"
 
-echo "== /admin/ et /oauth/ : sans CSP du site, jamais en cache =="
-for chemin in /admin/ /oauth/; do
-    requete GET "https://$DOMAINE$chemin"
-    attendre_statut "$chemin" 200
-    attendre_entete "$chemin" Cache-Control "no-store"
-    attendre_absent "$chemin" "Content-Security-Policy"
-    entetes_securite "$chemin"
-done
+echo "== /admin/ : sans CSP du site, jamais en cache =="
+requete GET "https://$DOMAINE/admin/"
+attendre_statut "/admin/" 200
+attendre_entete "/admin/" Cache-Control "no-store"
+attendre_absent "/admin/" "Content-Security-Policy"
+entetes_securite "/admin/"
 requete GET "https://$DOMAINE/admin/config.yml"
 attendre_statut "/admin/config.yml (lu par Sveltia CMS)" 200
 attendre_entete "/admin/config.yml" Cache-Control "no-store"
 
+echo "== /oauth/ : seuls auth.php et callback.php s'exécutent =="
+for script in auth callback; do
+    requete GET "https://$DOMAINE/oauth/$script.php"
+    attendre_statut "/oauth/$script.php exécuté" 200
+    attendre_corps "/oauth/$script.php" "OAUTH-$(printf '%s' "$script" | tr a-z A-Z)-OK"
+    attendre_entete "/oauth/$script.php" Cache-Control "no-store"
+    attendre_absent "/oauth/$script.php" "Content-Security-Policy"
+    entetes_securite "/oauth/$script.php"
+done
+for chemin in /oauth/lib/x.php /oauth/lib/ /oauth/lib /oauth/config.php /oauth/other.php /oauth/ /OAUTH/auth.php \
+    /oauth/lib/.htaccess /oauth/Auth.PHP; do
+    refus_sans_source "$chemin"
+done
+requete GET "https://$DOMAINE/"
+attendre_entete "/ garde la CSP partielle (absente seulement sous /admin, /oauth, /api)" Content-Security-Policy "$CSP"
+
 echo "== Fichiers jamais servis (403 ou 404, ni source ni exécution) =="
+# Chaque chemin désigne un fichier qui EXISTE dans la racine de test (dist/ ou piège de demarrer.sh).
 for chemin in \
-    /api/lib/contact.php /api/lib/exigences.php /api/lib/ /api/lib \
-    /api/config.sample.php /api/config.php /api/.user.ini /api/.htaccess /.htaccess \
+    /api/lib/contact.php /api/lib/exigences.php /api/lib/ /api/lib /api/lib/.htaccess \
+    /api/config.sample.php /api/config.php /api/.user.ini /api/.htaccess \
     /README.md /api/LISEZMOI.md /api/autre.php /api/autre.phtml /script.php \
     /.git/config /.git/ /.git /.env /index.html.bak '/index.html~' /.index.html.swp /api/contact.php.orig \
-    /error_log /api/error_log /composer.json \
+    /error_log /api/error_log /composer.json /x.php.jpg \
+    /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP \
     //api//lib/contact.php /api/lib/../lib/contact.php /api/./lib/contact.php /api/%6cib/contact.php \
-    /API/lib/contact.php /api/LIB/contact.php /api/CONFIG.SAMPLE.PHP /%2eenv /.%65nv /api/contact.php/../lib/contact.php
+    /%2eenv /.%65nv
 do
-    requete GET "https://$DOMAINE$chemin"
-    attendre_statut "$chemin" "403|404"
-    for piege in PIEGE '<?php' 'namespace Fan2Harmonie' 'Index of'; do
-        if grep -Fq -- "$piege" "$TMP/corps"; then ko "$chemin" "« $piege » dans le corps"; fi
-    done
+    refus_sans_source "$chemin"
 done
 requete POST "https://$DOMAINE/api/autre.php" -d 'x=1'
 attendre_statut "POST /api/autre.php" "403|404"
 refuser_corps "POST /api/autre.php non exécuté" "PIEGE"
 requete GET "https://$DOMAINE/.well-known/acme-challenge/jeton"
 attendre_statut "/.well-known/ reste accessible (certificats)" 200
+
+echo "== Chemin en plus après le script (AcceptPathInfo Off) =="
+for chemin in /api/contact.php/x /api/contact.php/x.md '/api/contact.php%2f..%2flib%2fcontact.php'; do
+    requete GET "https://$DOMAINE$chemin" -H 'Accept: application/json'
+    attendre_statut "$chemin" "403|404"
+    refuser_corps "$chemin : le script n'est pas exécuté" '"ok"'
+done
+
+echo "== Constats informatifs (refusés par le serveur lui-même, quelles que soient nos règles) =="
 requete TRACE "https://$DOMAINE/"
-attendre_statut "TRACE /" "403|405"
+info "TRACE / → $statut (Debian : TraceEnable Off ; notre règle TRACE/TRACK sert ailleurs)"
+requete GET "https://$DOMAINE/.htaccess"
+info "/.htaccess → $statut (aussi refusé par la configuration Debian <FilesMatch \"^\\.ht\">)"
 
 echo "== Listes de dossiers =="
 for chemin in /_astro/ /api/ /vide/ /admin/../api/; do
@@ -189,7 +236,8 @@ attendre_corps "page 404" "Page introuvable"
 attendre_corps "page 404" "Retour à l’accueil"
 entetes_securite "page 404"
 attendre_entete "page 404" Content-Security-Policy "$CSP"
-requete GET "https://$DOMAINE/.git/config"
+requete GET "https://$DOMAINE/api/lib/contact.php"
+attendre_statut "réponse 403" 403
 attendre_corps "403 : même page que 404 (rien n'indique ce qui existe)" "Page introuvable"
 entetes_securite "réponse 403"
 
@@ -212,14 +260,26 @@ attendre_entete "GET /api/contact.php" Allow "POST"
 attendre_entete "GET /api/contact.php" Content-Type "application/json; charset=utf-8"
 attendre_corps "GET /api/contact.php" '"ok":false'
 
-head -c 40000 /dev/zero | tr '\0' 'x' > "$TMP/gros"
+# Pire cas d'un envoi sans JavaScript : 5 000 caractères de 4 octets encodés (%XX) ≈ 45 Ko ; le script
+# accepte 56 Ko, Apache 64 Ko (LimitRequestBody), PHP 72 Ko (post_max_size de .user.ini).
+head -c 70000 /dev/zero | tr '\0' 'x' > "$TMP/gros"
 poster "https://$DOMAINE" application/json --data-urlencode "remplissage@$TMP/gros"
-attendre_statut "corps de plus de 32 Ko (LimitRequestBody)" 413
-refuser_corps "corps de plus de 32 Ko" "PIEGE"
-head -c 25000 /dev/zero | tr '\0' 'x' > "$TMP/moyen"
+attendre_statut "corps de plus de 64 Ko (LimitRequestBody)" 413
+# La réponse est celle d'Apache (page 413 HTML, en-tête text/html), pas le JSON du script. Avec PHP en module
+# Apache (mod_php), le script est tout de même lancé ensuite, sans corps, et son propre refus 413 s'ajoute
+# après la page d'Apache : sans conséquence (rien n'est lu ni envoyé), simple particularité de mod_php.
+if [ "$(head -c 14 "$TMP/corps")" = '<!DOCTYPE HTML' ]; then ok "corps de plus de 64 Ko : page 413 d'Apache"; else ko "corps de plus de 64 Ko" "la réponse ne commence pas par la page 413 d'Apache"; fi
+refuser_corps "page d'erreur d'Apache sans signature (ServerSignature Off)" '<address>'
+if valeurs Content-Type | grep -qi json; then ko "corps de plus de 64 Ko" "réponse JSON : c'est le script qui a répondu"; else ok "corps de plus de 64 Ko : réponse d'Apache (pas de JSON)"; fi
+head -c 60000 /dev/zero | tr '\0' 'x' > "$TMP/moyen"
 poster "https://$DOMAINE" application/json --data-urlencode "remplissage@$TMP/moyen"
-attendre_statut "corps de 25 Ko (refusé par le script, > 20 Ko)" 413
-attendre_corps "corps de 25 Ko" '"ok":false'
+attendre_statut "corps de 60 Ko (refusé par le script, > 56 Ko)" 413
+attendre_corps "corps de 60 Ko" '"ok":false'
+message_long=$(head -c 5000 /dev/zero | tr '\0' 'e' | sed 's/e/é/g')
+requete POST "https://$DOMAINE/api/contact.php" -H "Origin: https://$DOMAINE" -H 'Accept: text/html' \
+    --data-urlencode 'nom=Zoé' --data-urlencode 'email=zoe@example.org' --data-urlencode "message=$message_long" \
+    --data-urlencode 'consentement=oui' --data-urlencode '_gotcha='
+attendre_statut "envoi sans JavaScript du plus long message permis (5 000 « é »)" 200
 
 poster "https://$DOMAINE" 'text/html'
 attendre_statut "envoi sans JavaScript (page HTML)" 200
@@ -236,9 +296,19 @@ SERVEUR=apache-sans-headers
 requete GET "https://$DOMAINE/"
 attendre_statut "sans mod_headers : / reste servi" 200
 for chemin in /README.md /api/lib/contact.php /api/config.sample.php /.git/config /.env /api/autre.php; do
-    requete GET "https://$DOMAINE$chemin"
-    attendre_statut "sans mod_headers : $chemin toujours refusé" "403|404"
-    refuser_corps "sans mod_headers : $chemin" "PIEGE"
+    refus_sans_source "$chemin" "sans mod_headers : $chemin toujours refusé"
+done
+
+echo "== Règles de refus mod_rewrite retirées : les autres couches suffisent =="
+SERVEUR=apache-sans-refus-rewrite
+requete GET "https://$DOMAINE/"
+attendre_statut "sans refus mod_rewrite : / reste servi" 200
+requete GET "https://$DOMAINE/oauth/auth.php"
+attendre_statut "sans refus mod_rewrite : /oauth/auth.php reste exécuté" 200
+for chemin in /.git/config /.git/ /.env /api/lib/contact.php /api/lib/exigences.php /oauth/lib/x.php \
+    /api/config.php /api/config.sample.php /oauth/config.php /oauth/other.php /api/autre.php /script.php \
+    /README.md /x.php.jpg /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP /index.html.bak /error_log /composer.json; do
+    refus_sans_source "$chemin" "sans refus mod_rewrite : $chemin toujours refusé"
 done
 SERVEUR=apache
 

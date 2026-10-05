@@ -78,7 +78,21 @@ services:
     networks: [apache-test]
     healthcheck: *sante-apache
 
-  # Les requêtes de test (tests/apache/run.sh, curl) contre le service « apache ».
+  # Même serveur dont le .htaccess de la racine est privé de ses règles de refus mod_rewrite : les autres
+  # couches (FilesMatch, RedirectMatch, lib/.htaccess) doivent suffire.
+  apache-sans-refus-rewrite:
+    profiles: [apache]
+    image: fan2harmonie-apache-test:local
+    pull_policy: never
+    environment:
+      - RETIRER_REFUS_REWRITE=1
+    volumes:
+      - ./dist:/dist:ro
+      - ./tests/apache:/tests:ro
+    networks: [apache-test]
+    healthcheck: *sante-apache
+
+  # Les requêtes de test (tests/apache/run.sh, curl) contre les services Apache ci-dessus.
   apache-tests:
     profiles: [apache]
     image: fan2harmonie-apache-test:local
@@ -89,6 +103,8 @@ services:
       apache-sans-rewrite:
         condition: service_healthy
       apache-sans-headers:
+        condition: service_healthy
+      apache-sans-refus-rewrite:
         condition: service_healthy
     entrypoint: ["sh", "/tests/run.sh"]
     volumes:
