@@ -1,32 +1,45 @@
 # Construction et mise en ligne du site chez l'hébergeur français (SSH + rsync).
 #
-# En clair : à chaque modification de la branche main (y compris un enregistrement dans /admin), chaque
-# nuit, ou à la demande, GitHub construit le site puis copie le dossier dist/ sur l'hébergement. Le site est
-# statique : les rendez-vous passés disparaissent seulement quand le site est reconstruit, d'où la
-# reconstruction de chaque nuit. Rien d'autre ne passe par GitHub : le formulaire de contact est traité par
-# l'hébergeur (api/contact.php), aucune donnée de visiteur ne quitte la France.
+# En clair : à chaque modification de la branche main (y compris un rendez-vous, une actualité ou un texte
+# enregistré dans /admin, qui sont des fichiers .md de src/content/), chaque nuit, ou à la demande, GitHub
+# construit le site puis copie le dossier dist/ sur l'hébergement. Le site est statique : les rendez-vous
+# passés disparaissent seulement quand le site est reconstruit, d'où la reconstruction de chaque nuit. Rien
+# d'autre ne passe par GitHub : le formulaire de contact est traité par l'hébergeur (api/contact.php), aucune
+# donnée de visiteur ne quitte la France. Seules les modifications de docs/ et des fichiers .md à la racine
+# du dépôt (README…) ne déclenchent rien.
 #
-# Ordre : tests unitaires → garde-fou de mise en ligne (bloque tant qu'une valeur provisoire subsiste) →
-# construction → copie. Si une étape échoue, rien n'est copié et le site en ligne reste tel quel.
+# Deux jobs :
+#   1. « construire », SANS aucun secret : tests unitaires → garde-fou de mise en ligne (bloque tant qu'une
+#      valeur provisoire subsiste) → construction → contrôle de dist/ → dist/ mis de côté (artefact).
+#   2. « deployer », seulement depuis main, dans l'environnement GitHub « production » (qui détient les
+#      secrets), sans Node ni npm : garde-fous (REMOTE_PATH, fichier témoin sur le serveur) → rsync.
+# Si une étape échoue, rien n'est copié et le site en ligne reste tel quel.
 #
-# Revenir à une version précédente : Actions > « Déploiement » > Run workflow, champ « ref » = identifiant
-# (SHA) d'un ancien commit de main, ou « main ».
+# Revenir à une version précédente :
+#   - durablement : « git revert » du ou des commits fautifs sur main (le site est reconstruit aussitôt) ;
+#   - en urgence seulement : Actions > « Déploiement » > Run workflow DEPUIS main, champ « ref » = SHA complet
+#     (40 caractères) d'un ancien commit de main. Cette mise en ligne est provisoire : le prochain push ou la
+#     reconstruction de la nuit remet la dernière version de main.
 #
-# Secrets à créer (Settings > Secrets and variables > Actions), jamais écrits dans le dépôt :
+# Secrets à créer dans l'environnement « production » (Settings > Environments > production, limité à la
+# branche main), jamais écrits dans le dépôt :
 #   SSH_HOST         nom du serveur SSH de l'hébergeur
 #   SSH_PORT         port SSH (22 si vide)
 #   SSH_USER         compte SSH
-#   REMOTE_PATH      dossier de la racine web sur le serveur (ex. le dossier « www » du compte)
+#   REMOTE_PATH      chemin ABSOLU de la racine web sur le serveur (ex. /home/compte/www)
 #   SSH_PRIVATE_KEY  clé privée SSH dédiée au déploiement (sa clé publique est autorisée sur le compte)
 #   SSH_KNOWN_HOSTS  empreinte(s) du serveur, une ligne de known_hosts (vérifiée : jamais d'acceptation aveugle)
+# Et, une fois pour toutes, À LA MAIN sur le serveur : un fichier vide « .fan2harmonie-site » dans REMOTE_PATH
+# (fichier témoin : sans lui, rien n'est copié ni supprimé).
 name: Déploiement
 
 on:
   push:
     branches: [main]
+    # « * » ne traverse pas « / » : seuls les .md de la RACINE sont ignorés ; ceux de src/content/ déploient.
     paths-ignore:
       - 'docs/**'
-      - '**.md'
+      - '*.md'
   schedule:
     # GitHub planifie en UTC ; Paris est à UTC+2 en été, UTC+1 en hiver. 22:10 UTC = 00:10 à Paris en été,
     # 23:10 UTC = 00:10 à Paris en hiver : l'une des deux tombe toujours juste après minuit à Paris, quelle
@@ -36,7 +49,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Version à mettre en ligne (SHA d’un commit, 7 à 40 caractères, ou « main ») ; vide = main'
+        description: 'Urgence seulement : SHA complet (40 caractères) d’un commit de main à remettre en ligne ; vide = dernière version de main'
         required: false
         default: ''
         type: string
@@ -49,25 +62,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deployer:
+  construire:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+    outputs:
+      adresse: ${{ steps.adresse.outputs.adresse }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Vérifier la version demandée
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Choisir la version
+        id: version
         env:
           REF_DEMANDEE: ${{ inputs.ref }}
         run: |
           set -euo pipefail
-          if [ -n "$REF_DEMANDEE" ] && ! printf '%s' "$REF_DEMANDEE" | grep -Eqx '[0-9a-f]{7,40}|main'; then
-            echo "::error::« ref » doit être un SHA de commit (7 à 40 caractères hexadécimaux) ou « main »."
-            exit 1
+          # Script lu sur la version de main qui lance le workflow, avant tout changement de version.
+          cp scripts/valider-ref.sh "$RUNNER_TEMP/valider-ref.sh"
+          ref=$(bash "$RUNNER_TEMP/valider-ref.sh" syntaxe "$REF_DEMANDEE")
+          if [ -n "$REF_DEMANDEE" ]; then
+            if [ "$ref" = main ]; then
+              git checkout -q --detach origin/main
+            else
+              git checkout -q --detach "$ref"
+            fi
+            bash "$RUNNER_TEMP/valider-ref.sh" ancetre
           fi
-
-      - name: Récupérer le dépôt
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref }}
-          persist-credentials: false
+          echo "version=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "Version construite : $(git rev-parse HEAD)"
 
       - name: Installer Node.js (version de .node-version)
         uses: actions/setup-node@v4
@@ -96,7 +124,7 @@ jobs:
           test -f dist/api/.htaccess
           test -f dist/api/contact.php
           # Jamais de fichier propre au serveur dans dist/ (il écraserait celui de l'hébergement).
-          for interdit in dist/api/config.php dist/oauth/config.php dist/.htpasswd dist/error_log dist/api/error_log; do
+          for interdit in dist/api/config.php dist/oauth/config.php dist/.htpasswd dist/error_log dist/api/error_log dist/.fan2harmonie-site; do
             if [ -e "$interdit" ]; then
               echo "::error::$interdit ne doit pas être construit."
               exit 1
@@ -105,6 +133,68 @@ jobs:
           # Aucun lien symbolique (il pourrait désigner un fichier du serveur hors du site).
           if [ -n "$(find dist -type l -print -quit)" ]; then
             echo "::error::lien symbolique dans dist/."
+            exit 1
+          fi
+
+      - name: Adresse du site (src/config/site.ts)
+        id: adresse
+        run: |
+          set -euo pipefail
+          adresse=$(node --input-type=module -e "const { site } = await import('./src/config/site.ts'); console.log(new URL('/', site.url).href)")
+          echo "adresse=$adresse" >> "$GITHUB_OUTPUT"
+
+      - name: Mettre dist/ de côté
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: dist/
+          # .htaccess, api/.htaccess et api/.user.ini commencent par un point : à inclure explicitement.
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  deployer:
+    needs: construire
+    # Jamais depuis une autre branche (un lancement manuel ailleurs construit sans rien mettre en ligne).
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Récupérer les scripts de contrôle (main)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+          persist-credentials: false
+
+      - name: Récupérer dist/
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: dist
+
+      - name: Vérifier les paramètres de connexion
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "::error::Secrets SSH_HOST et SSH_USER requis."
+            exit 1
+          fi
+          port="${SSH_PORT:-22}"
+          if [[ ! "$port" =~ ^[0-9]{1,5}$ ]]; then
+            echo "::error::SSH_PORT doit être un numéro de port."
+            exit 1
+          fi
+          # Couche 1 : forme du chemin (absolu, au moins trois éléments, ni « . », « .. », « ~ »…).
+          if ! sh scripts/valider-remote-path.sh "$REMOTE_PATH"; then
+            echo "::error::REMOTE_PATH invalide (voir scripts/valider-remote-path.sh)."
             exit 1
           fi
 
@@ -130,54 +220,51 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+          VERSION: ${{ needs.construire.outputs.version }}
         run: |
           set -euo pipefail
           port="${SSH_PORT:-22}"
-          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$REMOTE_PATH" ]; then
-            echo "::error::Secrets SSH_HOST, SSH_USER et REMOTE_PATH requis."
-            exit 1
-          fi
-          if ! printf '%s' "$port" | grep -Eqx '[0-9]{1,5}'; then
-            echo "::error::SSH_PORT doit être un numéro de port."
-            exit 1
-          fi
-          # Dossier distant : caractères simples, jamais « / » seul ni « .. » (rsync --delete-after y supprime
-          # tout ce qui n'est pas dans dist/).
-          if ! printf '%s' "$REMOTE_PATH" | grep -Eqx '[A-Za-z0-9._~/-]+' \
-            || printf '%s' "$REMOTE_PATH" | grep -Eqx '[/]*' \
-            || printf '%s' "$REMOTE_PATH" | grep -Eq '(^|/)\.\.(/|$)'; then
-            echo "::error::REMOTE_PATH invalide."
+          distant="$SSH_USER@$SSH_HOST:${REMOTE_PATH%/}"
+          ssh_cmd="ssh -p $port -i $RUNNER_TEMP/ssh/cle -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts"
+          # Couche 2 : le fichier témoin, créé à la main sur le serveur, prouve que REMOTE_PATH est bien la
+          # racine du site. Absent : AUCUNE copie, aucune suppression (pas de repli).
+          if ! rsync --list-only -e "$ssh_cmd" "$distant/.fan2harmonie-site" > /dev/null; then
+            echo "::error::fichier témoin .fan2harmonie-site absent : REMOTE_PATH n'est pas la racine du site"
             exit 1
           fi
           # Fichiers propres au serveur, JAMAIS envoyés ni supprimés : exclus (« - ») ET protégés (« P »).
-          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents.
-          rsync -rlpt --delete-after --safe-links --chmod=D755,F644 --itemize-changes --stats \
+          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents. Couche 3 :
+          # --max-delete=200, au-delà rsync s'arrête. --delay-updates : fichiers mis en place à la fin.
+          rsync -rlpt --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
+            --itemize-changes --stats \
+            --filter='- /.fan2harmonie-site' --filter='P /.fan2harmonie-site' \
             --filter='- /api/config.php' --filter='P /api/config.php' \
             --filter='- /oauth/config.php' --filter='P /oauth/config.php' \
             --filter='- error_log' --filter='P error_log' \
-            --filter='- /.well-known/' --filter='P /.well-known/' \
+            --filter='- /.well-known/acme-challenge/' --filter='P /.well-known/acme-challenge/' \
             --filter='- /cgi-bin/' --filter='P /cgi-bin/' \
             --filter='- /.htpasswd' --filter='P /.htpasswd' \
             --filter='- /.user.ini' --filter='P /.user.ini' \
-            -e "ssh -p $port -i $RUNNER_TEMP/ssh/cle -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts" \
-            dist/ "$SSH_USER@$SSH_HOST:${REMOTE_PATH%/}/" > "$RUNNER_TEMP/rsync.log"
+            -e "$ssh_cmd" \
+            dist/ "$distant/" > "$RUNNER_TEMP/rsync.log"
           modifies=$(grep -c '^[<>ch*]' "$RUNNER_TEMP/rsync.log" || true)
           {
             echo "## Mise en ligne"
             echo ""
-            echo "- Version : \`$(git rev-parse HEAD)\` (déclencheur : $GITHUB_EVENT_NAME)"
+            echo "- Version : \`$VERSION\` (déclencheur : $GITHUB_EVENT_NAME)"
             echo "- Éléments envoyés ou supprimés : $modifies"
           } >> "$GITHUB_STEP_SUMMARY"
           tail -n 15 "$RUNNER_TEMP/rsync.log"
 
       - name: Vérifier que le site répond
+        env:
+          ADRESSE: ${{ needs.construire.outputs.adresse }}
         run: |
           set -euo pipefail
-          adresse=$(node --input-type=module -e "const { site } = await import('./src/config/site.ts'); console.log(new URL('/', site.url).href)")
-          if curl -fsSI --max-time 20 "$adresse" > /dev/null; then
-            echo "Le site répond : $adresse"
+          if curl -fsSI --max-time 20 "$ADRESSE" > /dev/null; then
+            echo "Le site répond : $ADRESSE"
           else
-            echo "::warning::$adresse ne répond pas encore (nom de domaine pas encore pointé vers l'hébergeur ?)."
+            echo "::warning::$ADRESSE ne répond pas encore (nom de domaine pas encore pointé vers l'hébergeur ?)."
           fi
 
       - name: Effacer la clé SSH
