@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { site } from '../../src/config/site';
 import { lienMailto } from '../../src/lib/contact';
@@ -5,8 +6,9 @@ import { REGLES_WCAG, sansDebordement, sansViolationAxe } from './outils';
 
 /**
  * Formulaire de contact (#contact) et page /mentions-legales.
- * L'adresse d'envoi (`site.formEndpoint`) reste une valeur de substitution jusqu'à la mise en ligne :
- * les envois sont donc toujours interceptés ici (page.route), jamais transmis à un vrai service.
+ * L'adresse d'envoi (`site.formEndpoint`) est le script PHP du même hébergement (/api/contact.php, testé à part
+ * par tests/php/) ; `astro preview` n'exécute pas de PHP : les envois sont donc toujours interceptés ici
+ * (page.route).
  */
 
 // Défilement doux désactivé : les clics sur le formulaire, en bas de page, ne visent pas une cible en mouvement.
@@ -45,12 +47,14 @@ async function remplir(page: Page, { consentement = true } = {}) {
 
 
 test.describe('formulaire de contact : structure', () => {
-  test('envoi POST vers site.formEndpoint, sans novalidate', async ({ page }) => {
+  test('envoi POST vers le script de contact du site (/api/contact.php), sans novalidate', async ({ page }) => {
     await page.goto('/');
     const f = formulaire(page);
     await expect(f).toHaveCount(1);
     await expect(f).toHaveAttribute('method', 'post');
-    await expect(f).toHaveAttribute('action', site.formEndpoint);
+    await expect(f).toHaveAttribute('action', '/api/contact.php');
+    expect(site.formEndpoint).toBe('/api/contact.php');
+    expect(await adresseEnvoi(page)).toBe(new URL('/api/contact.php', page.url()).href);
     await expect(f).not.toHaveAttribute('novalidate', /.*/);
     await expect(f.locator('input[type="hidden"][name="_subject"]')).toHaveValue(
       'Message depuis le site Fan 2 Harmonie',
@@ -260,6 +264,24 @@ test.describe('envoi avec JavaScript', () => {
     });
   }
 
+  test('réponse 422 du script : les champs signalés sont marqués invalides, avec leur indication', async ({ page }) => {
+    await page.goto('/');
+    await intercepter(page, (r) =>
+      r.fulfill({
+        status: 422,
+        json: { ok: false, errors: [{ field: 'email', message: 'Adresse e-mail invalide.' }, { field: 'inconnu', message: 'x' }] },
+      }),
+    );
+    await remplir(page);
+    await bouton(page).click();
+    const f = formulaire(page);
+    await expect(page.locator('#contact').getByRole('alert')).toContainText('Le message n’a pas pu être envoyé.');
+    await expect(f.getByLabel('Votre adresse e-mail')).toHaveAttribute('aria-invalid', 'true');
+    await expect(f.getByText('Indiquez une adresse e-mail valide')).toBeVisible();
+    await expect(f.getByLabel('Votre nom')).not.toHaveAttribute('aria-invalid', 'true');
+    await expect(f.getByLabel('Votre adresse e-mail')).toHaveValue('camille@example.org');
+  });
+
   test('nouvel essai après une erreur : l’erreur disparaît, le succès s’affiche', async ({ page }) => {
     await page.goto('/');
     let echec = true;
@@ -303,16 +325,31 @@ test.describe('mentions légales', () => {
 
     const main = page.locator('main');
     const valeur = (terme: string) => main.locator('dt', { hasText: terme }).locator('xpath=following-sibling::dd[1]');
-    await expect(valeur('Nom commercial')).toHaveText(site.nom);
-    await expect(valeur('Forme')).toHaveText('Entrepreneur individuel (micro-entreprise)');
-    await expect(valeur('SIRET')).toHaveText(site.siret);
-    await expect(valeur('Responsable de la publication')).toHaveText(site.editeur);
-    await expect(valeur('Ville')).toHaveText(site.ville);
+    await expect(valeur('Nom du site')).toHaveText(site.nom);
+    await expect(valeur('Éditrice du site et responsable de la publication')).toHaveText(site.editeur);
     await expect(valeur('Contact')).toHaveText(site.email);
     await expect(valeur('Contact').locator('a')).toHaveAttribute('href', lienMailto(site.email));
 
-    await expect(main).toContainText('Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis');
-    await expect(main).toContainText('Formspree');
+    // SIRET et ville facultatifs : affichés seulement s'ils sont renseignés ; le statut en découle.
+    const siret = site.siret?.trim() || null;
+    const ville = site.ville?.trim() || null;
+    if (siret) {
+      await expect(valeur('SIRET')).toHaveText(siret);
+      await expect(valeur('Statut')).toHaveText('Entrepreneur individuel (micro-entreprise)');
+    } else {
+      await expect(main.locator('dt', { hasText: 'SIRET' })).toHaveCount(0);
+      await expect(valeur('Statut')).toHaveText('Personne physique, activité exercée à titre non professionnel et gratuit');
+    }
+    if (ville) await expect(valeur('Ville')).toHaveText(ville);
+    else await expect(main.locator('dt', { hasText: /^Ville$/ })).toHaveCount(0);
+
+    // Hébergeur : tel qu'il est écrit dans src/config/site.ts (valeurs provisoires comprises).
+    const hebergement = page.locator('section[aria-labelledby="hebergement"]');
+    const valeurHebergeur = (terme: string) =>
+      hebergement.locator('dt', { hasText: terme }).locator('xpath=following-sibling::dd[1]');
+    await expect(valeurHebergeur('Hébergeur')).toHaveText(site.hebergeur.nom);
+    await expect(valeurHebergeur('Adresse')).toHaveText(site.hebergeur.adresse);
+    await expect(valeurHebergeur('Site web')).toHaveText(site.hebergeur.siteWeb);
     await expect(main).toContainText('consentement');
     await expect(main).toContainText('SIL Open Font License');
     await expect(main.getByRole('link', { name: /cnil\.fr/ })).toHaveAttribute('href', 'https://www.cnil.fr');
@@ -320,21 +357,26 @@ test.describe('mentions légales', () => {
     await expect(main.getByRole('link', { name: 'Retour à l’accueil' })).toHaveAttribute('href', '/');
   });
 
-  test('données personnelles : transfert hors UE, engagements vérifiables seulement', async ({ page }) => {
+  test('données personnelles : formulaire traité chez l’hébergeur, rien de conservé ni transmis, engagements vérifiables', async ({ page }) => {
     await page.goto('/mentions-legales');
     const donnees = page.locator('#donnees-personnelles');
-    await expect(donnees).toContainText('sont des sociétés établies aux États-Unis');
-    await expect(donnees).toContainText('peuvent donc être transférées hors de l’Union européenne');
-    const formspree = donnees.getByRole('link', { name: 'politique de confidentialité de Formspree' });
-    await expect(formspree).toHaveAttribute('href', 'https://formspree.io/legal/privacy-policy');
-    await expect(formspree).toHaveAttribute('rel', /noopener/);
-    const cloudflare = donnees.getByRole('link', { name: 'politique de confidentialité de Cloudflare' });
-    await expect(cloudflare).toHaveAttribute('href', 'https://www.cloudflare.com/privacypolicy/');
-    await expect(cloudflare).toHaveAttribute('rel', /noopener/);
+    await expect(donnees).toContainText('votre nom, votre adresse e-mail et votre message');
+    await expect(donnees).toContainText(`qui envoie votre message à l’adresse ${site.email}`);
+    await expect(donnees.getByRole('link', { name: site.email }).first()).toHaveAttribute('href', lienMailto(site.email));
+    await expect(donnees).toContainText('vos données ne sont pas enregistrées sur le site et ne sont pas transmises à des tiers');
+    await expect(donnees).toContainText(
+      'une empreinte non réversible de votre adresse IP et l’heure de l’envoi sont conservées une heure au plus, puis effacées.',
+    );
+    await expect(donnees).toContainText(
+      'L’hébergeur peut conserver les journaux techniques de connexion (adresse IP, date) conformément à la loi.',
+    );
     await expect(donnees).toContainText(
       'Vos données sont conservées uniquement le temps nécessaire pour répondre à votre demande, puis supprimées.',
     );
     await expect(donnees).toContainText('Ce site ne dépose aucun cookie de mesure d’audience ni de publicité.');
+    for (const ancien of ['États-Unis', 'hors de l’Union européenne', 'Formspree', 'Cloudflare']) {
+      await expect(page.locator('main'), ancien).not.toContainText(ancien);
+    }
     const main = page.locator('main');
     await expect(main).toContainText('Les logos, textes et visuels de ce site sont © 2026 Fan 2 Harmonie, sauf éléments de tiers mentionnés.');
     for (const affirmation of ['aucune conservation', 'ne dépose aucun cookie et', 'licence libre', 'clauses contractuelles']) {
@@ -342,6 +384,21 @@ test.describe('mentions légales', () => {
     }
   });
 
+  test('pages construites : aucune mention de Formspree ni de Cloudflare dans le HTML', async ({ request }) => {
+    for (const chemin of ['/', '/mentions-legales/']) {
+      const reponse = await request.get(chemin);
+      expect(reponse.status(), chemin).toBe(200);
+      const html = (await reponse.text()).toLowerCase();
+      expect(html.includes('formspree'), `${chemin} : formspree`).toBe(false);
+      expect(html.includes('cloudflare'), `${chemin} : cloudflare`).toBe(false);
+    }
+  });
+
+  test('le script de contact est copié dans le site construit, jamais sa configuration réelle', () => {
+    expect(existsSync('dist/api/contact.php')).toBe(true);
+    expect(existsSync('dist/api/lib/contact.php')).toBe(true);
+    expect(existsSync('dist/api/config.php')).toBe(false);
+  });
   test('formulaire : mention de conservation vérifiable', async ({ page }) => {
     await page.goto('/');
     await expect(formulaire(page)).toContainText('Ces informations ne sont conservées que le temps de répondre à ma demande.');

@@ -14,6 +14,14 @@ import { lienMailto } from '../lib/contact';
 
 const avecActualites = (await getCollection('actualites')).length > 0;
 const mailto = lienMailto(site.email);
+// SIRET et ville sont facultatifs : leurs lignes n'apparaissent que s'ils sont renseignés.
+const siret = site.siret?.trim() || null;
+const ville = site.ville?.trim() || null;
+const statut = siret
+  ? 'Entrepreneur individuel (micro-entreprise)'
+  : 'Personne physique, activité exercée à titre non professionnel et gratuit';
+const { hebergeur } = site;
+const siteHebergeurEnLien = /^https:\/\/[^\s]+$/.test(hebergeur.siteWeb);
 ---
 
 <Base
@@ -34,28 +42,36 @@ const mailto = lienMailto(site.email);
     <div class="container">
       <div class="legal__corps prose">
         <section aria-labelledby="editeur">
-          <h2 id="editeur">Éditeur du site</h2>
+          <h2 id="editeur">Édition du site</h2>
           <dl class="legal__fiche">
             <div>
-              <dt>Nom commercial</dt>
+              <dt>Nom du site</dt>
               <dd>{site.nom}</dd>
             </div>
             <div>
-              <dt>Forme</dt>
-              <dd>Entrepreneur individuel (micro-entreprise)</dd>
-            </div>
-            <div>
-              <dt>SIRET</dt>
-              <dd>{site.siret}</dd>
-            </div>
-            <div>
-              <dt>Responsable de la publication</dt>
+              <dt>Éditrice du site et responsable de la publication</dt>
               <dd>{site.editeur}</dd>
             </div>
             <div>
-              <dt>Ville</dt>
-              <dd>{site.ville}</dd>
+              <dt>Statut</dt>
+              <dd>{statut}</dd>
             </div>
+            {
+              siret && (
+                <div>
+                  <dt>SIRET</dt>
+                  <dd>{siret}</dd>
+                </div>
+              )
+            }
+            {
+              ville && (
+                <div>
+                  <dt>Ville</dt>
+                  <dd>{ville}</dd>
+                </div>
+              )
+            }
             <div>
               <dt>Contact</dt>
               <dd><a href={mailto}>{site.email}</a></dd>
@@ -65,12 +81,21 @@ const mailto = lienMailto(site.email);
 
         <section aria-labelledby="hebergement">
           <h2 id="hebergement">Hébergement</h2>
-          <p>
-            Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis<br />
-            Site : <a href="https://www.cloudflare.com">cloudflare.com</a>
-          </p>
+          <dl class="legal__fiche">
+            <div>
+              <dt>Hébergeur</dt>
+              <dd>{hebergeur.nom}</dd>
+            </div>
+            <div>
+              <dt>Adresse</dt>
+              <dd>{hebergeur.adresse}</dd>
+            </div>
+            <div>
+              <dt>Site web</dt>
+              <dd>{siteHebergeurEnLien ? <a href={hebergeur.siteWeb}>{hebergeur.siteWeb}</a> : hebergeur.siteWeb}</dd>
+            </div>
+          </dl>
         </section>
-
         <section aria-labelledby="propriete">
           <h2 id="propriete">Propriété intellectuelle</h2>
           <p>
@@ -91,25 +116,26 @@ const mailto = lienMailto(site.email);
               <strong>Base légale :</strong> votre consentement, donné en cochant la case prévue avant l’envoi.
             </li>
             <li>
-              <strong>Destinataires :</strong> l’éditrice du site et le prestataire qui reçoit les messages du
-              formulaire (Formspree).
+              <strong>Destinataire :</strong> l’éditrice du site uniquement. Le formulaire est traité sur le serveur
+              de l’hébergeur du site, qui envoie votre message à l’adresse <a href={mailto}>{site.email}</a> ; vos
+              données ne sont pas enregistrées sur le site et ne sont pas transmises à des tiers.
             </li>
             <li>
               <strong>Durée de conservation :</strong> Vos données sont conservées uniquement le temps nécessaire pour
               répondre à votre demande, puis supprimées.
             </li>
             <li>
+              <strong>Lutte contre les abus :</strong> pour limiter les envois répétés, une empreinte non réversible
+              de votre adresse IP et l’heure de l’envoi sont conservées une heure au plus, puis effacées.
+            </li>
+            <li>
+              <strong>Journaux techniques :</strong> L’hébergeur peut conserver les journaux techniques de connexion
+              (adresse IP, date) conformément à la loi.
+            </li>
+            <li>
               <strong>Cookies :</strong> Ce site ne dépose aucun cookie de mesure d’audience ni de publicité.
             </li>
           </ul>
-          <p>
-            Formspree, prestataire de réception du formulaire, et Cloudflare, hébergeur du site, sont des sociétés
-            établies aux États-Unis : vos données personnelles peuvent donc être transférées hors de l’Union
-            européenne. Pour en savoir plus, consultez la
-            <a href="https://formspree.io/legal/privacy-policy" rel="noopener">politique de confidentialité de Formspree</a>
-            et la
-            <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener">politique de confidentialité de Cloudflare</a>.
-          </p>
           <p>
             Vous disposez d’un droit d’accès, de rectification, d’effacement, d’opposition, de limitation et de
             portabilité de vos données. Pour l’exercer, écrivez à <a href={mailto}>{site.email}</a>.
