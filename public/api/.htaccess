@@ -1,0 +1,19 @@
+# Dossier api/ : script du formulaire de contact. S'ajoute aux règles de la racine (../.htaccess), dont les
+# refus (lib/, config*.php, *.sample.php, fichiers cachés…) s'appliquent aussi ici : ce fichier n'utilise
+# volontairement pas mod_rewrite, sinon les règles de réécriture de la racine ne seraient plus héritées.
+
+# Corps de requête limité à 32 Ko (le formulaire en envoie bien moins ; le script refuse lui-même au-delà de 20 Ko).
+LimitRequestBody 32768
+
+# Pas de liste du contenu du dossier.
+Options -Indexes
+
+# Seul contact.php peut être exécuté.
+<FilesMatch "^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
+    Require all denied
+</FilesMatch>
+
+# Réponses jamais gardées en cache.
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store"
+</IfModule>

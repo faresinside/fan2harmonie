@@ -1,0 +1,137 @@
+# ==========================================================================================================
+# Règles du serveur web (Apache 2.4 ou LiteSpeed) pour la racine du site fan2harmonie.fr.
+#
+# Copié tel quel de public/ vers dist/ par la construction, publié par .github/workflows/deploiement.yml.
+# Vérifié sur un vrai Apache dans Docker (npm run test:apache, tests/apache/run.sh) et par
+# tests/unit/htaccess.test.ts (le nom de domaine écrit ici doit être celui de site.url, src/config/site.ts :
+# changer de domaine fait échouer ce test, pas le site).
+#
+# Aucune directive n'a besoin d'un réglage du serveur lui-même : tout est permis dans un .htaccess avec
+# « AllowOverride All », le réglage habituel des hébergements mutualisés.
+# ==========================================================================================================
+
+# ---------- 1. Généralités ----------
+# Pas de liste du contenu des dossiers, pas de signature du serveur sur ses pages, UTF-8 par défaut.
+Options -Indexes
+ServerSignature Off
+AddDefaultCharset UTF-8
+
+<IfModule mod_dir.c>
+    DirectoryIndex index.html
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType text/javascript .js .mjs
+    AddType font/woff2 .woff2
+    AddType image/avif .avif
+    AddType image/webp .webp
+    AddType image/svg+xml .svg
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
+# ---------- 2. HTTPS et nom de domaine canonique ----------
+# mod_rewrite est OBLIGATOIRE, volontairement hors de tout <IfModule> : s'il manquait, le serveur répondrait
+# par une erreur 500 plutôt que de servir le site sans HTTPS et sans les refus de la section 5.
+RewriteEngine On
+
+# http:// → https://fan2harmonie.fr/… (301), quel que soit le nom demandé. X-Forwarded-Proto : certains
+# hébergeurs terminent HTTPS sur un serveur frontal qui parle ensuite en http à Apache ; un client qui ment
+# sur cet en-tête ne trompe que lui-même (il reste en http).
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^ https://fan2harmonie.fr%{REQUEST_URI} [R=301,L]
+
+# www.fan2harmonie.fr → fan2harmonie.fr (301).
+RewriteCond %{HTTP_HOST} ^www\.fan2harmonie\.fr\.?(:[0-9]+)?$ [NC]
+RewriteRule ^ https://fan2harmonie.fr%{REQUEST_URI} [R=301,L]
+
+# Méthodes de diagnostic jamais utiles ici.
+RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
+RewriteRule ^ - [F]
+
+# ---------- 3. En-têtes de sécurité ----------
+# « always » : aussi sur les réponses d'erreur (403, 404…) et sur celles du script PHP.
+#
+# - Referrer-Policy strict-origin-when-cross-origin, JAMAIS no-referrer : api/contact.php vérifie l'origine
+#   avec l'en-tête Origin et, à défaut, avec Referer.
+# - Permissions-Policy sans « interest-cohort » : fonction retirée des navigateurs ; Chrome signale ce nom
+#   inconnu par une erreur en console (pénalité Lighthouse « bonnes pratiques »).
+# - Strict-Transport-Security d'un an, SANS includeSubDomains ni preload : un sous-domaine sans HTTPS (boîte
+#   mail, outil de l'hébergeur…) deviendrait inaccessible, et preload est quasi irréversible.
+# - Content-Security-Policy PARTIELLE (base-uri, form-action, frame-ancestors, object-src) : le site a des
+#   scripts et styles en ligne. CSP complète : plus tard, avec hachages (voir README).
+#   Pas de CSP du site sur /admin/ et /oauth/ (Sveltia CMS et la fenêtre de connexion GitHub ont leurs propres
+#   besoins), ni sur /api/ (api/contact.php pose sa propre CSP, plus stricte, sur ses pages HTML).
+# - Aucun Cross-Origin-Opener-Policy : il casserait la fenêtre de connexion GitHub de /admin.
+# - Aucun en-tête CORS (Access-Control-*) : rien sur ce site n'est destiné à d'autres origines.
+<IfModule mod_setenvif.c>
+    SetEnvIf Request_URI "^/(admin|oauth|api)(/|$)" SANS_CSP
+    SetEnvIf Request_URI "^/_astro/" CACHE_IMMUABLE
+    SetEnvIf Request_URI "^/(admin|oauth|api)(/|$)" SANS_CACHE
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Copies éventuelles posées par PHP (api/contact.php) : retirées pour que chaque en-tête n'apparaisse
+    # qu'une fois (les valeurs ci-dessous les remplacent).
+    Header unset X-Content-Type-Options
+    Header unset Cache-Control
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+    Header always set X-Frame-Options "DENY"
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" env=!SANS_CSP
+
+    # ---------- 4. Cache ----------
+    # Par défaut (pages HTML et le reste) : toujours revalider. /admin/, /oauth/ et /api/ : jamais gardés.
+    # /_astro/ : fichiers dont le nom change à chaque version, gardés un an, mais seulement sur une réponse
+    # réussie (« Header set », sans « always ») : une erreur sous /_astro/ n'est jamais gardée un an.
+    Header always set Cache-Control "no-cache"
+    Header always set Cache-Control "no-store" env=SANS_CACHE
+    Header always unset Cache-Control env=CACHE_IMMUABLE
+    Header set Cache-Control "public, max-age=31536000, immutable" env=CACHE_IMMUABLE
+</IfModule>
+
+# Compression des textes.
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml application/xml text/xml application/manifest+json
+    </IfModule>
+</IfModule>
+
+# ---------- 5. Fichiers jamais servis ----------
+# Deux couches. 1) mod_rewrite (obligatoire, voir section 2) : refus 403 sur le chemin complet, dossiers
+# compris. 2) <FilesMatch> + Require (mod_authz_core, toujours présent en 2.4) sur le nom du fichier.
+#
+# Fichiers et dossiers cachés (.git/, .env, .htaccess, .user.ini, .gitattributes…), sauf /.well-known/.
+RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
+# Copies de sauvegarde et fichiers d'éditeur.
+RewriteRule (~|\.(bak|swp|save|orig|old|dist))$ - [F,NC]
+# Journal d'erreurs PHP (créé par certains hébergeurs à côté du script).
+RewriteRule (^|/)error_log$ - [F,NC]
+# Modèles et configurations PHP (api/config.sample.php, api/config.php…).
+RewriteRule \.sample\.php$ - [F,NC]
+RewriteRule (^|/)config[^/]*\.php$ - [F,NC]
+# Bibliothèque du script de contact.
+RewriteRule ^api/lib(/|$) - [F,NC]
+# Fichiers de Composer et documentation (README…).
+RewriteRule (^|/)composer\.[^/]*$ - [F,NC]
+RewriteRule \.md$ - [F,NC]
+# Aucun autre script PHP que api/contact.php.
+RewriteCond %{REQUEST_URI} !^/api/contact\.php$
+RewriteRule \.(php[0-9s]?|phtml|phar|pht|inc)$ - [F,NC]
+
+<FilesMatch "(^\.|~$|\.(bak|swp|save|orig|old|dist|md|inc)$|\.sample\.php$|^error_log$|^composer\.|^config.*\.php$)">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
+    Require all denied
+</FilesMatch>
+
+# ---------- 6. Pages d'erreur ----------
+# Même page « introuvable » pour 403 et 404 : rien n'indique ce qui existe.
+ErrorDocument 404 /404.html
+ErrorDocument 403 /404.html

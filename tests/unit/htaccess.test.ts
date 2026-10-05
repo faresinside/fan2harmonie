@@ -1,0 +1,139 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { contientPlaceholder } from '../../src/lib/misenligne';
+
+/**
+ * Règles Apache/LiteSpeed (public/.htaccess, public/api/.htaccess), lues comme du texte. Leur effet réel est
+ * vérifié sur un vrai Apache par `npm run test:apache` (tests/apache/run.sh) ; ici, ce qui doit rester vrai
+ * quoi qu'on modifie, à commencer par le nom de domaine, qui doit être celui de site.url.
+ */
+
+const RACINE = path.resolve(__dirname, '../..');
+const lire = (fichier: string) => readFileSync(path.join(RACINE, fichier), 'utf8');
+/** Lignes de directives (sans commentaires ni lignes vides), espaces de bordure retirés. */
+const directives = (texte: string) =>
+  texte
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '' && !l.startsWith('#'));
+
+const racine = lire('public/.htaccess');
+const api = lire('public/api/.htaccess');
+let hote = '';
+
+beforeAll(async () => {
+  // Jamais l'adresse d'audit Lighthouse : la valeur écrite dans site.ts.
+  delete process.env['AUDIT_SITE_URL'];
+  const { site } = await import('../../src/config/site');
+  hote = new URL(site.url).hostname;
+});
+
+describe('public/.htaccess', () => {
+  it('redirections vers https://<hôte de site.url> seulement (changer de domaine fait échouer ce test)', () => {
+    const cibles = [...racine.matchAll(/^RewriteRule \^ (https?:\/\/[^%\s]+)%\{REQUEST_URI\} \[R=301,L\]$/gm)].map((m) => m[1]);
+    expect(cibles).toEqual([`https://${hote}`, `https://${hote}`]);
+    // Aucune autre adresse ni aucun autre nom de domaine dans les directives.
+    const domaines = directives(racine).join('\n').match(/[a-z0-9-]+(\\?\.[a-z0-9-]+)*\\?\.(fr|com|net|org|eu)\b/gi) ?? [];
+    expect([...new Set(domaines.map((d) => d.replace(/\\/g, '')))].sort()).toEqual([hote, `www.${hote}`].sort());
+  });
+
+  it('www → domaine nu : condition sur www.<hôte de site.url>', () => {
+    const echappe = hote.replace(/\./g, '\\.');
+    expect(racine).toContain(`RewriteCond %{HTTP_HOST} ^www\\.${echappe}\\.?(:[0-9]+)?$ [NC]`);
+  });
+
+  it('HTTPS forcé (redirection 301) avant tout le reste ; mod_rewrite obligatoire (hors <IfModule>)', () => {
+    const lignes = directives(racine);
+    const moteur = lignes.indexOf('RewriteEngine On');
+    expect(moteur).toBeGreaterThan(-1);
+    // Profondeur des <IfModule> à la ligne « RewriteEngine On » : 0.
+    const profondeur = lignes.slice(0, moteur).reduce((p, l) => p + (/^<IfModule/i.test(l) ? 1 : /^<\/IfModule>/i.test(l) ? -1 : 0), 0);
+    expect(profondeur).toBe(0);
+    expect(lignes.slice(moteur + 1, moteur + 4)).toEqual([
+      'RewriteCond %{HTTPS} !=on',
+      'RewriteCond %{HTTP:X-Forwarded-Proto} !=https',
+      `RewriteRule ^ https://${hote}%{REQUEST_URI} [R=301,L]`,
+    ]);
+  });
+
+  it('en-têtes de sécurité exacts, sur toutes les réponses (« always »)', () => {
+    const lignes = directives(racine);
+    for (const attendu of [
+      'Header always set X-Content-Type-Options "nosniff"',
+      'Header always set Referrer-Policy "strict-origin-when-cross-origin"',
+      'Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"',
+      'Header always set X-Frame-Options "DENY"',
+      'Header always set Strict-Transport-Security "max-age=31536000"',
+      `Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" env=!SANS_CSP`,
+    ]) {
+      expect(lignes).toContain(attendu);
+    }
+  });
+
+  it('jamais no-referrer (le script de contact se replie sur Referer), ni COOP, ni CORS, ni HSTS étendu', () => {
+    const texte = directives(racine).join('\n');
+    expect(texte).not.toMatch(/no-referrer"/);
+    expect(texte).not.toMatch(/Cross-Origin-Opener-Policy|Cross-Origin-Embedder-Policy|Access-Control-/i);
+    expect(texte).not.toMatch(/includeSubDomains|preload/i);
+  });
+
+  it('CSP partielle : pas sur /admin/, /oauth/ ni /api/', () => {
+    expect(directives(racine)).toContain('SetEnvIf Request_URI "^/(admin|oauth|api)(/|$)" SANS_CSP');
+  });
+
+  it('cache : /_astro/ un an (réponses réussies seulement), HTML revalidé, /admin/ /oauth/ /api/ jamais', () => {
+    const lignes = directives(racine);
+    expect(lignes).toContain('SetEnvIf Request_URI "^/_astro/" CACHE_IMMUABLE');
+    expect(lignes).toContain('Header always set Cache-Control "no-cache"');
+    expect(lignes).toContain('Header set Cache-Control "public, max-age=31536000, immutable" env=CACHE_IMMUABLE');
+    expect(lignes).toContain('SetEnvIf Request_URI "^/(admin|oauth|api)(/|$)" SANS_CACHE');
+    expect(lignes).toContain('Header always set Cache-Control "no-store" env=SANS_CACHE');
+  });
+
+  it('refus par mod_rewrite ET par <FilesMatch> ; mêmes pages d’erreur pour 403 et 404', () => {
+    const lignes = directives(racine);
+    for (const regle of [
+      'RewriteRule (^|/)\\.(?!well-known(/|$)) - [F]',
+      'RewriteRule ^api/lib(/|$) - [F,NC]',
+      'RewriteRule \\.sample\\.php$ - [F,NC]',
+      'RewriteRule (^|/)config[^/]*\\.php$ - [F,NC]',
+      'RewriteRule \\.md$ - [F,NC]',
+      'RewriteRule (^|/)error_log$ - [F,NC]',
+    ]) {
+      expect(lignes).toContain(regle);
+    }
+    expect(lignes.filter((l) => l === 'Require all denied')).toHaveLength(2);
+    expect(lignes).toContain('ErrorDocument 404 /404.html');
+    expect(lignes).toContain('ErrorDocument 403 /404.html');
+    expect(lignes).toContain('Options -Indexes');
+  });
+
+  it('aucune valeur provisoire', () => {
+    expect(contientPlaceholder(racine)).toBe(false);
+    expect(contientPlaceholder(api)).toBe(false);
+  });
+});
+
+describe('public/api/.htaccess', () => {
+  it('corps limité à 32 Ko, seul contact.php exécutable, jamais en cache, pas de liste', () => {
+    const lignes = directives(api);
+    expect(lignes).toContain('LimitRequestBody 32768');
+    expect(lignes).toContain('<FilesMatch "^(?!contact\\.php$).*\\.(php[0-9s]?|phtml|phar|pht)$">');
+    expect(lignes).toContain('Require all denied');
+    expect(lignes).toContain('Header always set Cache-Control "no-store"');
+    expect(lignes).toContain('Options -Indexes');
+  });
+
+  it('aucune directive mod_rewrite (sinon les refus de la racine ne seraient plus hérités)', () => {
+    expect(directives(api).join('\n')).not.toMatch(/^Rewrite/m);
+  });
+
+  it('expression de <FilesMatch> : tout .php sauf contact.php', () => {
+    const motif = /^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$/;
+    expect(motif.test('contact.php')).toBe(false);
+    for (const nom of ['autre.php', 'config.php', 'config.sample.php', 'contact.php.php', 'x.phtml', 'x.php5', 'xcontact.php']) {
+      expect(motif.test(nom), nom).toBe(true);
+    }
+  });
+});
