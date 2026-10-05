@@ -1,0 +1,21 @@
+# Fins de ligne LF partout, quel que soit le réglage core.autocrlf du poste (Windows compris) :
+# certains tests lisent les fichiers avec des motifs écrits pour LF (ex. public/admin/config.yml).
+* text=auto eol=lf
+*.php text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+
+# Fichiers binaires : jamais convertis.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.odt binary
