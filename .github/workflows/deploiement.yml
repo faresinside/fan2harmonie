@@ -1,0 +1,185 @@
+# Construction et mise en ligne du site chez l'hébergeur français (SSH + rsync).
+#
+# En clair : à chaque modification de la branche main (y compris un enregistrement dans /admin), chaque
+# nuit, ou à la demande, GitHub construit le site puis copie le dossier dist/ sur l'hébergement. Le site est
+# statique : les rendez-vous passés disparaissent seulement quand le site est reconstruit, d'où la
+# reconstruction de chaque nuit. Rien d'autre ne passe par GitHub : le formulaire de contact est traité par
+# l'hébergeur (api/contact.php), aucune donnée de visiteur ne quitte la France.
+#
+# Ordre : tests unitaires → garde-fou de mise en ligne (bloque tant qu'une valeur provisoire subsiste) →
+# construction → copie. Si une étape échoue, rien n'est copié et le site en ligne reste tel quel.
+#
+# Revenir à une version précédente : Actions > « Déploiement » > Run workflow, champ « ref » = identifiant
+# (SHA) d'un ancien commit de main, ou « main ».
+#
+# Secrets à créer (Settings > Secrets and variables > Actions), jamais écrits dans le dépôt :
+#   SSH_HOST         nom du serveur SSH de l'hébergeur
+#   SSH_PORT         port SSH (22 si vide)
+#   SSH_USER         compte SSH
+#   REMOTE_PATH      dossier de la racine web sur le serveur (ex. le dossier « www » du compte)
+#   SSH_PRIVATE_KEY  clé privée SSH dédiée au déploiement (sa clé publique est autorisée sur le compte)
+#   SSH_KNOWN_HOSTS  empreinte(s) du serveur, une ligne de known_hosts (vérifiée : jamais d'acceptation aveugle)
+name: Déploiement
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  schedule:
+    # GitHub planifie en UTC ; Paris est à UTC+2 en été, UTC+1 en hiver. 22:10 UTC = 00:10 à Paris en été,
+    # 23:10 UTC = 00:10 à Paris en hiver : l'une des deux tombe toujours juste après minuit à Paris, quelle
+    # que soit l'heure d'été (l'autre fait une reconstruction de plus, sans effet gênant).
+    - cron: '10 22 * * *'
+    - cron: '10 23 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Version à mettre en ligne (SHA d’un commit, 7 à 40 caractères, ou « main ») ; vide = main'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploiement
+  cancel-in-progress: false
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Vérifier la version demandée
+        env:
+          REF_DEMANDEE: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          if [ -n "$REF_DEMANDEE" ] && ! printf '%s' "$REF_DEMANDEE" | grep -Eqx '[0-9a-f]{7,40}|main'; then
+            echo "::error::« ref » doit être un SHA de commit (7 à 40 caractères hexadécimaux) ou « main »."
+            exit 1
+          fi
+
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Installer Node.js (version de .node-version)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Tests unitaires
+        run: npm test
+
+      - name: Garde-fou de mise en ligne
+        run: npm run verifier:mise-en-ligne
+
+      - name: Construire le site
+        run: npm run build
+
+      - name: Contrôler le dossier construit
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/404.html
+          test -f dist/.htaccess
+          test -f dist/api/.htaccess
+          test -f dist/api/contact.php
+          # Jamais de fichier propre au serveur dans dist/ (il écraserait celui de l'hébergement).
+          for interdit in dist/api/config.php dist/oauth/config.php dist/.htpasswd dist/error_log dist/api/error_log; do
+            if [ -e "$interdit" ]; then
+              echo "::error::$interdit ne doit pas être construit."
+              exit 1
+            fi
+          done
+          # Aucun lien symbolique (il pourrait désigner un fichier du serveur hors du site).
+          if [ -n "$(find dist -type l -print -quit)" ]; then
+            echo "::error::lien symbolique dans dist/."
+            exit 1
+          fi
+
+      - name: Préparer la connexion SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
+            echo "::error::Secrets SSH_PRIVATE_KEY et SSH_KNOWN_HOSTS requis."
+            exit 1
+          fi
+          umask 077
+          mkdir -p "$RUNNER_TEMP/ssh"
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/ssh/cle"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/ssh/known_hosts"
+          chmod 0600 "$RUNNER_TEMP/ssh/cle" "$RUNNER_TEMP/ssh/known_hosts"
+
+      - name: Copier dist/ sur l'hébergement (rsync)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          port="${SSH_PORT:-22}"
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$REMOTE_PATH" ]; then
+            echo "::error::Secrets SSH_HOST, SSH_USER et REMOTE_PATH requis."
+            exit 1
+          fi
+          if ! printf '%s' "$port" | grep -Eqx '[0-9]{1,5}'; then
+            echo "::error::SSH_PORT doit être un numéro de port."
+            exit 1
+          fi
+          # Dossier distant : caractères simples, jamais « / » seul ni « .. » (rsync --delete-after y supprime
+          # tout ce qui n'est pas dans dist/).
+          if ! printf '%s' "$REMOTE_PATH" | grep -Eqx '[A-Za-z0-9._~/-]+' \
+            || printf '%s' "$REMOTE_PATH" | grep -Eqx '[/]*' \
+            || printf '%s' "$REMOTE_PATH" | grep -Eq '(^|/)\.\.(/|$)'; then
+            echo "::error::REMOTE_PATH invalide."
+            exit 1
+          fi
+          # Fichiers propres au serveur, JAMAIS envoyés ni supprimés : exclus (« - ») ET protégés (« P »).
+          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents.
+          rsync -rlpt --delete-after --safe-links --chmod=D755,F644 --itemize-changes --stats \
+            --filter='- /api/config.php' --filter='P /api/config.php' \
+            --filter='- /oauth/config.php' --filter='P /oauth/config.php' \
+            --filter='- error_log' --filter='P error_log' \
+            --filter='- /.well-known/' --filter='P /.well-known/' \
+            --filter='- /cgi-bin/' --filter='P /cgi-bin/' \
+            --filter='- /.htpasswd' --filter='P /.htpasswd' \
+            --filter='- /.user.ini' --filter='P /.user.ini' \
+            -e "ssh -p $port -i $RUNNER_TEMP/ssh/cle -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts" \
+            dist/ "$SSH_USER@$SSH_HOST:${REMOTE_PATH%/}/" > "$RUNNER_TEMP/rsync.log"
+          modifies=$(grep -c '^[<>ch*]' "$RUNNER_TEMP/rsync.log" || true)
+          {
+            echo "## Mise en ligne"
+            echo ""
+            echo "- Version : \`$(git rev-parse HEAD)\` (déclencheur : $GITHUB_EVENT_NAME)"
+            echo "- Éléments envoyés ou supprimés : $modifies"
+          } >> "$GITHUB_STEP_SUMMARY"
+          tail -n 15 "$RUNNER_TEMP/rsync.log"
+
+      - name: Vérifier que le site répond
+        run: |
+          set -euo pipefail
+          adresse=$(node --input-type=module -e "const { site } = await import('./src/config/site.ts'); console.log(new URL('/', site.url).href)")
+          if curl -fsSI --max-time 20 "$adresse" > /dev/null; then
+            echo "Le site répond : $adresse"
+          else
+            echo "::warning::$adresse ne répond pas encore (nom de domaine pas encore pointé vers l'hébergeur ?)."
+          fi
+
+      - name: Effacer la clé SSH
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
