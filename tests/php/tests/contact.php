@@ -340,19 +340,28 @@ test('fichiers joints ($_FILES non vide) : 413, aucun courriel', function (): vo
     egal([], $facteur->envois);
 });
 
-test('requête de plus de 20 Ko (Content-Length) : 413 ; 20 Ko pile : acceptée', function (): void {
-    [$r, $facteur] = traiter([], ['CONTENT_LENGTH' => '20481']);
+test('requête de plus de 56 Ko (Content-Length) : 413 ; 56 Ko pile : acceptée', function (): void {
+    [$r, $facteur] = traiter([], ['CONTENT_LENGTH' => '57345']);
     egal(413, $r['statut']);
     egal(['ok' => false, 'errors' => [['message' => 'Requête trop volumineuse.']]], $r['corps']);
     egal([], $facteur->envois);
-    [$r] = traiter([], ['CONTENT_LENGTH' => '20480']);
+    [$r] = traiter([], ['CONTENT_LENGTH' => '57344']);
     egal(200, $r['statut']);
 });
 
-test('sans Content-Length lisible : la taille des champs reçus est plafonnée à 20 Ko', function (): void {
+test('pire cas d’un envoi sans JavaScript (5 000 caractères de 3 octets, encodés %XX) : accepté', function (): void {
+    $champs = postTest(['message' => str_repeat('€', 5000), 'nom' => str_repeat('é', 100)]);
+    $corps = http_build_query($champs);
+    vrai(strlen($corps) > 45000, 'corps encodé : ' . strlen($corps) . ' octets');
+    [$r, $facteur] = traiter(['message' => str_repeat('€', 5000), 'nom' => str_repeat('é', 100)], ['CONTENT_LENGTH' => (string) strlen($corps)]);
+    egal(200, $r['statut']);
+    egal(1, count($facteur->envois));
+});
+
+test('sans Content-Length lisible : la taille des champs reçus est plafonnée à 56 Ko', function (): void {
     foreach ([null, '', 'abc', '-5'] as $longueur) {
         $serveur = $longueur === null ? sans(serveurTest(), 'CONTENT_LENGTH') : serveurTest(['CONTENT_LENGTH' => $longueur]);
-        $r = Fan2Harmonie\Contact\traiterContact(postTest(['_autre' => str_repeat('x', 21000)]), $serveur, configTest(), new Facteur(), new LimiteurFaux(), instantTest());
+        $r = Fan2Harmonie\Contact\traiterContact(postTest(['_autre' => str_repeat('x', 57400)]), $serveur, configTest(), new Facteur(), new LimiteurFaux(), instantTest());
         egal(413, $r['statut'], montrer($longueur));
         $r = Fan2Harmonie\Contact\traiterContact(postTest(), $serveur, configTest(), new Facteur(), new LimiteurFaux(), instantTest());
         egal(200, $r['statut'], montrer($longueur));

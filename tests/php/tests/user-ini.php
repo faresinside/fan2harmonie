@@ -14,7 +14,7 @@ test('.user.ini de public/api : réglages PHP du script de contact', function ()
         'log_errors' => 'On',
         'expose_php' => 'Off',
         'file_uploads' => 'Off',
-        'post_max_size' => '64K',
+        'post_max_size' => '72K',
         'max_input_vars' => '50',
         'max_execution_time' => '10',
         'memory_limit' => '32M',

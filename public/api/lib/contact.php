@@ -7,7 +7,7 @@
  * Demandé directement par le web, ce fichier ne fait que déclarer des constantes et des fonctions : il n'affiche
  * rien et n'agit sur rien. (L'accès direct à api/lib/ et à api/config.php sera en plus refusé par le serveur.)
  *
- * Parcours d'une requête (traiterContact) : méthode POST → configuration présente et valide → taille ≤ 20 Ko →
+ * Parcours d'une requête (traiterContact) : méthode POST → configuration présente et valide → taille ≤ 56 Ko →
  * origine autorisée → champ piège vide (sinon faux succès) → champs valides (sinon 422) → limiteur par adresse IP
  * → un courriel texte à l'adresse de la configuration. Rien n'est stocké ; aucune donnée saisie n'est journalisée.
  */
@@ -23,8 +23,12 @@ use RuntimeException;
 use stdClass;
 use Throwable;
 
-/** Taille maximale d'une requête (corps), en octets. */
-const TAILLE_MAX_REQUETE = 20480;
+/**
+ * Taille maximale d'une requête (corps), en octets : 56 Ko. Pire cas d'un envoi sans JavaScript (formulaire
+ * encodé %XX) : 5 000 caractères de 3 octets ≈ 45 Ko, plus nom et e-mail. Au-dessus : Apache 64 Ko
+ * (api/.htaccess, LimitRequestBody), PHP 72 Ko (api/.user.ini, post_max_size).
+ */
+const TAILLE_MAX_REQUETE = 57344;
 const LONGUEUR_MAX_NOM = 100;
 const LONGUEUR_MAX_EMAIL = 254;
 /** Fenêtre glissante du limiteur, en secondes. */
@@ -368,7 +372,7 @@ function configValide(array $config): bool
 // Contrôles de la requête
 // ---------------------------------------------------------------------------------------------------------
 
-/** Vrai si le corps annoncé (Content-Length) ou la taille des champs reçus dépasse 20 Ko. */
+/** Vrai si le corps annoncé (Content-Length) ou la taille des champs reçus dépasse 56 Ko. */
 function tailleExcessive(array $post, array $serveur): bool
 {
     $longueur = $serveur['CONTENT_LENGTH'] ?? null;

@@ -232,8 +232,8 @@ test('intégration HTTP (php -S) : configuration, méthode, origine, envoi, page
         vrai(ctype_digit($r['entetes']['retry-after'] ?? '') && (int) $r['entetes']['retry-after'] > 3500, 'Retry-After en secondes');
         egal(2, count(glob($site['courriers'] . '/*.eml') ?: []), 'aucun troisième message');
 
-        // 8. Requête de plus de 20 Ko : 413 ; fichier joint (multipart) : 413.
-        $r = posterFormulaire(VALIDE + ['remplissage' => str_repeat('x', 21000)], JS);
+        // 8. Requête de plus de 56 Ko : 413 ; fichier joint (multipart) : 413.
+        $r = posterFormulaire(VALIDE + ['remplissage' => str_repeat('x', 58000)], JS);
         egal(413, $r['statut']);
         $limite = 'limite-' . bin2hex(random_bytes(4));
         $multipart = '';
