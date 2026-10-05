@@ -4,7 +4,8 @@ import {
   listerPlaceholders,
   validerDepot,
   validerEmail,
-  validerFormspree,
+  SIRETS_EXEMPLES,
+  validerEndpointContact,
   validerSiret,
   validerUrlHttps,
   validerUrlSite,
@@ -53,26 +54,32 @@ describe('validerSiret', () => {
   });
 });
 
-describe('validerFormspree', () => {
-  it('accepte une adresse de formulaire Formspree', () => {
-    expect(validerFormspree('https://formspree.io/f/xyzabcde')).toBe(true);
-    expect(validerFormspree('https://formspree.io/f/AbC123')).toBe(true);
+describe('validerEndpointContact', () => {
+  it('accepte exactement le script de contact du même hébergement', () => {
+    expect(validerEndpointContact('/api/contact.php')).toBe(true);
   });
 
   it.each([
     'À_COMPLÉTER',
-    'http://formspree.io/f/xyzabcde',
-    'https://formspree.io/f/',
-    'https://formspree.io/f/xyz/abc',
-    'https://formspree.io/f/xyz-abc',
-    'https://exemple.org/f/xyzabcde',
-    'https://formspree.io.exemple.org/f/xyz',
-    ' https://formspree.io/f/xyzabcde',
-  ])('refuse %s', (url) => {
-    expect(validerFormspree(url)).toBe(false);
+    '',
+    'https://formspree.io/f/xyzabcde',
+    'https://fan2harmonie.fr/api/contact.php',
+    '//evil.example/api/contact.php',
+    '/api/contact.php?x=1',
+    '/api/contact.php ',
+    'api/contact.php',
+    '/api/autre.php',
+  ])('refuse « %s »', (url) => {
+    expect(validerEndpointContact(url)).toBe(false);
   });
 });
 
+describe('SIRET d’exemple', () => {
+  it('les valeurs d’exemple sont listées sans espaces, et 123 456 789 00012 échoue déjà à la clé de Luhn', () => {
+    expect(SIRETS_EXEMPLES).toEqual(['12345678900012', '00000000000000']);
+    expect(validerSiret('123 456 789 00012')).toBe(false);
+  });
+});
 describe('validerEmail', () => {
   it('accepte une adresse simple', () => {
     expect(validerEmail('contact@exemple.fr')).toBe(true);
@@ -165,12 +172,13 @@ describe('garde-fou de mise en ligne : séparé de npm test', () => {
 
 describe('verifierSite et verifierBackendCms', () => {
   const siteRempli = {
-    url: 'https://www.exemple.fr',
-    email: 'contact@exemple.fr',
-    formEndpoint: 'https://formspree.io/f/xyzabcde',
+    url: 'https://fan2harmonie.fr',
+    email: 'contact@fan2harmonie.fr',
+    formEndpoint: '/api/contact.php',
     siret: '123 456 789 01237',
     ville: 'Rambouillet',
     editeur: 'Prénom Nom',
+    hebergeur: { nom: 'Hébergeur SAS', adresse: '1 rue de l’Exemple, 75000 Paris', siteWeb: 'https://www.hebergeur.example.fr' },
   };
 
   it('aucun problème quand tout est correctement rempli', () => {
@@ -180,17 +188,45 @@ describe('verifierSite et verifierBackendCms', () => {
     );
   });
 
+  it('SIRET et ville facultatifs : null ou vides, aucun problème', () => {
+    expect(verifierSite({ ...siteRempli, siret: null, ville: null })).toEqual([]);
+    expect(verifierSite({ ...siteRempli, siret: '  ', ville: '' })).toEqual([]);
+  });
+
+  it('SIRET renseigné : 14 chiffres et clé de Luhn exigés', () => {
+    for (const s of siretValides) expect(verifierSite({ ...siteRempli, siret: s }), s).toEqual([]);
+    const problemes = verifierSite({ ...siteRempli, siret: '12345678901236' });
+    expect(problemes).toHaveLength(1);
+    expect(problemes[0]).toMatch(/^site\.siret .*n'est pas un SIRET valide/);
+  });
+
+  it.each(['123 456 789 00012', '12345678900012', '000 000 000 00000', '00000000000000'])(
+    'SIRET d’exemple %s : refusé avec un message explicite (même si la clé de Luhn est juste)',
+    (siret) => {
+      const problemes = verifierSite({ ...siteRempli, siret });
+      expect(problemes).toHaveLength(1);
+      expect(problemes[0]).toMatch(/^site\.siret /);
+      expect(problemes[0]).toContain("SIRET d'exemple : à remplacer par le vrai SIRET");
+    },
+  );
+
+  it('ville renseignée mais provisoire : signalée', () => {
+    expect(verifierSite({ ...siteRempli, ville: 'À_COMPLÉTER' })).toHaveLength(1);
+  });
+
   it('un message en français par valeur à reprendre, avec le nom du champ', () => {
     const problemes = verifierSite({
       url: 'https://a-completer.invalid',
       email: 'À_COMPLÉTER',
-      formEndpoint: 'À_COMPLÉTER',
+      formEndpoint: 'https://formspree.io/f/xyzabcde',
       siret: '12345678901236',
       ville: 'À_COMPLÉTER',
       editeur: '  ',
+      hebergeur: { nom: 'À_COMPLÉTER', adresse: '', siteWeb: 'http://hebergeur.fr' },
     });
-    expect(problemes).toHaveLength(6);
-    for (const champ of ['url', 'email', 'formEndpoint', 'siret', 'ville', 'editeur']) {
+    const champs = ['url', 'email', 'formEndpoint', 'siret', 'ville', 'editeur', 'hebergeur.nom', 'hebergeur.adresse', 'hebergeur.siteWeb'];
+    expect(problemes).toHaveLength(champs.length);
+    for (const champ of champs) {
       expect(problemes.some((p) => p.startsWith(`site.${champ} `)), champ).toBe(true);
     }
     expect(problemes.join('\n')).toMatch(/SIRET/);

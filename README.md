@@ -17,10 +17,16 @@ Tout tourne dans Docker (rien à installer sur le PC).
     Elle est posée uniquement par `scripts/lighthouse.mjs` : ne JAMAIS la définir chez l'hébergeur (tableau de bord Cloudflare Pages), sinon le site publié aurait une canonique et un plan du site faux.
 - Développement : `docker compose up`, puis http://localhost:4321
 
+## Formulaire de contact (PHP)
+
+- Le formulaire est reçu par `public/api/contact.php` (logique dans `public/api/lib/contact.php`) sur l'hébergement PHP du site, qui envoie un e-mail à `contact@fan2harmonie.fr` : aucune donnée de visiteur ne passe par un service tiers ni ne quitte l'hébergeur français.
+- Tests PHP (dans Docker, service `php`, sans réseau) : `docker compose run --rm php php tests/php/run.php` (alias `npm run test:php` là où `docker` est disponible). `npm test` (conteneur `app`) n'a pas besoin de PHP.
+- Configuration : `api/config.php` sur le serveur, à côté de `contact.php`, créé à partir de `public/api/config.sample.php`. Il n'est jamais versionné (`.gitignore`) ; sans lui, le formulaire répond « Configuration manquante ».
+
 ## En-têtes HTTP
 
 - `public/_headers` (Cloudflare Pages, vérifié par `tests/unit/headers.test.ts`) : `nosniff`, `Referrer-Policy`, `Permissions-Policy`, `X-Frame-Options: DENY` sur tout le site ; cache d'un an immuable sur `/_astro/*` ; `no-store` sur `/admin/*`. Aucun `Cross-Origin-Opener-Policy` (casserait la fenêtre de connexion GitHub de `/admin`). `astro preview` n'applique pas ce fichier : à vérifier sur le site en ligne.
-- CSP : à faire plus tard (hash des scripts en ligne). Les pages construites contiennent deux scripts en ligne : le menu (`src/components/Header.astro`, `is:inline`) et le formulaire de contact (`src/scripts/contact.ts`, qu'Astro insère dans la page en `type="module"`). Une `Content-Security-Policy` devra autoriser leurs empreintes (`'sha256-…'`, recalculées à chaque construction) et `connect-src https://formspree.io` ; `/admin` (Sveltia charge des ressources depuis unpkg.com, cdn.jsdelivr.net, api.github.com) demandera sa propre politique.
+- CSP : à faire plus tard (hash des scripts en ligne). Les pages construites contiennent deux scripts en ligne : le menu (`src/components/Header.astro`, `is:inline`) et le formulaire de contact (`src/scripts/contact.ts`, qu'Astro insère dans la page en `type="module"`). Une `Content-Security-Policy` devra autoriser leurs empreintes (`'sha256-…'`, recalculées à chaque construction) et `connect-src 'self'` (le formulaire écrit à `/api/contact.php`, même origine) ; `/admin` (Sveltia charge des ressources depuis unpkg.com, cdn.jsdelivr.net, api.github.com) demandera sa propre politique.
 
 ## Administration
 

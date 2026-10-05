@@ -1,6 +1,6 @@
 /**
  * Contrôles de mise en ligne : aucune valeur de substitution ne doit subsister, et les vraies valeurs
- * (adresse du site, e-mail, formulaire, SIRET, dépôt GitHub, relais d'authentification) doivent être plausibles.
+ * (adresse du site, e-mail, script de contact, SIRET facultatif, hébergeur, dépôt GitHub, relais d'authentification) doivent être plausibles.
  * Utilisé par le garde-fou `npm run verifier:mise-en-ligne` (tests/deploy/) ; fonctions pures, testées dans tests/unit/.
  */
 
@@ -50,9 +50,17 @@ export function validerSiret(siret: string): boolean {
   return somme % 10 === 0;
 }
 
-/** Adresse d'envoi d'un formulaire Formspree : https://formspree.io/f/<identifiant>. */
-export function validerFormspree(url: string): boolean {
-  return /^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/.test(url);
+/**
+ * SIRET d'exemple (sans espaces) : refusés à la mise en ligne même si leur clé de Luhn est juste
+ * (00000000000000 l'est). `site.ts` affiche le premier en attendant le vrai SIRET.
+ */
+export const SIRETS_EXEMPLES: readonly string[] = ['12345678900012', '00000000000000'];
+
+/** Adresse d'envoi du formulaire : exactement le script PHP du même hébergement (public/api/contact.php). */
+export const ENDPOINT_CONTACT = '/api/contact.php';
+
+export function validerEndpointContact(url: string): boolean {
+  return url === ENDPOINT_CONTACT;
 }
 
 /** Adresse e-mail plausible (contrôle simple : un @, un domaine avec un point, aucun espace). */
@@ -96,12 +104,17 @@ export interface SiteAVerifier {
   url: string;
   email: string;
   formEndpoint: string;
-  siret: string;
-  ville: string;
+  /** Facultatif : null ou vide = pas de SIRET (ligne masquée). */
+  siret: string | null;
+  /** Facultative : null ou vide = ville masquée. */
+  ville: string | null;
   editeur: string;
+  hebergeur: { nom: string; adresse: string; siteWeb: string };
 }
 
 const decrire = (v: unknown) => `« ${String(v)} »`;
+const vide = (v: string | null) => v === null || v.trim() === '';
+const provisoire = (v: string) => v.trim() === '' || contientPlaceholder(v);
 
 /** Problèmes de src/config/site.ts, un message en français par champ (vide si tout est prêt). */
 export function verifierSite(s: SiteAVerifier): string[] {
@@ -112,23 +125,34 @@ export function verifierSite(s: SiteAVerifier): string[] {
   if (!validerEmail(s.email) || contientPlaceholder(s.email)) {
     problemes.push(`site.email : ${decrire(s.email)} n'est pas une adresse e-mail (attendu : l'adresse qui reçoit les messages).`);
   }
-  if (!validerFormspree(s.formEndpoint)) {
-    problemes.push(`site.formEndpoint : ${decrire(s.formEndpoint)} n'est pas une adresse de formulaire Formspree (attendu : https://formspree.io/f/xxxxxxxx).`);
+  if (!validerEndpointContact(s.formEndpoint)) {
+    problemes.push(`site.formEndpoint : ${decrire(s.formEndpoint)} n'est pas l'adresse du script de contact (attendu : ${ENDPOINT_CONTACT}).`);
   }
-  if (!validerSiret(s.siret)) {
-    problemes.push(`site.siret : ${decrire(s.siret)} n'est pas un SIRET valide (14 chiffres, clé de contrôle juste).`);
+  if (!vide(s.siret)) {
+    const siret = s.siret ?? '';
+    if (SIRETS_EXEMPLES.includes(siret.replace(/ /g, ''))) {
+      problemes.push(`site.siret : ${decrire(siret)} — SIRET d'exemple : à remplacer par le vrai SIRET (ou null s'il n'y en a pas).`);
+    } else if (!validerSiret(siret)) {
+      problemes.push(`site.siret : ${decrire(siret)} n'est pas un SIRET valide (14 chiffres, clé de contrôle juste ; ou null s'il n'y en a pas).`);
+    }
+  }
+  if (!vide(s.ville) && contientPlaceholder(s.ville ?? '')) {
+    problemes.push(`site.ville : ${decrire(s.ville)} est provisoire (attendu : la ville, ou null pour ne pas l'afficher).`);
+  }
+  if (provisoire(s.editeur)) {
+    problemes.push(`site.editeur : ${decrire(s.editeur)} est vide ou provisoire (attendu : prénom et nom de l'éditrice, responsable de la publication).`);
   }
   for (const [champ, valeur, attendu] of [
-    ['ville', s.ville, 'la ville de domiciliation de l’entreprise'],
-    ['editeur', s.editeur, 'prénom et nom de la responsable de la publication'],
+    ['nom', s.hebergeur.nom, "la raison sociale de l'hébergeur"],
+    ['adresse', s.hebergeur.adresse, "l'adresse postale de l'hébergeur"],
   ] as const) {
-    if (valeur.trim() === '' || contientPlaceholder(valeur)) {
-      problemes.push(`site.${champ} : ${decrire(valeur)} est vide ou provisoire (attendu : ${attendu}).`);
-    }
+    if (provisoire(valeur)) problemes.push(`site.hebergeur.${champ} : ${decrire(valeur)} est vide ou provisoire (attendu : ${attendu}).`);
+  }
+  if (provisoire(s.hebergeur.siteWeb) || !validerUrlHttps(s.hebergeur.siteWeb)) {
+    problemes.push(`site.hebergeur.siteWeb : ${decrire(s.hebergeur.siteWeb)} n'est pas une adresse https (attendu : le site web de l'hébergeur).`);
   }
   return problemes;
 }
-
 /** Problèmes de la section `backend` de public/admin/config.yml (vide si tout est prêt). */
 export function verifierBackendCms(backend: Record<string, unknown>): string[] {
   const problemes: string[] = [];

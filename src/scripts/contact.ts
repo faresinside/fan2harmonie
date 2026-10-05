@@ -1,11 +1,11 @@
 /**
  * Amélioration progressive du formulaire de contact (src/components/ContactForm.astro).
- * Sans ce script, le formulaire part en POST classique et le service affiche sa propre page de remerciement.
+ * Sans ce script, le formulaire part en POST classique et le script de contact (public/api/contact.php) répond\n * par une courte page HTML.
  * Avec lui : envoi en arrière-plan, bouton « Envoi en cours… », puis message de réussite (formulaire vidé)
- * ou message d'erreur avec l'adresse e-mail de secours (la saisie est conservée).
+ * ou message d'erreur avec l'adresse e-mail de secours (la saisie est conservée ; les champs refusés par le\n * script, réponse 422, sont marqués invalides comme après une saisie incorrecte).
  * La validation reste celle du navigateur : l'événement « submit » n'arrive qu'avec un formulaire valide.
  */
-import { envoyerFormulaire } from '../lib/contact';
+import { envoyerFormulaireDetaille } from '../lib/contact';
 
 function brancher(formulaire: HTMLFormElement) {
   const bouton = formulaire.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -75,7 +75,7 @@ function brancher(formulaire: HTMLFormElement) {
     libelle.textContent = 'Envoi en cours…';
     formulaire.setAttribute('aria-busy', 'true');
 
-    const issue = await envoyerFormulaire(formulaire.action, new FormData(formulaire));
+    const { issue, champs } = await envoyerFormulaireDetaille(formulaire.action, new FormData(formulaire));
 
     formulaire.removeAttribute('aria-busy');
     libelle.textContent = texteBouton;
@@ -89,6 +89,11 @@ function brancher(formulaire: HTMLFormElement) {
       zoneSucces.replaceChildren(...copie(modeleSucces));
       zoneSucces.focus();
     } else {
+      // Noms déjà filtrés (champs connus du formulaire) : l'indication écrite du champ apparaît (voir le CSS).
+      for (const nom of champs) {
+        const champ = formulaire.elements.namedItem(nom);
+        if (champ instanceof Element) marquer(champ, true);
+      }
       zoneErreur.replaceChildren(...copie(modeleErreur));
       zoneErreur.focus();
     }

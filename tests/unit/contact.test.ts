@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { envoyerFormulaire, lienMailto, SUJET_MESSAGE } from '../../src/lib/contact';
+import { champsEnErreur, envoyerFormulaire, envoyerFormulaireDetaille, lienMailto, SUJET_MESSAGE } from '../../src/lib/contact';
 
 describe('lienMailto', () => {
   it('construit un lien mailto avec le sujet du site, encodé', () => {
@@ -27,10 +27,10 @@ describe('envoyerFormulaire', () => {
   it('POST en JSON vers l’adresse d’envoi, avec les données du formulaire', async () => {
     const envoi = vi.fn(async () => new Response('{"ok":true}', { status: 200 }));
     const d = donnees();
-    await envoyerFormulaire('https://formspree.io/f/abc', d, envoi);
+    await envoyerFormulaire('/api/contact.php', d, envoi);
     expect(envoi).toHaveBeenCalledOnce();
     const [url, options] = envoi.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe('https://formspree.io/f/abc');
+    expect(url).toBe('/api/contact.php');
     expect(options.method).toBe('POST');
     expect(options.body).toBe(d);
     expect(options.headers).toEqual({ Accept: 'application/json' });
@@ -99,5 +99,56 @@ describe('envoyerFormulaire', () => {
         options?.signal?.addEventListener('abort', () => rejeter(new DOMException('délai', 'TimeoutError')));
       });
     expect(await envoyerFormulaire('/x', donnees(), envoi, 20)).toBe('erreur');
+  });
+});
+
+describe('champs signalés par le script de contact (réponse 422)', () => {
+  const json = (status: number, corps: string) =>
+    async () => new Response(corps, { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
+  const d = () => new FormData();
+
+  it('422 avec des erreurs par champ : erreur, champs du formulaire listés dans l’ordre reçu', async () => {
+    const corps = JSON.stringify({
+      ok: false,
+      errors: [
+        { field: 'email', message: 'Adresse e-mail invalide.' },
+        { field: 'message', message: 'Écrivez votre message.' },
+      ],
+    });
+    expect(await envoyerFormulaireDetaille('/x', d(), json(422, corps))).toEqual({ issue: 'erreur', champs: ['email', 'message'] });
+    expect(await envoyerFormulaire('/x', d(), json(422, corps))).toBe('erreur');
+  });
+
+  it('succès, erreur sans champ, corps illisible ou non JSON : aucun champ', async () => {
+    expect(await envoyerFormulaireDetaille('/x', d(), json(200, '{"ok":true}'))).toEqual({ issue: 'succes', champs: [] });
+    expect(await envoyerFormulaireDetaille('/x', d(), json(429, '{"ok":false,"errors":[{"message":"x"}]}'))).toEqual({ issue: 'erreur', champs: [] });
+    expect(await envoyerFormulaireDetaille('/x', d(), json(422, '{pas du json'))).toEqual({ issue: 'erreur', champs: [] });
+    expect(
+      await envoyerFormulaireDetaille('/x', d(), async () => new Response('<p>x</p>', { status: 422, headers: { 'Content-Type': 'text/html' } })),
+    ).toEqual({ issue: 'erreur', champs: [] });
+    expect(
+      await envoyerFormulaireDetaille('/x', d(), async () => {
+        throw new TypeError('réseau');
+      }),
+    ).toEqual({ issue: 'erreur', champs: [] });
+  });
+
+  it('champsEnErreur : seulement les noms des champs du formulaire, sans doublon', () => {
+    expect(
+      champsEnErreur({
+        errors: [
+          { field: 'nom' },
+          { field: 'consentement' },
+          { field: '_gotcha' },
+          { field: 'nom' },
+          { field: 42 },
+          { field: 'contact-nom"]' },
+          'texte',
+          null,
+        ],
+      }),
+    ).toEqual(['nom', 'consentement']);
+    expect(champsEnErreur(null)).toEqual([]);
+    expect(champsEnErreur({ errors: { email: 'x' } })).toEqual([]);
   });
 });

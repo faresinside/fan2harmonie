@@ -1,11 +1,12 @@
 ---
 /**
  * Contact : quelques mots de Stéphanie et l'adresse e-mail, puis le formulaire sur une carte crème.
- * Formulaire envoyé à Formspree (`site.formEndpoint`) : POST classique sans JavaScript, envoi en arrière-plan
- * avec (src/scripts/contact.ts). Validation native du navigateur (pas de « novalidate ») ; après une saisie
- * invalide, une courte indication écrite s'affiche sous le champ, en plus de la couleur.
- * Anti-spam : champ piège « _gotcha » (nom attendu par Formspree), hors écran, ignoré au clavier et par les
- * lecteurs d'écran ; un robot qui le remplit voit son message écarté par Formspree.
+ * Formulaire envoyé au script PHP du même hébergement (`site.formEndpoint` = /api/contact.php, voir
+ * public/api/) : POST classique sans JavaScript, envoi en arrière-plan avec (src/scripts/contact.ts).
+ * Validation native du navigateur (pas de « novalidate ») ; après une saisie invalide, une courte indication
+ * écrite s'affiche sous le champ, en plus de la couleur. Longueurs maximales identiques à celles du script.
+ * Anti-spam : champ piège « _gotcha », hors écran, ignoré au clavier et par les lecteurs d'écran ; un robot qui
+ * le remplit reçoit un faux succès et son message n'est pas envoyé. « _subject » est ignoré par le script.
  * RGPD : consentement obligatoire, finalité unique (répondre), détails dans /mentions-legales.
  */
 import { site } from '../config/site';
@@ -35,7 +36,7 @@ const mailto = lienMailto(site.email);
       <div class="formulaire__ligne">
         <div class="champ">
           <label class="champ__libelle" for="contact-nom">Votre nom</label>
-          <input class="champ__saisie" id="contact-nom" name="nom" type="text" autocomplete="name" aria-describedby="contact-nom-aide" required />
+          <input class="champ__saisie" id="contact-nom" name="nom" type="text" maxlength="100" autocomplete="name" aria-describedby="contact-nom-aide" required />
           <p class="champ__aide" id="contact-nom-aide">Indiquez votre nom.</p>
         </div>
 
@@ -46,6 +47,7 @@ const mailto = lienMailto(site.email);
             id="contact-email"
             name="email"
             type="email"
+            maxlength="254"
             autocomplete="email"
             inputmode="email"
             spellcheck="false"
@@ -58,7 +60,7 @@ const mailto = lienMailto(site.email);
 
       <div class="champ">
         <label class="champ__libelle" for="contact-message">Votre message</label>
-        <textarea class="champ__saisie champ__saisie--message" id="contact-message" name="message" rows="6" aria-describedby="contact-message-aide" required
+        <textarea class="champ__saisie champ__saisie--message" id="contact-message" name="message" rows="6" maxlength="5000" aria-describedby="contact-message-aide" required
         ></textarea>
         <p class="champ__aide" id="contact-message-aide">Écrivez votre message.</p>
       </div>
