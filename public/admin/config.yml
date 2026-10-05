@@ -1,6 +1,7 @@
 # Configuration de Sveltia CMS (espace d'administration /admin).
 # Les champs correspondent exactement aux schémas Zod de src/lib/schemas.ts (vérifié par tests/unit/cms-config.test.ts).
-# Valeurs À_COMPLÉTER : dépôt GitHub (« propriétaire/dépôt ») et adresse du relais d'authentification (Task 11).
+# À la mise en ligne, renseigner `repo` (dépôt GitHub « propriétaire/dépôt ») et `base_url` (adresse du relais
+# d'authentification sveltia-cms-auth) : voir docs/MISE-EN-LIGNE.md, vérifié par `npm run verifier:mise-en-ligne`.
 
 backend:
   name: github
