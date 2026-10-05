@@ -14,25 +14,50 @@
 <script nonce="0123456789abcdef0123456789abcdef">
 (function () {
   "use strict";
+  var script = document.currentScript;
   var origines = ["http:\/\/localhost:4321"];
   var message = "authorization:github:success:{\u0022token\u0022:\u0022gho_JetonFactice0000000000000000000E2E\u0022,\u0022provider\u0022:\u0022github\u0022}";
   var attendu = "authorizing:github";
+  var texteEchec = "La connexion n\u2019a pas abouti. Vous pouvez fermer cette fen\u00eatre et recommencer.";
   var parent = window.opener;
+  var delai = 0;
+  function effacer(echec) {
+    message = null;
+    if (script && script.parentNode) {
+      script.parentNode.removeChild(script);
+    }
+    if (echec) {
+      var principal = document.querySelector("main");
+      if (principal) {
+        var paragraphe = document.createElement("p");
+        paragraphe.textContent = texteEchec;
+        principal.textContent = "";
+        principal.appendChild(paragraphe);
+      }
+    }
+  }
   if (!parent) {
+    effacer(true);
     return;
   }
   function recevoir(evenement) {
     var rang = origines.indexOf(evenement.origin);
-    if (evenement.source !== parent || rang === -1 || evenement.data !== attendu) {
+    if (message === null || evenement.source !== parent || rang === -1 || evenement.data !== attendu) {
       return;
     }
     window.removeEventListener("message", recevoir);
+    window.clearTimeout(delai);
     parent.postMessage(message, origines[rang]);
+    effacer(false);
     window.setTimeout(function () {
       window.close();
     }, 500);
   }
   window.addEventListener("message", recevoir);
+  delai = window.setTimeout(function () {
+    window.removeEventListener("message", recevoir);
+    effacer(true);
+  }, 30000);
   for (var i = 0; i < origines.length; i += 1) {
     parent.postMessage(attendu, origines[i]);
   }

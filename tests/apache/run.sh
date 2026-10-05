@@ -196,7 +196,7 @@ page_oauth() {
         if grep -Fq -- "$fuite" "$TMP/corps"; then ko "$1" "« $fuite » dans le corps"; fi
     done
 }
-EFFACE='fan2h_oauth_state=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/oauth/; Secure; HttpOnly; SameSite=Lax'
+EFFACE='__Host-fan2h_oauth_state=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; Secure; HttpOnly; SameSite=Lax'
 
 # auth.php, comme l'ouvre Sveltia : 302 vers GitHub (valeurs de la configuration, jamais de la requête), state
 # dans un cookie HttpOnly, Secure, SameSite=Lax, limité à /oauth/.
@@ -205,7 +205,7 @@ attendre_statut "/oauth/auth.php exécuté (configuration de test)" 302
 location=$(valeurs Location)
 etat=$(printf '%s' "$location" | sed -n 's/^https:\/\/github\.com\/login\/oauth\/authorize?client_id=Iv1\.apachetest0001&redirect_uri=https%3A%2F%2Ffan2harmonie\.fr%2Foauth%2Fcallback\.php&scope=repo&state=\([0-9a-f]\{64\}\)$/\1/p')
 if [ -n "$etat" ]; then ok "/oauth/auth.php → GitHub, paramètres de la configuration seulement"; else ko "/oauth/auth.php : Location" "obtenu : $location"; fi
-attendre_entete "/oauth/auth.php : cookie du state" Set-Cookie "fan2h_oauth_state=$etat; Max-Age=600; Path=/oauth/; Secure; HttpOnly; SameSite=Lax"
+attendre_entete "/oauth/auth.php : cookie du state" Set-Cookie "__Host-fan2h_oauth_state=$etat; Max-Age=600; Path=/; Secure; HttpOnly; SameSite=Lax"
 attendre_entete "/oauth/auth.php" Cache-Control "no-store"
 attendre_absent "/oauth/auth.php (redirection)" "Content-Security-Policy"
 entetes_securite "/oauth/auth.php" "no-referrer"
@@ -223,9 +223,14 @@ done
 requete GET "https://$DOMAINE/oauth/callback.php?code=abc123&state=$etat"
 attendre_statut "/oauth/callback.php sans cookie" 403
 page_oauth "/oauth/callback.php sans cookie"
+# Vérification « smoke test » de la checklist : exactement une fois chacun.
+for nom in Cache-Control Referrer-Policy Content-Security-Policy; do
+    nombre=$(valeurs "$nom" | grep -c '' || true)
+    if [ "$nombre" = 1 ]; then ok "/oauth/callback.php : $nom une seule fois"; else ko "/oauth/callback.php : $nom" "$nombre fois"; fi
+done
 attendre_entete "/oauth/callback.php : cookie effacé" Set-Cookie "$EFFACE"
 attendre_corps "/oauth/callback.php" "authorization:github:error:"
-requete GET "https://$DOMAINE/oauth/callback.php?error=access_denied&error_description=DETAIL-GITHUB&state=$etat" -H "Cookie: fan2h_oauth_state=$etat"
+requete GET "https://$DOMAINE/oauth/callback.php?error=access_denied&error_description=DETAIL-GITHUB&state=$etat" -H "Cookie: __Host-fan2h_oauth_state=$etat"
 attendre_statut "/oauth/callback.php?error=…" 400
 page_oauth "/oauth/callback.php?error=…"
 refuser_corps "/oauth/callback.php?error=… : description jamais reprise" "DETAIL-GITHUB"
@@ -235,7 +240,7 @@ attendre_entete "POST /oauth/callback.php" Allow "GET"
 
 for chemin in /oauth/lib/x.php /oauth/lib/ /oauth/lib /oauth/config.php /oauth/other.php /oauth/ /OAUTH/auth.php \
     /oauth/lib/.htaccess /oauth/Auth.PHP /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt \
-    /oauth/lib/oauth.php /oauth/lib/exigences.php /oauth/config.sample.php /oauth/.htaccess; do
+    /oauth/lib/oauth.php /oauth/lib/exigences.php /oauth/config.sample.php /oauth/.htaccess /oauth/.user.ini; do
     refus_sans_source "$chemin"
 done
 # Les .htaccess des dossiers lib/ et de oauth/ sont bien ceux du projet (copiés dans dist/).
@@ -375,10 +380,17 @@ attendre_statut "sans refus mod_rewrite : /oauth/auth.php exécuté, configurati
 page_oauth "sans refus mod_rewrite : /oauth/auth.php"
 attendre_corps "sans refus mod_rewrite : /oauth/auth.php" "Connexion impossible"
 attendre_absent "sans refus mod_rewrite : /oauth/auth.php" "Set-Cookie|Location"
+# callback.php en 500 (configuration invalide) : no-store, no-referrer et CSP à nonce, chacun une seule fois
+# (en-têtes de PHP, de la racine et de oauth/.htaccess réunis sans doublon), cookie effacé.
+requete GET "https://$DOMAINE/oauth/callback.php?code=abc&state=$etat"
+attendre_statut "sans refus mod_rewrite : /oauth/callback.php, configuration invalide" 500
+page_oauth "sans refus mod_rewrite : /oauth/callback.php"
+attendre_entete "sans refus mod_rewrite : /oauth/callback.php : cookie effacé" Set-Cookie "$EFFACE"
 for chemin in /.git/config /.git/ /.env /api/lib/contact.php /api/lib/exigences.php /oauth/lib/x.php \
     /api/config.php /api/config.sample.php /oauth/config.php /oauth/other.php /api/autre.php /script.php \
     /README.md /x.php.jpg /x.pht.jpg /x.inc.txt /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP /index.html.bak /error_log \
-    /composer.json /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt /oauth/lib/oauth.php /oauth/config.sample.php; do
+    /composer.json /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt /oauth/lib/oauth.php /oauth/config.sample.php \
+    /oauth/.user.ini; do
     refus_sans_source "$chemin" "sans refus mod_rewrite : $chemin toujours refusé"
 done
 SERVEUR=apache

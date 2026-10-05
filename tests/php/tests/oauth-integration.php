@@ -112,6 +112,7 @@ function preparerRelais(string $racine): array
         'scope' => 'repo',
         'url_callback' => 'https://fan2harmonie.fr/oauth/callback.php',
         'github_url_jeton' => 'http://127.0.0.1:' . PORT_FAUX_GITHUB . '/jeton.php',
+        'transport_test' => true,
     ], true) . ";\n");
     return [
         'config' => $config,
@@ -165,14 +166,14 @@ test('intégration OAuth (php -S + faux GitHub) : auth.php → GitHub → callba
         egal('repo', $params['scope'], 'portée de la configuration, pas « repo,user » de la requête');
         egal(1, preg_match('/^[0-9a-f]{64}$/', $params['state']));
         $etat = $params['state'];
-        egal('fan2h_oauth_state=' . $etat . '; Max-Age=600; Path=/oauth/; Secure; HttpOnly; SameSite=Lax', $r['entetes']['set-cookie'] ?? null);
+        egal('__Host-fan2h_oauth_state=' . $etat . '; Max-Age=600; Path=/; Secure; HttpOnly; SameSite=Lax', $r['entetes']['set-cookie'] ?? null);
         egal('no-store', $r['entetes']['cache-control'] ?? null);
         egal('no-referrer', $r['entetes']['referrer-policy'] ?? null);
         vrai(!isset($r['entetes']['x-powered-by']), 'X-Powered-By retiré');
 
         // 2. Retour de GitHub vers callback.php, avec le cookie : échange du code, page qui transmet le jeton.
         $retour = '/oauth/callback.php?code=' . CODE_VALIDE . '&state=' . $etat;
-        $r = requeteRelais('GET', $retour, 'fan2h_oauth_state=' . $etat);
+        $r = requeteRelais('GET', $retour, '__Host-fan2h_oauth_state=' . $etat);
         egal(200, $r['statut'], 'callback.php : ' . $r['corps']);
         egal('text/html; charset=utf-8', $r['entetes']['content-type'] ?? null);
         egal('no-store', $r['entetes']['cache-control'] ?? null);
@@ -194,21 +195,21 @@ test('intégration OAuth (php -S + faux GitHub) : auth.php → GitHub → callba
         $r = requeteRelais('GET', $retour);
         egal(403, $r['statut'], 'rejeu sans cookie');
         egal(cookieEfface(), $r['entetes']['set-cookie'] ?? null);
-        $r = requeteRelais('GET', $retour, 'fan2h_oauth_state=' . str_repeat('0', 64));
+        $r = requeteRelais('GET', $retour, '__Host-fan2h_oauth_state=' . str_repeat('0', 64));
         egal(403, $r['statut'], 'cookie d’un autre state');
         egal(1, count(requetesGitHub($chemins['journal_github'])), 'GitHub jamais appelé pour un rejeu');
 
         // 4. Code refusé par GitHub : 502, page générique (sans la description de GitHub).
         $r = requeteRelais('GET', '/oauth/auth.php');
         parse_str((string) parse_url($r['entetes']['location'] ?? '', PHP_URL_QUERY), $params);
-        $r = requeteRelais('GET', '/oauth/callback.php?code=code0refuse&state=' . $params['state'], 'fan2h_oauth_state=' . $params['state']);
+        $r = requeteRelais('GET', '/oauth/callback.php?code=code0refuse&state=' . $params['state'], '__Host-fan2h_oauth_state=' . $params['state']);
         egal(502, $r['statut']);
         nonceVerifie($r);
         absent('DESCRIPTION-SECRETE-GITHUB', $r['corps']);
         absent('bad_verification_code', $r['corps']);
 
         // 5. GitHub renvoie une erreur (accès refusé) : 400, rien de la description.
-        $r = requeteRelais('GET', '/oauth/callback.php?error=access_denied&error_description=DESCRIPTION-SECRETE-GITHUB&state=' . $params['state'], 'fan2h_oauth_state=' . $params['state']);
+        $r = requeteRelais('GET', '/oauth/callback.php?error=access_denied&error_description=DESCRIPTION-SECRETE-GITHUB&state=' . $params['state'], '__Host-fan2h_oauth_state=' . $params['state']);
         egal(400, $r['statut']);
         absent('DESCRIPTION-SECRETE-GITHUB', $r['corps']);
 
@@ -235,7 +236,7 @@ test('intégration OAuth (php -S + faux GitHub) : auth.php → GitHub → callba
         contient('Connexion impossible', $r['corps']);
         copy(RACINE . '/public/oauth/config.sample.php', $chemins['config']);
         egal(500, requeteRelais('GET', '/oauth/auth.php')['statut'], 'modèle non adapté');
-        egal(500, requeteRelais('GET', $retour, 'fan2h_oauth_state=' . $etat)['statut'], 'callback sans configuration valide');
+        egal(500, requeteRelais('GET', $retour, '__Host-fan2h_oauth_state=' . $etat)['statut'], 'callback sans configuration valide');
     } finally {
         proc_terminate($relais);
         proc_close($relais);
@@ -259,7 +260,7 @@ test('intégration OAuth (php -S + faux GitHub) : auth.php → GitHub → callba
         $fichiers[] = substr($f->getPathname(), strlen($racine . '/web'));
     }
     sort($fichiers);
-    egal(['/oauth/.htaccess', '/oauth/auth.php', '/oauth/callback.php', '/oauth/config.sample.php', '/oauth/lib/.htaccess', '/oauth/lib/exigences.php', '/oauth/lib/oauth.php'], $fichiers);
+    egal(['/oauth/.htaccess', '/oauth/.user.ini', '/oauth/auth.php', '/oauth/callback.php', '/oauth/config.sample.php', '/oauth/lib/.htaccess', '/oauth/lib/exigences.php', '/oauth/lib/oauth.php'], $fichiers);
     foreach (glob(sys_get_temp_dir() . '/sess_*') ?: [] as $session) {
         absent(JETON_FAUX_GITHUB, (string) @file_get_contents($session), 'session PHP');
     }

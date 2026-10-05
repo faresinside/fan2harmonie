@@ -138,6 +138,97 @@ test.describe('espace d’administration /admin/', () => {
     expect(autorisation).toContain(jeton);
   });
 
+  test.describe('page de retour du relais (script réel, navigateur réel)', () => {
+    // Page produite par public/oauth/lib/oauth.php (tests/fixtures/oauth/page-succes.html) : origine autorisée
+    // http://localhost:4321 (ce serveur de test), nonce fixe ; servie sur https://fan2harmonie.fr/oauth/….
+    const pageRelais = readFileSync('tests/fixtures/oauth/page-succes.html', 'utf8');
+    const jeton = 'gho_JetonFactice0000000000000000000E2E';
+    const adresse = 'https://fan2harmonie.fr/oauth/callback.php?code=c0de&state=' + 'a'.repeat(64);
+    const servirRelais = (context: import('@playwright/test').BrowserContext) =>
+      context.route('https://fan2harmonie.fr/oauth/**', (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'text/html; charset=utf-8',
+          headers: {
+            'Content-Security-Policy':
+              "default-src 'none'; script-src 'nonce-0123456789abcdef0123456789abcdef'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+          },
+          body: pageRelais,
+        }),
+      );
+    /** Ouvre la page du relais en fenêtre depuis `ouvreur`, qui note tous les messages reçus. */
+    async function ouvrirDepuis(ouvreur: Page) {
+      await ouvreur.evaluate(() => {
+        const w = window as unknown as { recus: string[] };
+        w.recus = [];
+        window.addEventListener('message', (e) => w.recus.push(String(e.data)));
+      });
+      const [fenetre] = await Promise.all([
+        ouvreur.waitForEvent('popup'),
+        ouvreur.evaluate((url) => {
+          (window as unknown as { fenetre: Window | null }).fenetre = window.open(url, 'auth');
+        }, adresse),
+      ]);
+      await fenetre.waitForLoadState();
+      return fenetre;
+    }
+    const recus = (p: Page) => p.evaluate(() => (window as unknown as { recus: string[] }).recus);
+
+    test('sans fenêtre parente : le jeton est retiré de la page, message calme affiché', async ({ page, context }) => {
+      await servirRelais(context);
+      await page.goto(adresse);
+      await expect(page.locator('main')).toHaveText('La connexion n’a pas abouti. Vous pouvez fermer cette fenêtre et recommencer.');
+      const html = await page.evaluate(() => document.documentElement.outerHTML);
+      expect(html).not.toContain(jeton);
+      expect(html).not.toContain('<script');
+      // Sans le script de nettoyage, le jeton serait bien là : contrôle du témoin.
+      expect(pageRelais).toContain(jeton);
+    });
+
+    test('ouvreur d’une origine non autorisée : rien ne lui est envoyé, même s’il répond', async ({ page, context }) => {
+      await servirRelais(context);
+      await context.route('https://autre.example/**', (route) => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>autre</title>' }));
+      await page.goto('https://autre.example/');
+      const fenetre = await ouvrirDepuis(page);
+      await page.evaluate(() => (window as unknown as { fenetre: Window }).fenetre.postMessage('authorizing:github', '*'));
+      await page.waitForTimeout(1500);
+      expect(await recus(page)).toEqual([]);
+      expect(await fenetre.evaluate(() => document.documentElement.outerHTML)).toContain('<script');
+    });
+
+    test('message d’une autre fenêtre (même origine, mais pas l’ouvreur) : ignoré ; puis l’ouvreur reçoit le jeton', async ({ page, context }) => {
+      await servirRelais(context);
+      await page.goto('/');
+      const fenetre = await ouvrirDepuis(page);
+      await expect.poll(() => recus(page)).toEqual(['authorizing:github']);
+      // Une autre fenêtre de la même origine autorisée (un cadre de la page) tente la poignée de main.
+      await page.evaluate(
+        () =>
+          new Promise<void>((fin) => {
+            const cadre = document.createElement('iframe');
+            cadre.src = '/robots.txt';
+            cadre.onload = () => {
+              // Exécuté dans le cadre : event.source sera le cadre, pas l'ouvreur.
+              (cadre.contentWindow as unknown as { eval: (code: string) => void }).eval(
+                'parent.fenetre.postMessage("authorizing:github", "*")',
+              );
+              fin();
+            };
+            document.body.appendChild(cadre);
+          }),
+      );
+      await page.waitForTimeout(1500);
+      expect((await recus(page)).filter((m) => m.startsWith('authorization:'))).toEqual([]);
+      // L'ouvreur lui-même : réussite, jeton reçu, script retiré, fenêtre fermée.
+      const fermee = fenetre.waitForEvent('close');
+      await page.evaluate(() => (window as unknown as { fenetre: Window }).fenetre.postMessage('authorizing:github', 'https://fan2harmonie.fr'));
+      await expect.poll(async () => (await recus(page)).filter((m) => m.startsWith('authorization:'))).toEqual([
+        `authorization:github:success:{"token":"${jeton}","provider":"github"}`,
+      ]);
+      await fermee;
+    });
+  });
+
   test('fichiers écrits par le CMS acceptés par les schémas du site (rendez-vous, actualité avec photo)', async ({ page }) => {
     test.setTimeout(90_000);
     const erreurs = suivreErreurs(page);

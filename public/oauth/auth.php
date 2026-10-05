@@ -3,7 +3,7 @@
 /**
  * Relais de connexion GitHub de /admin, étape 1 : GET /oauth/auth.php (fenêtre ouverte par Sveltia CMS, avec
  * provider=github, site_id et scope ; seul « provider » est lu). Tire un « state » aléatoire, le pose dans un
- * cookie réservé à /oauth/, puis redirige vers la page d'autorisation de GitHub. Logique et tests :
+ * cookie « __Host- » (HttpOnly, Secure, SameSite=Lax), puis redirige vers la page d'autorisation de GitHub. Logique et tests :
  * lib/oauth.php et tests/php/.
  *
  * Configuration (client_id, client_secret… ; modèle : config.sample.php), cherchée dans cet ordre : variable

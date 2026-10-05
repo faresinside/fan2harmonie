@@ -11,7 +11,7 @@
  * Parcours (flux « authorization code » d'une OAuth App GitHub, comme le relais sveltia-cms-auth) :
  *  1. /admin ouvre une fenêtre sur oauth/auth.php?provider=github&site_id=…&scope=… (paramètres ajoutés par
  *     Sveltia, IGNORÉS ici sauf « provider ») ; auth.php tire un « state » aléatoire, le pose dans un cookie
- *     HttpOnly réservé à /oauth/ et redirige vers GitHub (client_id, redirect_uri, scope et state de la
+ *     « __Host- » HttpOnly, Secure, SameSite=Lax et redirige vers GitHub (client_id, redirect_uri, scope et state de la
  *     configuration : rien qui vienne de la requête).
  *  2. GitHub renvoie la fenêtre sur oauth/callback.php?code=…&state=… ; callback.php compare le state au
  *     cookie (hash_equals), efface le cookie, échange le code contre un jeton (POST HTTPS vers GitHub, avec le
@@ -35,9 +35,13 @@ use Throwable;
 /** Fournisseur unique de ce relais. */
 const FOURNISSEUR = 'github';
 
-/** Cookie du « state » : nom, chemin (le relais seul), durée de vie en secondes. */
-const NOM_COOKIE = 'fan2h_oauth_state';
-const CHEMIN_COOKIE = '/oauth/';
+/**
+ * Cookie du « state » : nom, chemin, durée de vie en secondes. Préfixe « __Host- » : le navigateur ne
+ * l'accepte que s'il est Secure, posé en HTTPS, avec Path=/ et sans Domain ; un sous-domaine de fan2harmonie.fr
+ * ou une page en http ne peuvent donc pas en poser un (« cookie tossing »).
+ */
+const NOM_COOKIE = '__Host-fan2h_oauth_state';
+const CHEMIN_COOKIE = '/';
 const DUREE_ETAT = 600;
 
 /** Longueur maximale de la chaîne de requête (les paramètres utiles font moins de 400 octets). */
@@ -66,6 +70,9 @@ const DEFAUTS = [
     // Adresses de GitHub : à ne JAMAIS changer en production (modifiables seulement pour les tests).
     'github_url_autorisation' => 'https://github.com/login/oauth/authorize',
     'github_url_jeton' => 'https://github.com/login/oauth/access_token',
+    // TESTS seulement : autorise http://127.0.0.1 ou http://localhost pour github_url_jeton (faux GitHub local).
+    // JAMAIS true en production.
+    'transport_test' => false,
 ];
 
 /** Forme acceptée d'un jeton d'accès (les jetons GitHub « gho_… » en font partie). */
@@ -79,6 +86,9 @@ const MOTIF_CODE = '/^[A-Za-z0-9_\-]{1,256}$/D';
 
 /** Message d'échec transmis à /admin (affiché par Sveltia) : générique, en français. */
 const MESSAGE_ECHEC = 'La connexion avec GitHub n’a pas abouti. Réessayez dans quelques instants.';
+
+/** Texte qui remplace la page quand le jeton n'a pas pu être transmis (pas de fenêtre parente, délai dépassé). */
+const TEXTE_ABANDON = 'La connexion n’a pas abouti. Vous pouvez fermer cette fenêtre et recommencer.';
 
 /** Indicateurs json_encode d'une valeur insérée dans le script de la page : rien ne peut en sortir. */
 const JSON_SCRIPT = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_THROW_ON_ERROR;
@@ -178,7 +188,9 @@ function chargerConfig(string $chemin): ?array
  * - scope : « repo » ou « public_repo » ;
  * - url_callback : adresse https sans identifiants, requête ni fragment ;
  * - github_url_autorisation : adresse https, sans identifiants, requête ni fragment ;
- * - github_url_jeton : idem, ou http://127.0.0.1 / http://localhost (TESTS seulement : faux GitHub local).
+ * - github_url_jeton : idem ; http://127.0.0.1 ou http://localhost seulement si transport_test vaut true
+ *   (TESTS seulement : faux GitHub local) ;
+ * - transport_test : booléen, false par défaut, jamais true en production.
  */
 function normaliserConfig(array $brute): ?array
 {
@@ -211,7 +223,10 @@ function normaliserConfig(array $brute): ?array
             return null;
         }
     }
-    if (!is_string($config['github_url_jeton']) || !adresseSure($config['github_url_jeton'], true)) {
+    if (!is_bool($config['transport_test'])) {
+        return null;
+    }
+    if (!is_string($config['github_url_jeton']) || !adresseSure($config['github_url_jeton'], $config['transport_test'])) {
         return null;
     }
     return $config;
@@ -301,7 +316,7 @@ function construireUrlAutorisation(array $config, string $etat): string
     ], '', '&', PHP_QUERY_RFC3986);
 }
 
-/** En-tête Set-Cookie qui pose le « state » : HttpOnly, Secure, SameSite=Lax, réservé à /oauth/, 10 minutes. */
+/** En-tête Set-Cookie qui pose le « state » : __Host-, HttpOnly, Secure, SameSite=Lax, Path=/, 10 minutes. */
 function cookieEtat(string $etat): string
 {
     return NOM_COOKIE . '=' . $etat . '; Max-Age=' . DUREE_ETAT . '; Path=' . CHEMIN_COOKIE . '; Secure; HttpOnly; SameSite=Lax';
@@ -365,25 +380,50 @@ function pageMessage(string $titre, string $texte, string $message, array $origi
 {
     $script = "(function () {\n"
         . "  \"use strict\";\n"
+        . "  var script = document.currentScript;\n"
         . '  var origines = ' . json_encode(array_values($origines), JSON_SCRIPT) . ";\n"
         . '  var message = ' . json_encode($message, JSON_SCRIPT) . ";\n"
         . '  var attendu = ' . json_encode('authorizing:' . FOURNISSEUR, JSON_SCRIPT) . ";\n"
+        . '  var texteEchec = ' . json_encode(TEXTE_ABANDON, JSON_SCRIPT) . ";\n"
         . "  var parent = window.opener;\n"
+        . "  var delai = 0;\n"
+        . "  function effacer(echec) {\n"
+        . "    message = null;\n"
+        . "    if (script && script.parentNode) {\n"
+        . "      script.parentNode.removeChild(script);\n"
+        . "    }\n"
+        . "    if (echec) {\n"
+        . "      var principal = document.querySelector(\"main\");\n"
+        . "      if (principal) {\n"
+        . "        var paragraphe = document.createElement(\"p\");\n"
+        . "        paragraphe.textContent = texteEchec;\n"
+        . "        principal.textContent = \"\";\n"
+        . "        principal.appendChild(paragraphe);\n"
+        . "      }\n"
+        . "    }\n"
+        . "  }\n"
         . "  if (!parent) {\n"
+        . "    effacer(true);\n"
         . "    return;\n"
         . "  }\n"
         . "  function recevoir(evenement) {\n"
         . "    var rang = origines.indexOf(evenement.origin);\n"
-        . "    if (evenement.source !== parent || rang === -1 || evenement.data !== attendu) {\n"
+        . "    if (message === null || evenement.source !== parent || rang === -1 || evenement.data !== attendu) {\n"
         . "      return;\n"
         . "    }\n"
         . "    window.removeEventListener(\"message\", recevoir);\n"
+        . "    window.clearTimeout(delai);\n"
         . "    parent.postMessage(message, origines[rang]);\n"
+        . "    effacer(false);\n"
         . "    window.setTimeout(function () {\n"
         . "      window.close();\n"
         . "    }, 500);\n"
         . "  }\n"
         . "  window.addEventListener(\"message\", recevoir);\n"
+        . "  delai = window.setTimeout(function () {\n"
+        . "    window.removeEventListener(\"message\", recevoir);\n"
+        . "    effacer(true);\n"
+        . "  }, 30000);\n"
         . "  for (var i = 0; i < origines.length; i += 1) {\n"
         . "    parent.postMessage(attendu, origines[i]);\n"
         . "  }\n"
@@ -421,7 +461,7 @@ function reponse(int $statut, array $entetes, string $contenu): array
 /** Page de réussite (200) : transmet le jeton à /admin. */
 function reponseSucces(string $jeton, array $origines, string $nonce): array
 {
-    return reponse(200, [
+    $reponse = reponse(200, [
         'Content-Type' => 'text/html; charset=utf-8',
         'Content-Security-Policy' => politiqueContenu($nonce),
     ], pageMessage(
@@ -431,6 +471,9 @@ function reponseSucces(string $jeton, array $origines, string $nonce): array
         $origines,
         $nonce,
     ));
+    // Contenu sensible : jamais émis si les en-têtes (CSP, no-store) n'ont pas pu partir (voir emettre()).
+    $reponse['sensible'] = true;
+    return $reponse;
 }
 
 /**
@@ -699,15 +742,32 @@ function traiterCallback(array $get, array $serveur, array $cookies, ?array $con
 // Sortie
 // ---------------------------------------------------------------------------------------------------------
 
-/** Émet la réponse : statut, en-têtes (X-Powered-By retiré), contenu. Seule fonction qui écrit la sortie. */
-function emettre(array $reponse): void
+/**
+ * Émet la réponse : statut, en-têtes (X-Powered-By retiré), contenu. Seule fonction qui écrit la sortie.
+ * Si les en-têtes sont déjà partis (sortie accidentelle avant emettre()), une réponse sensible (le jeton)
+ * n'est JAMAIS écrite, puisque sa CSP et son « no-store » manqueraient : une page d'échec sans script, et une
+ * ligne générique dans le journal, la remplacent.
+ *
+ * @param (callable(): bool)|null $entetesEnvoyes headers_sent en production (injecté dans les tests).
+ */
+function emettre(array $reponse, ?callable $entetesEnvoyes = null): void
 {
-    if (!headers_sent()) {
-        header_remove('X-Powered-By');
-        http_response_code($reponse['statut']);
-        foreach ($reponse['entetes'] as $nom => $valeur) {
-            header($nom . ': ' . $valeur, $nom !== 'Set-Cookie');
+    $entetesEnvoyes ??= static fn (): bool => headers_sent();
+    if ($entetesEnvoyes()) {
+        if (($reponse['sensible'] ?? false) === true) {
+            error_log('oauth : en-têtes déjà envoyés, réponse remplacée par une page d’échec.');
+            echo "<!doctype html>\n<html lang=\"fr\">\n<head>\n<meta charset=\"utf-8\">\n"
+                . "<title>Connexion impossible — Fan 2 Harmonie</title>\n</head>\n<body>\n<h1>Connexion impossible</h1>\n"
+                . '<p>' . html(TEXTE_ABANDON) . "</p>\n</body>\n</html>\n";
+            return;
         }
+        echo $reponse['contenu'];
+        return;
+    }
+    header_remove('X-Powered-By');
+    http_response_code($reponse['statut']);
+    foreach ($reponse['entetes'] as $nom => $valeur) {
+        header($nom . ': ' . $valeur, $nom !== 'Set-Cookie');
     }
     echo $reponse['contenu'];
 }

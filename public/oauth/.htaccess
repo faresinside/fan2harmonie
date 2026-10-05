@@ -4,6 +4,13 @@
 # Pas de « chemin en plus » après le nom du script : /oauth/auth.php/x et /oauth/callback.php/x/y.css → 404.
 #
 # RÈGLE : aucune directive Rewrite ici (ni « RewriteEngine ») : elle remplacerait les règles de réécriture de
-# la racine pour tout ce dossier, et leurs refus disparaîtraient en silence. Rien d'autre que la ligne
-# ci-dessous : les en-têtes et le cache de /oauth/ sont réglés par la racine et par les scripts eux-mêmes.
+# la racine pour tout ce dossier, et leurs refus disparaîtraient en silence.
 AcceptPathInfo Off
+
+# Pages du relais (elles portent le jeton) : jamais gardées en cache, aucune adresse transmise en Referer.
+# Déjà réglé par la racine pour /oauth/ ; répété ici pour ne pas dépendre de ses conditions SetEnvIf. « set »
+# remplace la valeur : chaque en-tête reste présent une seule fois.
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store"
+    Header always set Referrer-Policy "no-referrer"
+</IfModule>

@@ -182,9 +182,15 @@ describe('.htaccess des sous-dossiers de public/', () => {
     }
   });
 
-  it('oauth/ : « AcceptPathInfo Off » seulement (aucun « chemin en plus » après auth.php ou callback.php)', () => {
+  it('oauth/ : « AcceptPathInfo Off », no-store et no-referrer (une seule fois), rien d’autre', () => {
     expect(sousDossiers).toContain('oauth/.htaccess');
-    expect(directives(lire('public/oauth/.htaccess'))).toEqual(['AcceptPathInfo Off']);
+    expect(directives(lire('public/oauth/.htaccess'))).toEqual([
+      'AcceptPathInfo Off',
+      '<IfModule mod_headers.c>',
+      'Header always set Cache-Control "no-store"',
+      'Header always set Referrer-Policy "no-referrer"',
+      '</IfModule>',
+    ]);
   });
 
   it('aucun ne contient de directive Rewrite (les refus de la racine ne seraient plus hérités)', () => {

@@ -43,4 +43,7 @@ return [
     // modifiables, ici seulement, que pour les tests (faux GitHub local) :
     // 'github_url_autorisation' => 'https://github.com/login/oauth/authorize',
     // 'github_url_jeton' => 'https://github.com/login/oauth/access_token',
+
+    // TESTS seulement (faux GitHub local en http://127.0.0.1) : JAMAIS true en production.
+    'transport_test' => false,
 ];

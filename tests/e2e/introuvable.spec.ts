@@ -48,7 +48,7 @@ test('construction : dist/404.html, absente du plan du site ; .htaccess et .user
   expect(existsSync('dist/404.html')).toBe(true);
   const plan = await (await request.get('/sitemap-0.xml')).text();
   expect(plan).not.toContain('404');
-  for (const fichier of ['.htaccess', 'api/.htaccess', 'api/.user.ini', 'api/lib/.htaccess', 'oauth/.htaccess', 'oauth/lib/.htaccess']) {
+  for (const fichier of ['.htaccess', 'api/.htaccess', 'api/.user.ini', 'api/lib/.htaccess', 'oauth/.htaccess', 'oauth/.user.ini', 'oauth/lib/.htaccess']) {
     expect(existsSync(`dist/${fichier}`), `dist/${fichier}`).toBe(true);
     expect(readFileSync(`dist/${fichier}`, 'utf8')).toBe(readFileSync(`public/${fichier}`, 'utf8'));
   }

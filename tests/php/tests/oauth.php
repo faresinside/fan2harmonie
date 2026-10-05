@@ -113,7 +113,7 @@ function rappel(array $get = [], array $cookies = [NOM_COOKIE_TEST => ETAT_TEST]
     return [$reponse, $github];
 }
 
-const NOM_COOKIE_TEST = 'fan2h_oauth_state';
+const NOM_COOKIE_TEST = '__Host-fan2h_oauth_state';
 
 /** Vérifie une page d'échec générique : statut, en-têtes, message d'échec, cookie effacé si demandé. */
 function verifierEchec(array $reponse, int $statut, bool $cookieEfface, string $libelle): void
@@ -187,8 +187,55 @@ test('oauth config : valeurs par défaut (origine du site, repo, callback, adres
     egal('https://github.com/login/oauth/access_token', $c['github_url_jeton']);
     egal('public_repo', configOauth(['scope' => 'public_repo'])['scope']);
     egal(['https://fan2harmonie.fr', 'https://www.fan2harmonie.fr:8443'], configOauth(['origines_autorisees' => ['https://fan2harmonie.fr', 'https://www.fan2harmonie.fr:8443']])['origines_autorisees']);
-    // Faux GitHub local : http seulement vers la boucle locale, et seulement pour l'adresse du jeton.
-    egal('http://127.0.0.1:8092/jeton.php', configOauth(['github_url_jeton' => 'http://127.0.0.1:8092/jeton.php'])['github_url_jeton']);
+    // Faux GitHub local : http seulement vers la boucle locale, seulement pour l'adresse du jeton, et seulement
+    // avec le drapeau de TEST transport_test => true (faux par défaut, jamais en production).
+    egal(false, configOauth()['transport_test']);
+    egal('http://127.0.0.1:8092/jeton.php', configOauth(['github_url_jeton' => 'http://127.0.0.1:8092/jeton.php', 'transport_test' => true])['github_url_jeton']);
+    egal(null, normaliserConfig(configOauthBrute(['github_url_jeton' => 'http://127.0.0.1:8092/jeton.php'])), 'boucle locale http sans transport_test');
+    egal(null, normaliserConfig(configOauthBrute(['github_url_jeton' => 'http://127.0.0.1:8092/jeton.php', 'transport_test' => false])), 'transport_test false');
+    egal(null, normaliserConfig(configOauthBrute(['github_url_jeton' => 'http://127.0.0.1:8092/jeton.php', 'transport_test' => 'true'])), 'transport_test non booléen');
+    egal(null, normaliserConfig(configOauthBrute(['github_url_jeton' => 'http://github.com/x', 'transport_test' => true])), 'http distant même en test');
+    // transport_test seul ne change rien à une configuration https.
+    vrai(normaliserConfig(configOauthBrute(['transport_test' => true])) !== null, 'transport_test avec https');
+});
+
+test('oauth cookie : préfixe __Host- (Secure, Path=/, sans Domain) : ni posé par un sous-domaine, ni par http', function (): void {
+    egal('__Host-fan2h_oauth_state', Fan2Harmonie\OAuth\NOM_COOKIE);
+    foreach ([cookieEtat(ETAT_TEST), cookieEfface()] as $cookie) {
+        vrai(str_starts_with($cookie, '__Host-fan2h_oauth_state='), $cookie);
+        contient('; Path=/;', $cookie);
+        contient('; Secure;', $cookie);
+        contient('; HttpOnly;', $cookie);
+        vrai(str_ends_with($cookie, '; SameSite=Lax'), $cookie);
+        absent('Domain', $cookie);
+    }
+});
+
+test('oauth emettre : en-têtes déjà envoyés → jamais le jeton, page d’échec générique et ligne de journal', function (): void {
+    [$succes] = rappel();
+    contient(JETON_TEST, $succes['contenu']);
+    $sortie = '';
+    $journal = journalPendant(function () use ($succes, &$sortie): void {
+        ob_start();
+        Fan2Harmonie\OAuth\emettre($succes, static fn (): bool => true);
+        $sortie = (string) ob_get_clean();
+    });
+    absent(JETON_TEST, $sortie);
+    absent('<script', $sortie);
+    contient('Connexion impossible', $sortie);
+    contient('oauth : en-têtes déjà envoyés, réponse remplacée par une page d’échec.', $journal);
+    absent(JETON_TEST, $journal);
+    // Page d'échec (sans jeton) : émise telle quelle même si les en-têtes sont partis.
+    [$echec] = rappel([], []);
+    ob_start();
+    Fan2Harmonie\OAuth\emettre($echec, static fn (): bool => true);
+    egal($echec['contenu'], (string) ob_get_clean());
+});
+
+test('.user.ini de public/oauth : erreurs jamais affichées, journalisées, peu de variables', function (): void {
+    $ini = parse_ini_file(RACINE . '/public/oauth/.user.ini', false, INI_SCANNER_RAW);
+    vrai(is_array($ini), '.user.ini lisible');
+    egal(['display_errors' => 'Off', 'log_errors' => 'On', 'max_input_vars' => '20', 'expose_php' => 'Off'], $ini);
 });
 
 test('oauth config : modèle config.sample.php REFUSÉ tel quel (secret et identifiant « CHANGER-MOI »)', function (): void {
@@ -328,7 +375,7 @@ test('oauth auth.php : 302 vers GitHub, rien de la requête dans l’adresse, co
     foreach (['evil', 'admin', 'delete_repo', 'autre', 'impose', 'token'] as $valeur) {
         absent($valeur, $r['entetes']['Location'], 'valeur de la requête reprise');
     }
-    egal('fan2h_oauth_state=' . ETAT_TEST . '; Max-Age=600; Path=/oauth/; Secure; HttpOnly; SameSite=Lax', $r['entetes']['Set-Cookie'] ?? null);
+    egal('__Host-fan2h_oauth_state=' . ETAT_TEST . '; Max-Age=600; Path=/; Secure; HttpOnly; SameSite=Lax', $r['entetes']['Set-Cookie'] ?? null);
     egal(cookieEtat(ETAT_TEST), $r['entetes']['Set-Cookie']);
     egal('no-store', $r['entetes']['Cache-Control'] ?? null);
     egal('no-referrer', $r['entetes']['Referrer-Policy'] ?? null);
@@ -341,7 +388,7 @@ test('oauth auth.php : 302 vers GitHub, rien de la requête dans l’adresse, co
     egal(302, $a['statut']);
     vrai($a['entetes']['Set-Cookie'] !== $b['entetes']['Set-Cookie'], 'nouveau state à chaque demande');
     parse_str((string) parse_url($a['entetes']['Location'], PHP_URL_QUERY), $params);
-    egal('fan2h_oauth_state=' . $params['state'] . '; Max-Age=600; Path=/oauth/; Secure; HttpOnly; SameSite=Lax', $a['entetes']['Set-Cookie'], 'cookie = state de l’adresse');
+    egal('__Host-fan2h_oauth_state=' . $params['state'] . '; Max-Age=600; Path=/; Secure; HttpOnly; SameSite=Lax', $a['entetes']['Set-Cookie'], 'cookie = state de l’adresse');
 });
 
 test('oauth auth.php : provider autre que « github » (ou tableau) → 400 ; sans configuration → 500 ; state mal formé → 500', function (): void {
@@ -388,7 +435,7 @@ test('oauth callback.php : réussite → page qui transmet le jeton, cookie effa
     egal('no-referrer', $r['entetes']['Referrer-Policy'] ?? null);
     egal('nosniff', $r['entetes']['X-Content-Type-Options'] ?? null);
     egal(cookieEfface(), $r['entetes']['Set-Cookie'] ?? null);
-    egal('fan2h_oauth_state=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/oauth/; Secure; HttpOnly; SameSite=Lax', cookieEfface());
+    egal('__Host-fan2h_oauth_state=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; Secure; HttpOnly; SameSite=Lax', cookieEfface());
     $message = valeurDuScript($r['contenu'], 'message');
     egal('authorization:github:success:{"token":"' . JETON_TEST . '","provider":"github"}', $message);
     egal(messageSucces(JETON_TEST), $message);
@@ -573,7 +620,7 @@ test('oauth page : postMessage vers les origines EXACTES de la configuration, ja
     preg_match_all('/postMessage\(([^)]*)\)/', $page, $appels);
     egal(['message, origines[rang]', 'attendu, origines[i]'], $appels[1]);
     contient('var parent = window.opener;', $page);
-    contient('if (evenement.source !== parent || rang === -1 || evenement.data !== attendu) {', $page);
+    contient('if (message === null || evenement.source !== parent || rang === -1 || evenement.data !== attendu) {', $page);
     contient('var rang = origines.indexOf(evenement.origin);', $page);
     contient('window.close();', $page);
     // L'échec suit le même chemin.
@@ -583,6 +630,21 @@ test('oauth page : postMessage vers les origines EXACTES de la configuration, ja
     $echec = valeurDuScript($e['contenu'], 'message');
     vrai(str_starts_with($echec, 'authorization:github:error:'), 'préfixe du message d’échec');
     egal(['provider' => 'github', 'error' => 'La connexion avec GitHub n’a pas abouti. Réessayez dans quelques instants.'], json_decode(substr($echec, strlen('authorization:github:error:')), true));
+});
+
+test('oauth page : le jeton ne reste pas dans la page (sans fenêtre parente, après 30 s, ou après la transmission)', function (): void {
+    [$r] = rappel();
+    $page = $r['contenu'];
+    // document.currentScript est lu en tout premier (il vaut null dans un gestionnaire d'événement).
+    egal(1, preg_match('/<script nonce="[0-9a-f]{32}">\n\(function \(\) \{\n  "use strict";\n  var script = document\.currentScript;\n/', $page), 'currentScript capturé d’abord');
+    contient('script.parentNode.removeChild(script);', $page);
+    contient('message = null;', $page);
+    contient('if (!parent) {' . "\n" . '    effacer(true);', $page);
+    contient('}, 30000);', $page);
+    egal('La connexion n’a pas abouti. Vous pouvez fermer cette fenêtre et recommencer.', valeurDuScript($page, 'texteEchec'));
+    // Après la transmission : nœud retiré avant la fermeture.
+    egal(1, preg_match('/parent\.postMessage\(message, origines\[rang\]\);\n\s+effacer\(false\);\n\s+window\.setTimeout\(function \(\) \{\n\s+window\.close\(\);/', $page), 'effacer puis fermer');
+    absent('innerHTML', $page);
 });
 
 test('oauth page : valeurs hostiles insérées sans pouvoir sortir de la chaîne ni du script (défense en profondeur)', function (): void {
