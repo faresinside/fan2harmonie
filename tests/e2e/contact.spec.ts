@@ -56,9 +56,8 @@ test.describe('formulaire de contact : structure', () => {
     expect(site.formEndpoint).toBe('/api/contact.php');
     expect(await adresseEnvoi(page)).toBe(new URL('/api/contact.php', page.url()).href);
     await expect(f).not.toHaveAttribute('novalidate', /.*/);
-    await expect(f.locator('input[type="hidden"][name="_subject"]')).toHaveValue(
-      'Message depuis le site Fan 2 Harmonie',
-    );
+    // Le script de contact compose lui-même le sujet de l'e-mail : aucun champ caché « _subject ».
+    await expect(f.locator('input[name="_subject"]')).toHaveCount(0);
   });
 
   test('chaque champ a une étiquette visible et est obligatoire', async ({ page }) => {
@@ -232,9 +231,10 @@ test.describe('envoi avec JavaScript', () => {
 
     expect(envois).toHaveLength(1);
     expect(envois[0]!.accept).toBe('application/json');
-    for (const nom of ['nom', 'email', 'message', 'consentement', '_gotcha', '_subject']) {
+    for (const nom of ['nom', 'email', 'message', 'consentement', '_gotcha']) {
       expect(envois[0]!.corps, nom).toContain(`name="${nom}"`);
     }
+    expect(envois[0]!.corps).not.toContain('name="_subject"');
     expect(envois[0]!.corps).toContain('Camille Martin');
   });
 
@@ -400,6 +400,7 @@ test.describe('mentions légales', () => {
     expect(existsSync('dist/api/lib/contact.php')).toBe(true);
     expect(existsSync('dist/api/config.php')).toBe(false);
   });
+
   test('formulaire : mention de conservation vérifiable', async ({ page }) => {
     await page.goto('/');
     await expect(formulaire(page)).toContainText('Ces informations ne sont conservées que le temps de répondre à ma demande.');

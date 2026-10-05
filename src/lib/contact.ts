@@ -5,7 +5,10 @@
  * `errors`, JSON illisible, réseau coupé, délai dépassé) = échec.
  */
 
-/** Sujet de l'e-mail reçu par Stéphanie (champ caché « _subject ») et des liens mailto de secours. */
+/**
+ * Sujet des liens mailto de secours. (Le sujet des e-mails du formulaire est composé par le script de contact,
+ * public/api/lib/contact.php : « [Site Fan 2 Harmonie] Message de <nom> ».)
+ */
 export const SUJET_MESSAGE = 'Message depuis le site Fan 2 Harmonie';
 
 /** Délai au-delà duquel un envoi sans réponse est considéré comme échoué (le message reste saisi). */
@@ -78,6 +81,7 @@ export function champsEnErreur(corps: unknown): string[] {
   }
   return champs;
 }
+
 /** Vrai si la réponse JSON du service signale un échec : `ok: false` ou une liste/un objet `errors` non vide. */
 function echecSignale(corps: unknown): boolean {
   if (typeof corps !== 'object' || corps === null) return false;

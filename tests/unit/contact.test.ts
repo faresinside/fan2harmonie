@@ -12,7 +12,7 @@ describe('lienMailto', () => {
     expect(lienMailto('  a@b.fr ')).toMatch(/^mailto:a@b\.fr\?/);
   });
 
-  it('le sujet est celui du champ caché du formulaire', () => {
+  it('le sujet des liens mailto de secours', () => {
     expect(SUJET_MESSAGE).toBe('Message depuis le site Fan 2 Harmonie');
   });
 });

@@ -1,8 +1,10 @@
 /**
  * Amélioration progressive du formulaire de contact (src/components/ContactForm.astro).
- * Sans ce script, le formulaire part en POST classique et le script de contact (public/api/contact.php) répond\n * par une courte page HTML.
+ * Sans ce script, le formulaire part en POST classique et le script de contact (public/api/contact.php) répond
+ * par une courte page HTML.
  * Avec lui : envoi en arrière-plan, bouton « Envoi en cours… », puis message de réussite (formulaire vidé)
- * ou message d'erreur avec l'adresse e-mail de secours (la saisie est conservée ; les champs refusés par le\n * script, réponse 422, sont marqués invalides comme après une saisie incorrecte).
+ * ou message d'erreur avec l'adresse e-mail de secours (la saisie est conservée ; les champs refusés par le
+ * script, réponse 422, sont marqués invalides comme après une saisie incorrecte).
  * La validation reste celle du navigateur : l'événement « submit » n'arrive qu'avec un formulaire valide.
  */
 import { envoyerFormulaireDetaille } from '../lib/contact';

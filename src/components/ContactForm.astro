@@ -6,11 +6,12 @@
  * Validation native du navigateur (pas de « novalidate ») ; après une saisie invalide, une courte indication
  * écrite s'affiche sous le champ, en plus de la couleur. Longueurs maximales identiques à celles du script.
  * Anti-spam : champ piège « _gotcha », hors écran, ignoré au clavier et par les lecteurs d'écran ; un robot qui
- * le remplit reçoit un faux succès et son message n'est pas envoyé. « _subject » est ignoré par le script.
+ * le remplit reçoit un faux succès et son message n'est pas envoyé. Le sujet de l'e-mail est composé par le
+ * script (aucun champ « _subject »).
  * RGPD : consentement obligatoire, finalité unique (répondre), détails dans /mentions-legales.
  */
 import { site } from '../config/site';
-import { lienMailto, SUJET_MESSAGE } from '../lib/contact';
+import { lienMailto } from '../lib/contact';
 import IconSouffle from './IconSouffle.astro';
 
 const mailto = lienMailto(site.email);
@@ -30,8 +31,6 @@ const mailto = lienMailto(site.email);
   <div class="contact__carte">
     <form class="formulaire" action={site.formEndpoint} method="post" data-contact>
       <p class="formulaire__note">Tous les champs sont obligatoires.</p>
-
-      <input type="hidden" name="_subject" value={SUJET_MESSAGE} />
 
       <div class="formulaire__ligne">
         <div class="champ">

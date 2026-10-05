@@ -80,6 +80,7 @@ describe('SIRET d’exemple', () => {
     expect(validerSiret('123 456 789 00012')).toBe(false);
   });
 });
+
 describe('validerEmail', () => {
   it('accepte une adresse simple', () => {
     expect(validerEmail('contact@exemple.fr')).toBe(true);

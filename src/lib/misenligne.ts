@@ -153,6 +153,7 @@ export function verifierSite(s: SiteAVerifier): string[] {
   }
   return problemes;
 }
+
 /** Problèmes de la section `backend` de public/admin/config.yml (vide si tout est prêt). */
 export function verifierBackendCms(backend: Record<string, unknown>): string[] {
   const problemes: string[] = [];
