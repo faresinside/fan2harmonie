@@ -1,3 +1,10 @@
+/**
+ * Tests de /admin avec le vrai Sveltia CMS.
+ * - Réseau requis : Sveltia charge ses textes français depuis unpkg.com et ses polices depuis cdn.jsdelivr.net
+ *   (adresses codées en dur dans le bundle) ; hors ligne, ces tests échouent. Les hôtes ne sont pas simulés.
+ * - Ils s'appuient sur des libellés de l'interface Sveltia (« Parcourir », « Téléverser », « Insérer »,
+ *   « Enregistrer », « Se connecter avec GitHub »…) : à revoir à chaque changement de version de @sveltia/cms.
+ */
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect, type Page } from '@playwright/test';
 import { actualiteSchema, rendezvousSchema } from '../../src/lib/schemas';
@@ -97,6 +104,41 @@ test.describe('espace d’administration /admin/', () => {
     await page.getByRole('textbox', { name: 'Remarque' }).fill('Annulé en cas de pluie');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByText('17/10/2099 — 16:00')).toBeVisible();
+    const premier = `sveltia-cms-test/src/content/rendezvous/2099-10-17.md`;
+    const premierAvant = (await fichiersEcrits(page))[premier];
+    expect(premierAvant).toBeDefined();
+
+    // Deuxième rendez-vous le même jour : nouveau fichier suffixé, le premier n'est pas écrasé.
+    await page.goto('/admin/#/collections/rendezvous/new');
+    await page.locator('input[type=date]').fill('2099-10-17');
+    await page.getByRole('textbox', { name: 'Heure' }).fill('10:00');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.getByText('17/10/2099 — 10:00')).toBeVisible();
+    const apresDeux = await fichiersEcrits(page);
+    const suffixe = 'sveltia-cms-test/src/content/rendezvous/2099-10-17-1.md';
+    const rdvDuJour = [premier, suffixe];
+    expect(
+      Object.keys(apresDeux)
+        .filter((f) => f.startsWith('sveltia-cms-test/src/content/rendezvous/2099-10-17'))
+        .sort(),
+    ).toEqual([...rdvDuJour].sort());
+    expect(apresDeux[premier]).toBe(premierAvant);
+    const heures = rdvDuJour.map((f) => rendezvousSchema.parse(parseFrontmatter(apresDeux[f] ?? '').frontmatter).heure);
+    expect(heures).toEqual(['16:00', '10:00']);
+
+    // Actualité sans photo : aucune clé `image` écrite (omit_empty_optional_fields), fichier valide.
+    await page.goto('/admin/#/collections/actualites/new');
+    await page.getByRole('textbox', { name: 'Titre' }).fill('Sans photo');
+    await page.locator('input[type=date]').fill('2099-10-03');
+    await page.locator('[contenteditable="true"]').first().click();
+    await page.keyboard.type('Un texte.');
+    await page.getByRole('button', { name: 'Enregistrer' }).click();
+    await expect(page.getByText(/Sans photo/).first()).toBeVisible();
+    const sansPhoto = Object.entries(await fichiersEcrits(page)).find(([f]) => f.endsWith('-sans-photo.md'))?.[1];
+    expect(sansPhoto).toBeDefined();
+    const fmSansPhoto = parseFrontmatter(sansPhoto ?? '').frontmatter;
+    expect(fmSansPhoto).not.toHaveProperty('image');
+    expect(actualiteSchema.safeParse(fmSansPhoto).success).toBe(true);
 
     // Actualité avec photo téléversée et texte sur deux paragraphes.
     await page.goto('/admin/#/collections/actualites/new');
@@ -123,7 +165,9 @@ test.describe('espace d’administration /admin/', () => {
     const rdvLu = rendezvousSchema.parse(parseFrontmatter(rdv ?? '').frontmatter);
     expect(rdvLu).toMatchObject({ heure: '16:00', remarque: 'Annulé en cas de pluie', annule: false });
 
-    const cheminActu = Object.keys(fichiers).find((f) => f.startsWith(`${racine}src/content/actualites/`));
+    const cheminActu = Object.keys(fichiers).find(
+      (f) => f.startsWith(`${racine}src/content/actualites/`) && f.includes('stage'),
+    );
     expect(cheminActu).toMatch(/\/\d{4}-\d{2}-\d{2}-stage-d-ete\.md$/);
     const actu = parseFrontmatter(fichiers[cheminActu ?? ''] ?? '');
     expect(actualiteSchema.safeParse(actu.frontmatter).success).toBe(true);

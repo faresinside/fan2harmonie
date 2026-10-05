@@ -15,6 +15,7 @@ Tout tourne dans Docker (rien à installer sur le PC).
 
 - Adresse : `/admin` (Sveltia CMS, en français si le navigateur l'est). Rendez-vous, actualités (photo facultative) et textes des pages.
 - Connexion avec un compte GitHub ayant accès au dépôt (collaborateurs du dépôt) ; chaque enregistrement est un commit, le site se reconstruit seul.
-- Configuration : `public/admin/config.yml` ; `repo` et `base_url` (relais d'authentification) valent `À_COMPLÉTER` jusqu'à la Task 11.
-- Le script du CMS (version exacte épinglée dans `package.json`) est copié dans `public/admin/` par `npm run dev` / `npm run build` (non versionné).
+- Configuration : `public/admin/config.yml` ; `repo` et `base_url` (relais d'authentification) valent `À_COMPLÉTER` jusqu'à la mise en ligne.
+- Le script du CMS (version exacte épinglée dans `package.json`, non versionné) est copié dans `public/admin/` par `npm install` / `npm ci` (postinstall), `npm run dev` et `npm run build`. La commande de construction de l'hébergeur doit donc être `npm run build` (pas `astro build` seul).
+- Les tests e2e de `/admin` (vrai Sveltia CMS) ont besoin d'Internet (textes français sur unpkg.com, polices sur cdn.jsdelivr.net) et dépendent des libellés de l'interface Sveltia (« Parcourir », « Téléverser », « Insérer », « Enregistrer ») : à revoir à chaque nouvelle version de `@sveltia/cms`.
 - En local, sur http://localhost:4321/admin, « Travailler avec un dépôt local » édite directement les fichiers du projet (Chrome ou Edge, une fois `repo` renseigné).

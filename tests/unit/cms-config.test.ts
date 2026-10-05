@@ -186,6 +186,13 @@ describe('config.yml de Sveltia CMS', () => {
     expect(dateSchema.safeParse('2026-10-10').success).toBe(true);
   });
 
+  it('nom suffixé (2e rendez-vous du jour, AAAA-MM-JJ-1.md) lu par le site : glob **/*.md, déjà couvert par un jeu de test', () => {
+    // Le nom du fichier n'est pas lu par le site : seule la date du front matter compte.
+    expect(readFileSync(path.join(RACINE, 'src/content.config.ts'), 'utf8')).toContain("pattern: '**/*.md'");
+    // Jeu e2e « melange » : 2099-03-14.md et 2099-03-14-matin.md, deux séances le même jour (tests/e2e/rdv-actus.spec.ts).
+    expect(existsSync(path.join(RACINE, 'tests/fixtures/content/melange/rendezvous/2099-03-14-matin.md'))).toBe(true);
+  });
+
   it('nom de fichier d’un rendez-vous : AAAA-MM-JJ.md, non modifiable à la main', () => {
     const slug = collection('rendezvous')['slug'] as { template: string; editable: boolean };
     expect(slug.template).toBe('{{fields.date}}');

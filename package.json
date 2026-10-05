@@ -4,6 +4,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
+    "postinstall": "node scripts/copy-cms.mjs",
     "predev": "node scripts/copy-cms.mjs",
     "dev": "astro dev",
     "prebuild": "node scripts/copy-cms.mjs",
