@@ -6,11 +6,14 @@
 
 declare(strict_types=1);
 
+use function Fan2Harmonie\Contact\candidatsConfig;
 use function Fan2Harmonie\Contact\chargerConfig;
+use function Fan2Harmonie\Contact\choisirTransport;
 use function Fan2Harmonie\Contact\composerMessageBrut;
 use function Fan2Harmonie\Contact\configValide;
 use function Fan2Harmonie\Contact\construireSujet;
 use function Fan2Harmonie\Contact\emailValide;
+use function Fan2Harmonie\Contact\trouverConfig;
 use function Fan2Harmonie\Contact\veutJson;
 
 // ---------- Envoi valide ----------
@@ -108,6 +111,21 @@ test('nom avec tabulation, DEL, séparateurs de ligne Unicode et contrôles bidi
     egal('[Site Fan 2 Harmonie] Message de A B C D EFG', $sujet);
 });
 
+test('nom : tous les caractères de format (\p{Cf}) retirés (LRM, RLM, ALM, largeur nulle, BOM, bidi)', function (): void {
+    $nom = "A\u{200E}B\u{200F}C\u{061C}D\u{200B}E\u{FEFF}F\u{202A}G\u{2069}H\u{200D}I";
+    [$r, $facteur] = traiter(['nom' => $nom]);
+    egal(200, $r['statut']);
+    egal('[Site Fan 2 Harmonie] Message de ABCDEFGHI', decoderSujet($facteur->envois[0]['sujet']));
+    contient("Nom : ABCDEFGHI\r\n", decoderCorps($facteur->envois[0]['corps']));
+    [$r] = traiter(['nom' => "\u{200B}\u{FEFF}\u{200E}"]);
+    egal(422, $r['statut'], 'nom fait seulement de caractères invisibles');
+});
+
+test('message : contrôles bidirectionnels (U+202A–U+202E, U+2066–U+2069) retirés', function (): void {
+    [, $facteur] = traiter(['message' => "a\u{202A}b\u{202B}c\u{202C}d\u{202D}e\u{202E}f\u{2066}g\u{2067}h\u{2068}i\u{2069}j"]);
+    contient("abcdefghij\r\n", decoderCorps($facteur->envois[0]['corps']));
+});
+
 test('injection par l’adresse e-mail : refusée (422), aucun courriel', function (): void {
     foreach ([
         "a@b.fr\r\nBcc: victime@example.org",
@@ -176,6 +194,7 @@ foreach ($cas422 as $cas => [$champs, $champ, $texte]) {
         egal(false, $r['envoye']);
         egal([], $facteur->envois, 'aucun courriel');
         egal([], $limiteur->appels, 'un envoi refusé ne compte pas dans la limite');
+        egal(['203.0.113.7'], $limiteur->purges, 'les entrées expirées sont purgées quand même');
     });
 }
 
@@ -216,6 +235,14 @@ test('champ piège rempli : 200 {ok:true} sans courriel ni décompte (le robot n
     egal(false, $r['envoye']);
     egal([], $facteur->envois);
     egal([], $limiteur->appels);
+    egal(['203.0.113.7'], $limiteur->purges, 'purge des entrées expirées, sans décompte');
+});
+
+test('purge en panne sur un faux succès ou un 422 : la réponse ne change pas', function (): void {
+    [$r] = traiter(['_gotcha' => 'x'], [], null, null, new LimiteurFaux(panne: true));
+    egal(200, $r['statut']);
+    [$r] = traiter(['nom' => ''], [], null, null, new LimiteurFaux(panne: true));
+    egal(422, $r['statut']);
 });
 
 test('champ piège rempli avec des champs invalides : toujours 200 {ok:true}', function (): void {
@@ -243,6 +270,12 @@ test('méthode autre que POST : 405 avec Allow: POST, corps JSON, aucun courriel
     }
 });
 
+test('HEAD : 405 avec Allow: POST', function (): void {
+    [$r] = traiter([], ['REQUEST_METHOD' => 'HEAD']);
+    egal(405, $r['statut']);
+    egal(['Allow' => 'POST'], $r['entetes']);
+});
+
 test('origine refusée : 403, aucun courriel', function (): void {
     foreach ([
         'https://evil.example',
@@ -254,6 +287,11 @@ test('origine refusée : 403, aucun courriel', function (): void {
         '',
         'fan2harmonie.fr',
         "https://fan2harmonie.fr\r\nX: y",
+        'https://user@fan2harmonie.fr',
+        'https://user:mdp@fan2harmonie.fr',
+        'https://fan2harmonie.fr.',
+        'https://fan2harmonie.fr\\@evil.example',
+        'https:\\\\fan2harmonie.fr',
     ] as $origine) {
         [$r, $facteur] = traiter([], ['HTTP_ORIGIN' => $origine]);
         egal(403, $r['statut'], montrer($origine));
@@ -289,6 +327,17 @@ test('sans Origin : le Referer décide ; ni l’un ni l’autre : 403', function
 test('Origin présent mais refusé : un Referer correct ne le rattrape pas', function (): void {
     [$r] = traiter([], ['HTTP_ORIGIN' => 'https://evil.example', 'HTTP_REFERER' => 'https://fan2harmonie.fr/']);
     egal(403, $r['statut']);
+    [$r] = traiter([], ['HTTP_ORIGIN' => 'null', 'HTTP_REFERER' => 'https://fan2harmonie.fr/#contact']);
+    egal(403, $r['statut'], 'Origin: null avec un Referer correct');
+});
+
+test('fichiers joints ($_FILES non vide) : 413, aucun courriel', function (): void {
+    $fichiers = ['piece' => ['name' => 'a.txt', 'type' => 'text/plain', 'tmp_name' => '/tmp/x', 'error' => 0, 'size' => 3]];
+    $facteur = new Facteur();
+    $r = Fan2Harmonie\Contact\traiterContact(postTest(), serveurTest(), configTest(), $facteur, new LimiteurFaux(), instantTest(), $fichiers);
+    egal(413, $r['statut']);
+    egal('Requête trop volumineuse.', $r['corps']['errors'][0]['message']);
+    egal([], $facteur->envois);
 });
 
 test('requête de plus de 20 Ko (Content-Length) : 413 ; 20 Ko pile : acceptée', function (): void {
@@ -363,6 +412,18 @@ test('configuration invalide : 500 « Configuration invalide »', function (): v
         ['limite_par_heure' => '5'],
         ['taille_max_message' => 0],
         ['dossier_limiteur' => ''],
+        ['dossier_limiteur' => null],
+        ['dossier_limiteur' => '/chemin/qui/n-existe/pas'],
+        ['dossier_limiteur' => sys_get_temp_dir()],
+        ['dossier_limiteur' => dossierAvecDroits(0777)],
+        ['dossier_limiteur' => dossierAvecDroits(01700)],
+        ['secret_limiteur' => null],
+        ['secret_limiteur' => ''],
+        ['secret_limiteur' => str_repeat('x', 31)],
+        ['secret_limiteur' => 'CHANGER-MOI'],
+        ['limite_globale_par_heure' => 0],
+        ['limite_globale_par_heure' => '20'],
+        ['entrees_max' => 0],
         ['transport_test' => 'non'],
         ['transport_test' => true],
     ];
@@ -373,18 +434,54 @@ test('configuration invalide : 500 « Configuration invalide »', function (): v
         egal('Configuration invalide', $r['corps']['errors'][0]['message']);
         egal([], $facteur->envois);
     }
-    vrai(configValide(sans(configTest(), 'secret_limiteur', 'transport_test')), 'secret_limiteur et transport_test facultatifs');
+    vrai(configValide(sans(configTest(), 'transport_test', 'limite_globale_par_heure', 'entrees_max')), 'transport_test et plafonds facultatifs (valeurs par défaut)');
     vrai(configValide(configTest(['transport_test' => true, 'dossier_transport_test' => sys_get_temp_dir()])), 'transport de test avec son dossier');
 });
 
-test('chargerConfig : fichier absent ou ne renvoyant pas de tableau → null ; config.sample.php valide et sans transport de test', function (): void {
+test('configuration : la requête ne peut pas activer le transport de test', function (): void {
+    $config = configTest(['transport_test' => false]);
+    $env = ['HTTP_MAIL_TRANSPORT' => 'file', 'PATH' => '/usr/bin'];
+    egal('mail', choisirTransport($config, $env), 'en-tête Mail-Transport: file (HTTP_MAIL_TRANSPORT)');
+    egal('mail', choisirTransport(configTest(['transport_test' => true, 'dossier_transport_test' => '/tmp']), $env), 'config de test sans MAIL_TRANSPORT réel');
+    egal('fichier', choisirTransport(configTest(['transport_test' => true, 'dossier_transport_test' => '/tmp']), ['MAIL_TRANSPORT' => 'file']));
+    // Un champ POST « transport_test » n'est lu nulle part : la configuration seule compte.
+    [$r, $facteur] = traiter(['transport_test' => 'true', 'dossier_transport_test' => '/tmp']);
+    egal(200, $r['statut']);
+    vrai(!array_key_exists('transport_test', $facteur->envois[0]), 'aucun champ reçu ne passe dans le courriel');
+});
+
+test('emplacement de config.php : variable FAN2HARMONIE_CONFIG, puis dossier voisin hors racine web, puis api/', function (): void {
+    $api = '/srv/compte/www/api';
+    egal(['/secret/conf.php', '/srv/compte/fan2harmonie-contact/config.php', '/srv/compte/www/api/config.php'], candidatsConfig(['FAN2HARMONIE_CONFIG' => '/secret/conf.php'], $api));
+    egal(['/srv/compte/fan2harmonie-contact/config.php', '/srv/compte/www/api/config.php'], candidatsConfig([], $api));
+    egal(['/srv/compte/fan2harmonie-contact/config.php', '/srv/compte/www/api/config.php'], candidatsConfig(['FAN2HARMONIE_CONFIG' => ''], $api));
+
+    $existants = [];
+    $existe = static function (string $chemin) use (&$existants): bool {
+        return in_array($chemin, $existants, true);
+    };
+    $env = ['FAN2HARMONIE_CONFIG' => '/secret/conf.php'];
+    egal(null, trouverConfig($env, $api, $existe), 'aucun fichier');
+    $existants = ['/srv/compte/www/api/config.php'];
+    egal('/srv/compte/www/api/config.php', trouverConfig($env, $api, $existe), 'dernier recours');
+    $existants[] = '/srv/compte/fan2harmonie-contact/config.php';
+    egal('/srv/compte/fan2harmonie-contact/config.php', trouverConfig($env, $api, $existe), 'hors racine web avant api/');
+    $existants[] = '/secret/conf.php';
+    egal('/secret/conf.php', trouverConfig($env, $api, $existe), 'variable d’environnement en premier');
+});
+
+test('chargerConfig : fichier absent ou ne renvoyant pas de tableau → null ; config.sample.php inutilisable telle quelle', function (): void {
     $dossier = dossierTemporaire();
     egal(null, chargerConfig($dossier . '/config.php'));
     file_put_contents($dossier . '/config.php', "<?php\nreturn 'oups';\n");
     egal(null, chargerConfig($dossier . '/config.php'));
     $exemple = chargerConfig(RACINE . '/public/api/config.sample.php');
     vrai(is_array($exemple), 'config.sample.php renvoie un tableau');
-    vrai(configValide($exemple), 'config.sample.php est une configuration valide');
+    vrai(!configValide($exemple), 'copiée sans être adaptée, config.sample.php est refusée');
+    egal('CHANGER-MOI', $exemple['secret_limiteur']);
+    vrai(configValide(array_replace($exemple, ['dossier_limiteur' => dossierLimiteurTest(), 'secret_limiteur' => str_repeat('k', 40)])), 'valide une fois dossier et secret renseignés');
+    egal(20, $exemple['limite_globale_par_heure']);
+    egal(2000, $exemple['entrees_max']);
     egal('contact@fan2harmonie.fr', $exemple['destinataire']);
     egal('site@fan2harmonie.fr', $exemple['expediteur']);
     egal(['https://fan2harmonie.fr', 'https://www.fan2harmonie.fr'], $exemple['origines_autorisees']);

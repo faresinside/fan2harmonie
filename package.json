@@ -14,6 +14,7 @@
     "verifier:mise-en-ligne": "vitest run --config vitest.deploy.config.ts",
     "test:e2e": "playwright test",
     "test:php": "docker compose run --rm php php tests/php/run.php",
+    "test:php81": "docker compose run --rm php81 php tests/php/run.php",
     "check": "astro check",
     "lighthouse": "node scripts/lighthouse.mjs",
     "assets": "node scripts/prepare-assets.mjs"

@@ -22,5 +22,14 @@ services:
     volumes:
       - .:/app
 
+  # Même suite sur la plus ancienne version de PHP acceptée par le script (8.1) :
+  # `docker compose run --rm php81 php tests/php/run.php`.
+  php81:
+    image: php:8.1-cli
+    working_dir: /app
+    network_mode: none
+    volumes:
+      - .:/app
+
 volumes:
   fan2harmonie_node_modules:

@@ -9,6 +9,22 @@ declare(strict_types=1);
 
 use function Fan2Harmonie\Contact\traiterContact;
 
+/** Dossier privé (0700) du limiteur, commun aux tests qui ne s'en servent pas vraiment. */
+function dossierLimiteurTest(): string
+{
+    static $dossier = null;
+    return $dossier ??= dossierTemporaire();
+}
+
+/** Nouveau dossier temporaire avec les droits donnés (ex. 0777 : ouvert à tous, 01700 : bit collant). */
+function dossierAvecDroits(int $droits): string
+{
+    $dossier = dossierTemporaire() . '/d';
+    mkdir($dossier);
+    chmod($dossier, $droits);
+    return $dossier;
+}
+
 /** Configuration valide ; `$remplacement` écrase des clés. */
 function configTest(array $remplacement = []): array
 {
@@ -17,7 +33,9 @@ function configTest(array $remplacement = []): array
         'expediteur' => 'site@fan2harmonie.fr',
         'origines_autorisees' => ['https://fan2harmonie.fr', 'https://www.fan2harmonie.fr'],
         'limite_par_heure' => 5,
-        'dossier_limiteur' => sys_get_temp_dir(),
+        'limite_globale_par_heure' => 20,
+        'entrees_max' => 2000,
+        'dossier_limiteur' => dossierLimiteurTest(),
         'secret_limiteur' => str_repeat('0123456789abcdef', 4),
         'taille_max_message' => 5000,
         'transport_test' => false,
@@ -72,18 +90,27 @@ final class Facteur
     }
 }
 
-/** Faux limiteur : décision fixée à l'avance, appels notés. */
+/** Faux limiteur : décision fixée à l'avance ; envois comptés (`appels`) et purges seules (`purges`) notés. */
 final class LimiteurFaux
 {
     /** @var list<string> */
     public array $appels = [];
+    /** @var list<string> */
+    public array $purges = [];
 
     public function __construct(public bool $autorise = true, public int $reessayer = 0, public bool $panne = false)
     {
     }
 
-    public function __invoke(string $cle): array
+    public function __invoke(string $cle, bool $compter = true): array
     {
+        if (!$compter) {
+            $this->purges[] = $cle;
+            if ($this->panne) {
+                throw new RuntimeException('stockage indisponible');
+            }
+            return ['autorise' => true, 'reessayer' => 0];
+        }
         $this->appels[] = $cle;
         if ($this->panne) {
             throw new RuntimeException('stockage indisponible');

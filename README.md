@@ -20,8 +20,9 @@ Tout tourne dans Docker (rien à installer sur le PC).
 ## Formulaire de contact (PHP)
 
 - Le formulaire est reçu par `public/api/contact.php` (logique dans `public/api/lib/contact.php`) sur l'hébergement PHP du site, qui envoie un e-mail à `contact@fan2harmonie.fr` : aucune donnée de visiteur ne passe par un service tiers ni ne quitte l'hébergeur français.
-- Tests PHP (dans Docker, service `php`, sans réseau) : `docker compose run --rm php php tests/php/run.php` (alias `npm run test:php` là où `docker` est disponible). `npm test` (conteneur `app`) n'a pas besoin de PHP.
-- Configuration : `api/config.php` sur le serveur, à côté de `contact.php`, créé à partir de `public/api/config.sample.php`. Il n'est jamais versionné (`.gitignore`) ; sans lui, le formulaire répond « Configuration manquante ».
+- Tests PHP (dans Docker, sans réseau), sur PHP 8.3 et 8.1 : `docker compose run --rm php php tests/php/run.php` et `docker compose run --rm php81 php tests/php/run.php` (alias `npm run test:php` / `npm run test:php81` là où `docker` est disponible). `npm test` (conteneur `app`) n'a pas besoin de PHP.
+- Configuration : `config.php`, créé sur le serveur par la propriétaire ou son technicien à partir de `public/api/config.sample.php` (copié tel quel, il est refusé : `dossier_limiteur` et `secret_limiteur` sont à renseigner). Emplacement recommandé : `<compte>/fan2harmonie-contact/config.php`, dossier voisin de la racine web, donc hors de celle-ci ; sinon la variable d'environnement `FAN2HARMONIE_CONFIG` (cherchée en premier) ou, en dernier recours, `api/config.php`. Jamais versionné (`.gitignore`) ; sans lui, le formulaire répond « Configuration manquante ».
+- Exigences de l'hébergement : PHP ≥ 8.1 avec les extensions mbstring, ctype, filter, json, hash et PCRE (UTF-8) ; une fonction `mail()` qui accepte l'option `-f` ; un dossier privé du compte, inscriptible par PHP, hors de la racine web, pour le limiteur (`dossier_limiteur`, pas `/tmp`). Si une exigence manque, le script répond 500 et note seulement le nom de ce qui manque dans le journal d'erreurs.
 
 ## En-têtes HTTP
 
