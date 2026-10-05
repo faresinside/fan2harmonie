@@ -36,10 +36,12 @@ printf '%s\n' "$piege_php" > "$racine/api/autre.php"
 printf '%s\n' "$piege_php" > "$racine/api/autre.phtml"
 printf '%s\n' "$piege_php" > "$racine/script.php"
 printf '<?php return ["PIEGE-CONFIG"]; // PIEGE-SOURCE\n' > "$racine/api/config.php"
-# Relais de connexion de /admin (écrit plus tard, versionné dans public/oauth/) : ébauches de test seulement.
-mkdir -p "$racine/oauth/lib" "$racine/API/lib"
-printf '<?php echo "OAUTH-AUTH-OK";\n' > "$racine/oauth/auth.php"
-printf '<?php echo "OAUTH-CALLBACK-OK";\n' > "$racine/oauth/callback.php"
+# Relais de connexion de /admin : les VRAIS scripts de dist/oauth/ (auth.php, callback.php, lib/), plus des pièges.
+if [ ! -f "$racine/oauth/auth.php" ] || [ ! -f "$racine/oauth/callback.php" ] || [ ! -f "$racine/oauth/lib/oauth.php" ]; then
+    echo "dist/oauth/ incomplet : relancer la construction du site (npm run build)." >&2
+    exit 1
+fi
+mkdir -p "$racine/API/lib"
 printf '%s\n' "$piege_php" > "$racine/oauth/lib/x.php"
 printf '%s\n' "$piege_php" > "$racine/oauth/other.php"
 printf '<?php return ["PIEGE-CONFIG"]; // PIEGE-SOURCE\n' > "$racine/oauth/config.php"
@@ -81,8 +83,11 @@ fi
 rm -rf "$prive"
 mkdir -p "$prive/limiteur" "$prive/courriers"
 cp /tests/config-test.php "$prive/config.php"
+# Configuration de TEST du relais OAuth, désignée par FAN2HARMONIE_OAUTH_CONFIG (service « apache » seulement ;
+# les autres serveurs tombent sur le piège oauth/config.php, invalide : page 500 générique).
+cp /tests/oauth-config-test.php "$prive/oauth-config.php"
 chown -R www-data:www-data "$prive"
 chmod 0700 "$prive" "$prive/limiteur" "$prive/courriers"
-chmod 0600 "$prive/config.php"
+chmod 0600 "$prive/config.php" "$prive/oauth-config.php"
 
 exec apache2-foreground

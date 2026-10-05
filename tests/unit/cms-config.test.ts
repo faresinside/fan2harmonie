@@ -65,6 +65,23 @@ describe('config.yml de Sveltia CMS', () => {
     expect(c.collections.map((x) => x.name).sort()).toEqual(['actualites', 'pages', 'rendezvous']);
   });
 
+  it('connexion GitHub par le relais du site lui-même : base_url = https://<hôte de site.url>, auth_endpoint = oauth/auth.php', async () => {
+    delete process.env['AUDIT_SITE_URL'];
+    const { site } = await import('../../src/config/site');
+    const backend = config().backend;
+    expect(backend['base_url']).toBe(`https://${new URL(site.url).hostname}`);
+    expect(backend['auth_endpoint']).toBe('oauth/auth.php');
+    // Le point d'entrée existe (public/oauth/auth.php) ; son adresse de retour est oauth/callback.php.
+    expect(existsSync(path.join(RACINE, 'public', backend['auth_endpoint'] as string))).toBe(true);
+    expect(existsSync(path.join(RACINE, 'public/oauth/callback.php'))).toBe(true);
+    // Adresse de la fenêtre de connexion telle que Sveltia la construit (base_url + « / » + auth_endpoint).
+    expect(`${String(backend['base_url']).replace(/\/+$/, '')}/${String(backend['auth_endpoint']).replace(/^\/+/, '')}`).toBe(
+      'https://fan2harmonie.fr/oauth/auth.php',
+    );
+    // Ni autre méthode de connexion, ni autre relais.
+    for (const cle of ['auth_type', 'app_id', 'api_root', 'site_domain']) expect(backend[cle], cle).toBeUndefined();
+  });
+
   it('champ facultatif vide non écrit (sinon `image: \'\'` casserait la construction, `lieu: \'\'` effacerait le lieu)', () => {
     expect((config()['output'] as Record<string, unknown>)['omit_empty_optional_fields']).toBe(true);
   });

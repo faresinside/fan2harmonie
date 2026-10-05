@@ -74,8 +74,16 @@ describe('public/.htaccess', () => {
     }
   });
 
-  it('jamais no-referrer (le script de contact se replie sur Referer), ni COOP, ni CORS, ni HSTS étendu', () => {
-    const texte = directives(racine).join('\n');
+  it('jamais no-referrer (le script de contact se replie sur Referer) sauf sous /oauth/, ni COOP, ni CORS, ni HSTS étendu', () => {
+    const lignes = directives(racine);
+    // Seule exception : le relais de connexion GitHub (/oauth/), dont les adresses portent code et state.
+    expect(lignes).toContain('SetEnvIf Request_URI "^/oauth(/|$)" SANS_REFERENT');
+    expect(lignes).toContain('Header unset Referrer-Policy');
+    expect(lignes.filter((l) => l.includes('no-referrer'))).toEqual(['Header always set Referrer-Policy "no-referrer" env=SANS_REFERENT']);
+    expect(lignes.indexOf('Header always set Referrer-Policy "no-referrer" env=SANS_REFERENT')).toBe(
+      lignes.indexOf('Header always set Referrer-Policy "strict-origin-when-cross-origin"') + 1,
+    );
+    const texte = lignes.filter((l) => !l.includes('SANS_REFERENT')).join('\n');
     expect(texte).not.toMatch(/no-referrer"/);
     expect(texte).not.toMatch(/Cross-Origin-Opener-Policy|Cross-Origin-Embedder-Policy|Access-Control-/i);
     expect(texte).not.toMatch(/includeSubDomains|preload/i);

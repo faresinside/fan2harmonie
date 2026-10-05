@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Connexion réussie — Fan 2 Harmonie</title>
+</head>
+<body>
+<main>
+<h1>Connexion réussie</h1>
+<p>La connexion a réussi. Cette fenêtre va se fermer ; si elle reste ouverte, vous pouvez la fermer.</p>
+</main>
+<script nonce="0123456789abcdef0123456789abcdef">
+(function () {
+  "use strict";
+  var origines = ["http:\/\/localhost:4321"];
+  var message = "authorization:github:success:{\u0022token\u0022:\u0022gho_JetonFactice0000000000000000000E2E\u0022,\u0022provider\u0022:\u0022github\u0022}";
+  var attendu = "authorizing:github";
+  var parent = window.opener;
+  if (!parent) {
+    return;
+  }
+  function recevoir(evenement) {
+    var rang = origines.indexOf(evenement.origin);
+    if (evenement.source !== parent || rang === -1 || evenement.data !== attendu) {
+      return;
+    }
+    window.removeEventListener("message", recevoir);
+    parent.postMessage(message, origines[rang]);
+    window.setTimeout(function () {
+      window.close();
+    }, 500);
+  }
+  window.addEventListener("message", recevoir);
+  for (var i = 0; i < origines.length; i += 1) {
+    parent.postMessage(attendu, origines[i]);
+  }
+})();
+</script>
+</body>
+</html>

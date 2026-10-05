@@ -41,6 +41,7 @@ services:
     image: fan2harmonie-apache-test:local
     environment:
       - FAN2HARMONIE_CONFIG=/srv/fan2harmonie-test/config.php
+      - FAN2HARMONIE_OAUTH_CONFIG=/srv/fan2harmonie-test/oauth-config.php
       - MAIL_TRANSPORT=file
     volumes:
       - ./dist:/dist:ro

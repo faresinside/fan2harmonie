@@ -128,7 +128,7 @@ describe('validerDepot et validerUrlHttps (config.yml)', () => {
   });
 
   it('adresse https', () => {
-    expect(validerUrlHttps('https://auth.exemple.workers.dev')).toBe(true);
+    expect(validerUrlHttps('https://hebergeur.exemple.org')).toBe(true);
     for (const ko of ['À_COMPLÉTER', 'http://auth.exemple.org', 'auth.exemple.org', '']) {
       expect(validerUrlHttps(ko), ko).toBe(false);
     }
@@ -182,11 +182,15 @@ describe('verifierSite et verifierBackendCms', () => {
     hebergeur: { nom: 'Hébergeur SAS', adresse: '1 rue de l’Exemple, 75000 Paris', siteWeb: 'https://www.hebergeur.example.fr' },
   };
 
+  /** Contexte de la vérification de config.yml : adresse du site et fichiers présents dans public/. */
+  const contexte = { urlSite: 'https://fan2harmonie.fr', existeDansPublic: (chemin: string) => chemin === 'oauth/auth.php' };
+  const backendRempli = { repo: 'proprietaire/fan2harmonie', base_url: 'https://fan2harmonie.fr', auth_endpoint: 'oauth/auth.php' };
+
   it('aucun problème quand tout est correctement rempli', () => {
     expect(verifierSite(siteRempli)).toEqual([]);
-    expect(verifierBackendCms({ repo: 'proprietaire/fan2harmonie', base_url: 'https://auth.exemple.workers.dev' })).toEqual(
-      [],
-    );
+    expect(verifierBackendCms(backendRempli, contexte)).toEqual([]);
+    // Sveltia retire les barres de début et de fin : mêmes adresses.
+    expect(verifierBackendCms({ ...backendRempli, base_url: 'https://fan2harmonie.fr/', auth_endpoint: '/oauth/auth.php' }, contexte)).toEqual([]);
   });
 
   it('SIRET et ville facultatifs : null ou vides, aucun problème', () => {
@@ -233,11 +237,36 @@ describe('verifierSite et verifierBackendCms', () => {
     expect(problemes.join('\n')).toMatch(/SIRET/);
   });
 
-  it('config.yml : repo et base_url', () => {
-    const problemes = verifierBackendCms({ repo: 'À_COMPLÉTER', base_url: 'À_COMPLÉTER' });
-    expect(problemes).toHaveLength(2);
+  it('config.yml : repo, base_url et auth_endpoint provisoires ou absents', () => {
+    const problemes = verifierBackendCms({ repo: 'À_COMPLÉTER', base_url: 'À_COMPLÉTER', auth_endpoint: 'À_COMPLÉTER' }, contexte);
+    expect(problemes).toHaveLength(3);
     expect(problemes[0]).toMatch(/^backend\.repo /);
     expect(problemes[1]).toMatch(/^backend\.base_url /);
-    expect(verifierBackendCms({})).toHaveLength(2);
+    expect(problemes[2]).toMatch(/^backend\.auth_endpoint /);
+    expect(verifierBackendCms({}, contexte)).toHaveLength(3);
   });
+
+  it.each([
+    'https://auth.exemple.workers.dev',
+    'http://fan2harmonie.fr',
+    'https://www.fan2harmonie.fr',
+    'https://fan2harmonie.fr/oauth',
+    'https://fan2harmonie.fr.evil.example',
+    'https://fan2harmonie.fr:8443',
+    'https://user@fan2harmonie.fr',
+    '//fan2harmonie.fr',
+  ])('base_url %s refusée : seul https://<hôte de site.url> (le relais du site lui-même)', (baseUrl) => {
+    const problemes = verifierBackendCms({ ...backendRempli, base_url: baseUrl }, contexte);
+    expect(problemes).toHaveLength(1);
+    expect(problemes[0]).toMatch(/^backend\.base_url .*https:\/\/fan2harmonie\.fr/);
+  });
+
+  it.each(['oauth/absent.php', 'oauth/../api/contact.php', '../oauth/auth.php', 'https://evil.example/auth', 'oauth/auth.php?x=1', '', ' oauth/auth.php', 'auth'])(
+    'auth_endpoint « %s » refusé : chemin d’un fichier existant de public/',
+    (point) => {
+      const problemes = verifierBackendCms({ ...backendRempli, auth_endpoint: point }, contexte);
+      expect(problemes).toHaveLength(1);
+      expect(problemes[0]).toMatch(/^backend\.auth_endpoint /);
+    },
+  );
 });

@@ -68,10 +68,11 @@ refuser_corps() {
     if grep -Fq -- "$2" "$TMP/corps"; then ko "$1" "« $2 » présent dans le corps"; else ok "$1 : sans « $2 »"; fi
 }
 
-# En-têtes de sécurité communs à toutes les réponses (pages, erreurs, script PHP).
+# En-têtes de sécurité communs à toutes les réponses (pages, erreurs, script PHP). $2 facultatif : la valeur
+# attendue de Referrer-Policy (no-referrer sous /oauth/).
 entetes_securite() {
     attendre_entete "$1" X-Content-Type-Options "nosniff"
-    attendre_entete "$1" Referrer-Policy "strict-origin-when-cross-origin"
+    attendre_entete "$1" Referrer-Policy "${2:-strict-origin-when-cross-origin}"
     attendre_entete "$1" Permissions-Policy "camera=(), microphone=(), geolocation=()"
     attendre_entete "$1" X-Frame-Options "DENY"
     attendre_entete "$1" Strict-Transport-Security "max-age=31536000"
@@ -173,17 +174,68 @@ requete GET "https://$DOMAINE/admin/config.yml"
 attendre_statut "/admin/config.yml (lu par Sveltia CMS)" 200
 attendre_entete "/admin/config.yml" Cache-Control "no-store"
 
-echo "== /oauth/ : seuls auth.php et callback.php s'exécutent =="
-for script in auth callback; do
-    requete GET "https://$DOMAINE/oauth/$script.php"
-    attendre_statut "/oauth/$script.php exécuté" 200
-    attendre_corps "/oauth/$script.php" "OAUTH-$(printf '%s' "$script" | tr a-z A-Z)-OK"
-    attendre_entete "/oauth/$script.php" Cache-Control "no-store"
-    attendre_absent "/oauth/$script.php" "Content-Security-Policy"
-    entetes_securite "/oauth/$script.php"
+echo "== /oauth/ : relais de connexion GitHub (vrais scripts), seuls auth.php et callback.php s'exécutent =="
+# CSP propre aux pages du relais : un seul script, autorisé par un nonce tiré à chaque réponse.
+CSP_OAUTH="^default-src 'none'; script-src 'nonce-([0-9a-f]{32})'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'\$"
+# page_oauth LIBELLÉ : page du relais avec la CSP à nonce (une fois) et le même nonce sur sa balise <script>.
+page_oauth() {
+    csp=$(valeurs Content-Security-Policy)
+    if [ "$(printf '%s' "$csp" | grep -c '')" = 1 ] && printf '%s' "$csp" | grep -Eq "$CSP_OAUTH"; then
+        nonce=$(printf '%s' "$csp" | sed -E "s/$CSP_OAUTH/\\1/")
+        ok "$1 : CSP à nonce"
+        attendre_corps "$1 : même nonce dans la balise" "<script nonce=\"$nonce\">"
+    else
+        ko "$1 : CSP à nonce" "obtenu : « $(printf '%s' "$csp" | tr '\n' '|') »"
+    fi
+    attendre_entete "$1" Content-Type "text/html; charset=utf-8"
+    attendre_entete "$1" Cache-Control "no-store"
+    entetes_securite "$1" "no-referrer"
+    attendre_corps "$1" '<html lang="fr">'
+    refuser_corps "$1" '"*"'
+    for fuite in PIEGE '<?php' 'namespace Fan2Harmonie' 'secret0de0test' 'Iv1.apachetest0001'; do
+        if grep -Fq -- "$fuite" "$TMP/corps"; then ko "$1" "« $fuite » dans le corps"; fi
+    done
+}
+EFFACE='fan2h_oauth_state=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/oauth/; Secure; HttpOnly; SameSite=Lax'
+
+# auth.php, comme l'ouvre Sveltia : 302 vers GitHub (valeurs de la configuration, jamais de la requête), state
+# dans un cookie HttpOnly, Secure, SameSite=Lax, limité à /oauth/.
+requete GET "https://$DOMAINE/oauth/auth.php?provider=github&site_id=$DOMAINE&scope=repo%2Cuser&redirect_uri=https%3A%2F%2Fevil.example%2F"
+attendre_statut "/oauth/auth.php exécuté (configuration de test)" 302
+location=$(valeurs Location)
+etat=$(printf '%s' "$location" | sed -n 's/^https:\/\/github\.com\/login\/oauth\/authorize?client_id=Iv1\.apachetest0001&redirect_uri=https%3A%2F%2Ffan2harmonie\.fr%2Foauth%2Fcallback\.php&scope=repo&state=\([0-9a-f]\{64\}\)$/\1/p')
+if [ -n "$etat" ]; then ok "/oauth/auth.php → GitHub, paramètres de la configuration seulement"; else ko "/oauth/auth.php : Location" "obtenu : $location"; fi
+attendre_entete "/oauth/auth.php : cookie du state" Set-Cookie "fan2h_oauth_state=$etat; Max-Age=600; Path=/oauth/; Secure; HttpOnly; SameSite=Lax"
+attendre_entete "/oauth/auth.php" Cache-Control "no-store"
+attendre_absent "/oauth/auth.php (redirection)" "Content-Security-Policy"
+entetes_securite "/oauth/auth.php" "no-referrer"
+requete GET "https://$DOMAINE/oauth/auth.php?provider=gitlab"
+attendre_statut "/oauth/auth.php?provider=gitlab" 400
+page_oauth "/oauth/auth.php?provider=gitlab"
+attendre_absent "/oauth/auth.php?provider=gitlab : ni cookie ni redirection" "Set-Cookie|Location"
+for methode in POST HEAD; do
+    requete "$methode" "https://$DOMAINE/oauth/auth.php"
+    attendre_statut "$methode /oauth/auth.php" 405
+    attendre_entete "$methode /oauth/auth.php" Allow "GET"
 done
+
+# callback.php : state sans cookie → 403, page générique, cookie effacé ; erreur de GitHub → 400 sans détail.
+requete GET "https://$DOMAINE/oauth/callback.php?code=abc123&state=$etat"
+attendre_statut "/oauth/callback.php sans cookie" 403
+page_oauth "/oauth/callback.php sans cookie"
+attendre_entete "/oauth/callback.php : cookie effacé" Set-Cookie "$EFFACE"
+attendre_corps "/oauth/callback.php" "authorization:github:error:"
+requete GET "https://$DOMAINE/oauth/callback.php?error=access_denied&error_description=DETAIL-GITHUB&state=$etat" -H "Cookie: fan2h_oauth_state=$etat"
+attendre_statut "/oauth/callback.php?error=…" 400
+page_oauth "/oauth/callback.php?error=…"
+refuser_corps "/oauth/callback.php?error=… : description jamais reprise" "DETAIL-GITHUB"
+requete POST "https://$DOMAINE/oauth/callback.php" -d 'code=x'
+attendre_statut "POST /oauth/callback.php" 405
+attendre_entete "POST /oauth/callback.php" Allow "GET"
+
 for chemin in /oauth/lib/x.php /oauth/lib/ /oauth/lib /oauth/config.php /oauth/other.php /oauth/ /OAUTH/auth.php \
-    /oauth/lib/.htaccess /oauth/Auth.PHP /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt; do
+    /oauth/lib/.htaccess /oauth/Auth.PHP /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt \
+    /oauth/lib/oauth.php /oauth/lib/exigences.php /oauth/config.sample.php /oauth/.htaccess; do
     refus_sans_source "$chemin"
 done
 # Les .htaccess des dossiers lib/ et de oauth/ sont bien ceux du projet (copiés dans dist/).
@@ -219,11 +271,12 @@ for chemin in /api/contact.php/x /api/contact.php/x.md; do
     attendre_statut "$chemin" "403|404"
     refuser_corps "$chemin : le script n'est pas exécuté" '"ok"'
 done
-# Sans « AcceptPathInfo Off » (oauth/.htaccess), PHP exécuterait le script pour ces adresses (200).
+# Sans « AcceptPathInfo Off » (oauth/.htaccess), PHP exécuterait le script pour ces adresses.
 for chemin in /oauth/auth.php/x /oauth/callback.php/x/y.css; do
     requete GET "https://$DOMAINE$chemin"
     attendre_statut "$chemin" 404
-    refuser_corps "$chemin : le script n'est pas exécuté" 'OAUTH-'
+    attendre_absent "$chemin : le script n'est pas exécuté" "Set-Cookie|Location"
+    refuser_corps "$chemin : le script n'est pas exécuté" 'authorization:github'
 done
 
 echo "== Constats informatifs (refusés par le serveur lui-même, quelles que soient nos règles) =="
@@ -315,12 +368,17 @@ echo "== Règles de refus mod_rewrite retirées : les autres couches suffisent =
 SERVEUR=apache-sans-refus-rewrite
 requete GET "https://$DOMAINE/"
 attendre_statut "sans refus mod_rewrite : / reste servi" 200
+# Ce serveur n'a pas FAN2HARMONIE_OAUTH_CONFIG : le relais trouve le piège oauth/config.php (invalide) → page 500
+# générique, sans rien du piège.
 requete GET "https://$DOMAINE/oauth/auth.php"
-attendre_statut "sans refus mod_rewrite : /oauth/auth.php reste exécuté" 200
+attendre_statut "sans refus mod_rewrite : /oauth/auth.php exécuté, configuration invalide" 500
+page_oauth "sans refus mod_rewrite : /oauth/auth.php"
+attendre_corps "sans refus mod_rewrite : /oauth/auth.php" "Connexion impossible"
+attendre_absent "sans refus mod_rewrite : /oauth/auth.php" "Set-Cookie|Location"
 for chemin in /.git/config /.git/ /.env /api/lib/contact.php /api/lib/exigences.php /oauth/lib/x.php \
     /api/config.php /api/config.sample.php /oauth/config.php /oauth/other.php /api/autre.php /script.php \
     /README.md /x.php.jpg /x.pht.jpg /x.inc.txt /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP /index.html.bak /error_log \
-    /composer.json /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt; do
+    /composer.json /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt /oauth/lib/oauth.php /oauth/config.sample.php; do
     refus_sans_source "$chemin" "sans refus mod_rewrite : $chemin toujours refusé"
 done
 SERVEUR=apache

@@ -1,9 +1,10 @@
 <?php
 
 /**
- * Tests du script de contact PHP (public/api/), sans dépendance (ni Composer ni PHPUnit).
+ * Tests PHP du script de contact (public/api/) et du relais de connexion GitHub de /admin (public/oauth/), sans
+ * dépendance (ni Composer ni PHPUnit).
  * Lancement : `docker compose run --rm php php tests/php/run.php` (ou `npm run test:php` depuis le PC).
- * 1. `php -l` de chaque fichier PHP du projet (public/api/ et tests/php/) ;
+ * 1. `php -l` de chaque fichier PHP du projet (public/api/, public/oauth/ et tests/php/) ;
  * 2. tests unitaires de la bibliothèque (tests/php/tests/*.php), dont le limiteur sur fichier et le vrai mail()
  *    vers un faux sendmail ;
  * 3. test d'intégration HTTP avec le serveur intégré de PHP (tests/php/tests/integration.php).
@@ -92,7 +93,7 @@ function supprimerDossier(string $dossier): void
 // ---------- 1. Syntaxe de chaque fichier PHP ----------
 
 $fichiersPhp = [];
-foreach ([RACINE . '/public/api', RACINE . '/tests/php'] as $dossier) {
+foreach ([RACINE . '/public/api', RACINE . '/public/oauth', RACINE . '/tests/php'] as $dossier) {
     if (!is_dir($dossier)) {
         continue;
     }

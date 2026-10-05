@@ -5,6 +5,7 @@
  * - Ils s'appuient sur des libellés de l'interface Sveltia (« Parcourir », « Téléverser », « Insérer »,
  *   « Enregistrer », « Se connecter avec GitHub »…) : à revoir à chaque changement de version de @sveltia/cms.
  */
+import { readFileSync } from 'node:fs';
 import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { test, expect, type Page } from '@playwright/test';
 import { actualiteSchema, rendezvousSchema } from '../../src/lib/schemas';
@@ -78,15 +79,63 @@ test.describe('espace d’administration /admin/', () => {
 
   test('dépôt renseigné : écran de connexion GitHub en français, configuration validée par Sveltia', async ({ page }) => {
     const erreurs = suivreErreurs(page);
-    await servirConfig(page, (yml) =>
-      yml
-        .replace('repo: À_COMPLÉTER', 'repo: exemple/fan2harmonie')
-        .replace('base_url: À_COMPLÉTER', 'base_url: https://auth.exemple.org'),
-    );
+    await servirConfig(page, (yml) => yml.replace('repo: À_COMPLÉTER', 'repo: exemple/fan2harmonie'));
     await page.goto('/admin/');
     await expect(page.getByRole('button', { name: /Se connecter avec .*GitHub/ })).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText('Administration Fan 2 Harmonie').first()).toBeVisible();
     expect(erreurs).toEqual([]);
+  });
+
+  test('connexion GitHub par le relais du site : fenêtre sur /oauth/auth.php, jeton reçu par la vraie page du relais', async ({
+    page,
+    context,
+  }) => {
+    // Aucune requête ne sort vers le vrai site ni vers GitHub : tout est simulé ici. La page de retour est
+    // celle que produit public/oauth/lib/oauth.php (tests/fixtures/oauth/page-succes.html, tenue à jour par
+    // tests/php/tests/oauth.php), avec l'origine de ce serveur de test et un nonce fixe.
+    const pageRelais = readFileSync('tests/fixtures/oauth/page-succes.html', 'utf8');
+    const jeton = 'gho_JetonFactice0000000000000000000E2E';
+    let adressePopup: URL | null = null;
+    let autorisation: string | null = null;
+    // Le trajet auth.php → GitHub → callback.php (302, cookie du state, échange du code) est couvert par
+    // tests/php/tests/oauth-integration.php ; ici, la fenêtre reçoit directement la page de retour du relais,
+    // sur la même origine (https://fan2harmonie.fr) que la vraie page de callback.php.
+    await context.route('https://fan2harmonie.fr/oauth/**', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname === '/oauth/auth.php') {
+        adressePopup = url;
+        await route.fulfill({
+          status: 200,
+          contentType: 'text/html; charset=utf-8',
+          headers: {
+            'Content-Security-Policy':
+              "default-src 'none'; script-src 'nonce-0123456789abcdef0123456789abcdef'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+            'Cache-Control': 'no-store',
+          },
+          body: pageRelais,
+        });
+      } else {
+        await route.fulfill({ status: 404, body: '' });
+      }
+    });
+    await context.route(/^https:\/\/(api\.github\.com|github\.com|[^/]*githubstatus\.com)\//, async (route) => {
+      if (new URL(route.request().url()).hostname === 'api.github.com') autorisation ??= route.request().headers()['authorization'] ?? '';
+      await route.fulfill({ status: 401, contentType: 'application/json', body: '{"message":"Bad credentials"}' });
+    });
+    await servirConfig(page, (yml) => yml.replace('repo: À_COMPLÉTER', 'repo: exemple/fan2harmonie'));
+    await page.goto('/admin/');
+    const fenetre = page.waitForEvent('popup');
+    await page.getByRole('button', { name: /Se connecter avec .*GitHub/ }).click({ timeout: 30_000 });
+    await fenetre;
+    // Adresse construite par Sveltia : base_url + auth_endpoint, avec provider, site_id et scope (ignorés
+    // par le relais, sauf provider).
+    await expect.poll(() => adressePopup?.href ?? null).not.toBeNull();
+    expect(adressePopup!.origin + adressePopup!.pathname).toBe('https://fan2harmonie.fr/oauth/auth.php');
+    expect(adressePopup!.searchParams.get('provider')).toBe('github');
+    expect([...adressePopup!.searchParams.keys()].sort()).toEqual(['provider', 'scope', 'site_id']);
+    // Poignée de main postMessage réussie : Sveltia a reçu le jeton et l'utilise pour appeler l'API GitHub.
+    await expect.poll(() => autorisation, { timeout: 30_000 }).not.toBeNull();
+    expect(autorisation).toContain(jeton);
   });
 
   test('fichiers écrits par le CMS acceptés par les schémas du site (rendez-vous, actualité avec photo)', async ({ page }) => {
