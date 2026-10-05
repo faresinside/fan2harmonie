@@ -8,7 +8,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import { getImage } from 'astro:assets';
 import { site } from '../config/site';
-import { serialiserJsonLd } from '../lib/jsonld';
+import { donneesLocalBusiness, serialiserJsonLd } from '../lib/jsonld';
 import { jeton } from '../lib/jetons';
 import tokens from '../styles/tokens.css?raw';
 import favicon from '../assets/logo/favicon.png';
@@ -34,23 +34,13 @@ const [icone32, icone180, imageOg] = await Promise.all([
   getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 }),
 ]);
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: site.nom,
+const jsonLd = donneesLocalBusiness({
+  nom: site.nom,
   description,
   url: absolue('/'),
   image: absolue(imageOg.src),
-  priceRange: 'Gratuit',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Rambouillet',
-    postalCode: '78120',
-    addressCountry: 'FR',
-  },
-  geo: { '@type': 'GeoCoordinates', latitude: site.gps.lat, longitude: site.gps.lon },
-  areaServed: { '@type': 'City', name: 'Rambouillet' },
-};
+  gps: site.gps,
+});
 ---
 
 <!doctype html>

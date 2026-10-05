@@ -28,6 +28,11 @@ test.describe('mise en page de base', () => {
     expect(local).toBeDefined();
     expect(local?.['name']).toBe('Fan 2 Harmonie');
     expect(local?.['geo']).toMatchObject({ '@type': 'GeoCoordinates', latitude: 48.64703, longitude: 1.811268 });
+    // Faits établis seulement : gratuité, ville et pays ; ni code postal, ni prix, ni zone desservie.
+    expect(local?.['isAccessibleForFree']).toBe(true);
+    expect(local?.['address']).toEqual({ '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' });
+    expect(local).not.toHaveProperty('priceRange');
+    expect(local).not.toHaveProperty('areaServed');
   });
 
   test('lien canonique présent et absolu', async ({ page }) => {
