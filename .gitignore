@@ -13,3 +13,5 @@ playwright-report
 public/admin/sveltia-cms.js
 dist-audit
 .lighthouseci
+# Configuration réelle du formulaire de contact : créée sur le serveur, jamais versionnée.
+public/api/config.php

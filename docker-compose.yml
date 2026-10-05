@@ -13,5 +13,14 @@ services:
     ipc: host
     command: npm run dev -- --host 0.0.0.0
 
+  # PHP du script de contact (public/api/) : tests seulement (`docker compose run --rm php php tests/php/run.php`).
+  # Aucun accès réseau : le test d'intégration parle au serveur PHP intégré sur la boucle locale du conteneur.
+  php:
+    image: php:8.3-cli
+    working_dir: /app
+    network_mode: none
+    volumes:
+      - .:/app
+
 volumes:
   fan2harmonie_node_modules:
