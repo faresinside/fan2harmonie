@@ -19,6 +19,17 @@ Site vitrine de Stéphanie (Qi Gong gratuit en plein air, parc de Rambouillet, s
 - **Formulaire de contact** avec anti-spam, envoi par e-mail.
 - WordPress écarté : plus lourd, mises à jour et sécurité à entretenir, sans bénéfice ici.
 
+> **Mise à jour (hébergement français), octobre 2026.** Les deux lignes Cloudflare ci-dessus et le service de
+> formulaire tiers sont remplacés, pour qu’aucune donnée de visiteur ne quitte la France :
+> - **Hébergement** : hébergeur mutualisé 100 % français (PHP ≥ 8.1, Apache ou LiteSpeed, SSH), site copié par
+>   GitHub Actions (rsync sur SSH) ; HTTPS par certificat Let’s Encrypt de l’hébergeur ; règles dans `.htaccess`.
+> - **Formulaire de contact** : script PHP du même hébergement (`/api/contact.php`), envoi par la messagerie de
+>   l’hébergeur, limiteur anti-abus ; ni Formspree ni autre service tiers.
+> - **Connexion de Sveltia CMS à GitHub** : relais PHP servi par le site lui-même (`/oauth/auth.php`,
+>   `/oauth/callback.php`), plus de Cloudflare Workers.
+> - GitHub ne garde que le contenu public et construit le site. Détails : `README.md`,
+>   `docs/MISE-EN-LIGNE.md`, `docs/GUIDE-STEPHANIE.md`.
+
 ## Contenus gérés par l'administration
 - Rendez-vous : date, heure, lieu, remarque (ex. « annulé si pluie »).
 - Communications : titre, date, texte, image facultative.

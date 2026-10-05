@@ -1,53 +1,103 @@
 # Fan 2 Harmonie
 
-Tout tourne dans Docker (rien à installer sur le PC).
+Site vitrine de Fan 2 Harmonie (Qi Gong en plein air au parc de Rambouillet) : `https://fan2harmonie.fr`.
+Stéphanie y gère elle-même ses rendez-vous, ses actualités et les textes des pages depuis `/admin`.
 
-- Première fois : `docker compose run --rm app npm install`
-- Après toute modification de `package.json` : relancer `docker compose run --rm app npm install`
-- Tests unitaires : `docker compose run --rm app npm test`
-- Tests E2E : `docker compose run --rm app npm run test:e2e`
-  - Les rendez-vous et actualités de test sont dans `tests/fixtures/content/<jeu>/` (dates 2099 = à venir, 2020 = passées).
-    Playwright construit chaque jeu avec `CONTENT_FIXTURE=1 CONTENT_FIXTURE_SET=<jeu>` dans `dist-fixture-<jeu>/`
-    et le sert sur le port indiqué dans `tests/fixtures/jeux.ts` (4322 et suivants) ; le vrai contenu reste sur `dist/` et le port 4321.
-- Portes de qualité :
-  - `npm run test:e2e` inclut `tests/e2e/quality.spec.ts` : axe (WCAG 2.x A/AA et bonnes pratiques) à 360, 768 et 1280 px, clavier et focus visible, aucun débordement de 320 à 1920 px, mouvement réduit, `robots.txt` et plan du site.
-  - Lighthouse : `docker compose run --rm app npm run lighthouse` (`lighthouserc.json`) construit le site dans `dist-audit/` puis audite `/` et `/mentions-legales/` en mobile, 3 passages chacun, avec le Chromium de l'image Playwright.
-    Échec si une catégorie (performance, accessibilité, bonnes pratiques, SEO) est sous 0,95, ou si LCP > 2,5 s, CLS > 0,1, TBT > 200 ms. Rapports : `.lighthouseci/rapports/`.
-  - Pour l'audit seulement, `AUDIT_SITE_URL=http://localhost:4400` remplace l'adresse du site (canonique, plan du site, `robots.txt`) ; c'est une variable d'environnement, jamais écrite dans `src/config/site.ts`.
-    Elle est posée uniquement par `scripts/lighthouse.mjs` : ne JAMAIS la définir chez l'hébergeur ni dans le workflow de déploiement, sinon le site publié aurait une canonique et un plan du site faux.
+Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` tournent sur l’hôte).
+
+- Première fois, et après toute modification de `package.json` : `docker compose run --rm app npm install`
 - Développement : `docker compose up`, puis http://localhost:4321
+
+## Architecture
+
+- **Site statique Astro 5** (TypeScript strict) : une page d’accueil défilante et les mentions légales. Les
+  contenus (`src/content/` : rendez-vous, actualités, textes des pages) sont des fichiers validés par des schémas
+  Zod (`src/lib/schemas.ts`) ; les rendez-vous passés disparaissent à chaque construction.
+- **Hébergeur 100 % français** (PHP ≥ 8.1, Apache ou LiteSpeed lisant `.htaccess`, SSH) : il sert `dist/`, le
+  script du formulaire de contact (`public/api/`) et le relais de connexion GitHub de l’administration
+  (`public/oauth/`). Ni Cloudflare ni Formspree ni autre service tiers ne sont utilisés : aucune donnée de visiteur ne
+  quitte la France.
+- **GitHub** : code et contenu public, construction et mise en ligne par GitHub Actions
+  (`.github/workflows/deploiement.yml` : construction sans secret, puis copie rsync sur SSH depuis l’environnement
+  `production`, à chaque modification de `main` et chaque nuit).
+- **Administration** : Sveltia CMS sous `/admin` (`public/admin/config.yml`), qui enregistre dans le dépôt
+  GitHub ; le site est reconstruit et republié en deux minutes environ.
+- **Règles du serveur** : `public/.htaccess` (HTTPS, domaine canonique, en-têtes de sécurité, cache, refus des
+  fichiers sensibles en plusieurs couches, page 404), `public/api/.htaccess`, `public/oauth/.htaccess`
+  (`AcceptPathInfo Off` seulement), `public/api/lib/.htaccess` et `public/oauth/lib/.htaccess` (tout refusé),
+  `public/api/.user.ini`. RÈGLE : aucun `.htaccess` de sous-dossier ne contient de directive `Rewrite…` (il
+  remplacerait les règles de la racine et leurs refus disparaîtraient en silence).
+
+## Tests
+
+Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont donnés entre parenthèses.
+
+| Suite | Commande |
+|---|---|
+| Unitaires (Vitest, `tests/unit/`) | `docker compose run --rm app npm test` |
+| Bout en bout (Playwright, `tests/e2e/`, y compris le vrai Sveltia CMS ; Internet requis pour ses textes et polices) | `docker compose run --rm app npm run test:e2e` |
+| PHP 8.3 (formulaire et relais OAuth, `tests/php/`) | `docker compose run --rm php php tests/php/run.php` (`npm run test:php`) |
+| PHP 8.1 | `docker compose run --rm php81 php tests/php/run.php` (`npm run test:php81`) |
+| Vrai Apache (quatre serveurs : normal, sans mod_rewrite, sans mod_headers, sans les refus mod_rewrite), après `npm run build` | commande Docker complète du script `test:apache` de `package.json` (`npm run test:apache`) |
+| Lighthouse (mobile, 3 passages, seuils 0,95) | `docker compose run --rm app npm run lighthouse` |
+| Types Astro | `docker compose run --rm app npm run check` |
+| Garde-fou de mise en ligne (échoue tant qu’une valeur provisoire subsiste) | `docker compose run --rm app npm run verifier:mise-en-ligne` |
+
+- Jeux de contenus de test : `tests/fixtures/content/<jeu>/` (dates 2099 = à venir, 2020 = passées), construits
+  dans `dist-fixture-<jeu>/` et servis sur les ports de `tests/fixtures/jeux.ts` ; le vrai contenu reste sur
+  `dist/` et le port 4321.
+- Lighthouse construit le site dans `dist-audit/` avec `AUDIT_SITE_URL=http://localhost:4400`, variable posée
+  uniquement par `scripts/lighthouse.mjs` : ne JAMAIS la définir chez l’hébergeur ni dans le déploiement.
+- Les tests PHP n’ont pas de réseau : le relais OAuth y parle à un faux GitHub local (`php -S`). Le test de bout
+  en bout de `/admin` simule GitHub et le relais (`tests/fixtures/oauth/page-succes.html`, page produite par la
+  bibliothèque du relais et vérifiée par les tests PHP).
+- Les tests de `/admin` dépendent des libellés de l’interface Sveltia (« Parcourir », « Enregistrer »…) : à revoir
+  à chaque nouvelle version de `@sveltia/cms` (version exacte épinglée dans `package.json`).
+
+## Mise en ligne
+
+- **Checklist complète et ordonnée** (domaine, DNS, boîtes mail, réglages PHP, dossiers du serveur, GitHub et ses
+  secrets d’environnement, application OAuth, premier déploiement, vérifications, retour arrière, points
+  juridiques, risques restants) : [`docs/MISE-EN-LIGNE.md`](docs/MISE-EN-LIGNE.md).
+- **Guide de Stéphanie** pour l’administration : [`docs/GUIDE-STEPHANIE.md`](docs/GUIDE-STEPHANIE.md).
+- Revenir en arrière : durablement par `git revert` sur `main` ; en urgence, lancement manuel du déploiement
+  depuis `main` avec `ref` = SHA complet d’un ancien commit (provisoire : écrasé au prochain push ou la nuit).
 
 ## Formulaire de contact (PHP)
 
-- Le formulaire est reçu par `public/api/contact.php` (logique dans `public/api/lib/contact.php`) sur l'hébergement PHP du site, qui envoie un e-mail à `contact@fan2harmonie.fr` : aucune donnée de visiteur ne passe par un service tiers ni ne quitte l'hébergeur français.
-- Tests PHP (dans Docker, sans réseau), sur PHP 8.3 et 8.1 : `docker compose run --rm php php tests/php/run.php` et `docker compose run --rm php81 php tests/php/run.php` (alias `npm run test:php` / `npm run test:php81` là où `docker` est disponible). `npm test` (conteneur `app`) n'a pas besoin de PHP.
-- Configuration : `config.php`, créé sur le serveur par la propriétaire ou son technicien à partir de `public/api/config.sample.php` (copié tel quel, il est refusé : `dossier_limiteur` et `secret_limiteur` sont à renseigner). Emplacement recommandé : `<compte>/fan2harmonie-contact/config.php`, dossier voisin de la racine web, donc hors de celle-ci ; sinon la variable d'environnement `FAN2HARMONIE_CONFIG` (cherchée en premier) ou, en dernier recours, `api/config.php`. Jamais versionné (`.gitignore`) ; sans lui, le formulaire répond « Configuration manquante ».
-- Exigences de l'hébergement : PHP ≥ 8.1 avec les extensions mbstring, ctype, filter, json, hash et PCRE (UTF-8) ; extension `posix` RECOMMANDÉE (pas exigée : sans elle, le compte du processus PHP est lu sur un petit fichier sonde créé puis supprimé dans le dossier du limiteur) ; une fonction `mail()` qui accepte l'option `-f` ; un dossier privé pour le limiteur (`dossier_limiteur`) : hors de la racine web, pas `/tmp`, vrai dossier (pas un lien symbolique), appartenant au compte sous lequel PHP s'exécute, droits 0700 (jamais inscriptible par le groupe ou les autres). Secret `secret_limiteur` : `php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"`. Si une exigence manque, le script répond 500 et note seulement le nom de ce qui manque dans le journal d'erreurs.
-
-## Hébergement et mise en ligne
-
-- Tout est servi par un hébergeur 100 % français (PHP ≥ 8.1, Apache ou LiteSpeed lisant `.htaccess`, SSH) : les pages statiques (`dist/`) et le script de contact (`api/contact.php`). Ni Cloudflare ni service tiers : aucune donnée de visiteur ne quitte la France. GitHub ne sert qu'au contenu public et à la construction.
-- `.github/workflows/deploiement.yml`, en deux jobs. `construire` (sans aucun secret) : tests unitaires, garde-fou `npm run verifier:mise-en-ligne` (bloque tant qu'une valeur provisoire subsiste), construction, `dist/` mis de côté. `deployer` (seulement depuis `main`, environnement GitHub `production`, sans Node) : contrôle de `REMOTE_PATH` (`scripts/valider-remote-path.sh`), fichier témoin sur le serveur, puis copie de `dist/` par rsync sur SSH (200 suppressions au plus). Déclenché à chaque modification de `main` — y compris un rendez-vous, une actualité ou un texte enregistré dans `/admin` (fichiers `.md` de `src/content/`) ; seuls `docs/` et les `.md` de la racine (README…) ne déclenchent rien —, chaque nuit (les rendez-vous passés disparaissent) et à la main. Les fichiers propres au serveur (`api/config.php`, `oauth/config.php`, `error_log`, `.well-known/acme-challenge/`, `cgi-bin/`, `.htpasswd`, `.user.ini` de la racine, `.fan2harmonie-site`) ne sont jamais écrasés ni supprimés.
-- Revenir en arrière : durablement, `git revert` du ou des commits fautifs sur `main` (le site est reconstruit aussitôt). En urgence seulement : Actions > Déploiement > Run workflow **depuis main**, champ `ref` = SHA complet (40 caractères) d'un ancien commit de `main` (vide = dernière version de `main`) ; c'est provisoire, le prochain push ou la reconstruction de la nuit remet la dernière version de `main`. Un lancement depuis une autre branche construit sans rien mettre en ligne.
-- Secrets à créer dans l'environnement GitHub `production` (Settings > Environments, règle de déploiement limitée à la branche `main` ; noms seulement, valeurs jamais dans le dépôt) : `SSH_HOST`, `SSH_USER`, `SSH_PORT` (22 si vide), `REMOTE_PATH` (chemin ABSOLU de la racine web, au moins trois éléments, ex. `/home/compte/www`), `SSH_PRIVATE_KEY` (clé dédiée au déploiement), `SSH_KNOWN_HOSTS` (empreinte du serveur, vérifiée). Sur le serveur, une fois, à la main : un fichier vide `.fan2harmonie-site` dans `REMOTE_PATH` (fichier témoin ; sans lui, rien n'est copié ni supprimé).
-- Règles du serveur : `public/.htaccess` (HTTPS et domaine canonique — tout autre nom, y compris l'adresse provisoire de l'hébergeur, est redirigé vers `https://fan2harmonie.fr` —, en-têtes de sécurité, cache, compression, refus des fichiers sensibles en plusieurs couches, page 404 pour 403 et 404), `public/api/.htaccess` (64 Ko au plus, seul `contact.php` exécutable), `public/api/lib/.htaccess` et `public/oauth/lib/.htaccess` (tout refusé) ; réglages PHP dans `public/api/.user.ini`. Le domaine écrit dans `.htaccess` doit être celui de `site.url` (`tests/unit/htaccess.test.ts`). Relais de connexion GitHub de `/admin` : versionné dans `public/oauth/` avec exactement deux scripts publics, `auth.php` et `callback.php` (seuls exécutables sous `/oauth/`), une bibliothèque `oauth/lib/` et un `oauth/config.php` créé sur le serveur seulement (jamais dans git, jamais touché par le déploiement).
-- RÈGLE : aucun `.htaccess` de sous-dossier ne doit contenir de directive `Rewrite…` (`RewriteEngine On` compris) : il remplacerait les règles de la racine pour tout ce dossier et ses refus disparaîtraient en silence.
-- Vérification sur un vrai Apache (PHP 8.3) dans Docker, après `npm run build` : `npm run test:apache` (commande Docker complète dans `package.json` ; quatre serveurs : normal, sans mod_rewrite, sans mod_headers, sans les refus mod_rewrite ; tout est arrêté et supprimé à la fin). `tests/apache/run.sh` : redirections, en-têtes exacts, refus, relais OAuth, page 404, vrai envoi du formulaire.
-- À savoir pour la mise en ligne :
-  - avant que le DNS pointe vers l'hébergeur, tester avec `curl --resolve fan2harmonie.fr:443:<adresse IP du serveur> https://fan2harmonie.fr/` (ou une ligne du fichier hosts) : l'adresse provisoire du panneau de l'hébergeur est redirigée vers le domaine ;
-  - LiteSpeed n'a pas été testé (`LimitRequestBody`, conditions `env=` de `Header`, héritage des règles) : après la mise en ligne, refaire les vérifications de `tests/apache/run.sh` avec `curl` contre le vrai site ;
-  - GitHub désactive les tâches planifiées (reconstruction de la nuit) d'un dépôt PUBLIC après 60 jours sans activité : le réactiver dans Actions si besoin (un dépôt privé n'a pas cette limite mais consomme des minutes Actions) ;
-  - si le formulaire répond « Service momentanément indisponible » et que le journal parle du limiteur, un outil de sauvegarde a pu créer un lien physique vers `fan2harmonie-limiteur.json` (refusé : il doit n'avoir qu'un seul lien) : supprimer ce fichier dans `dossier_limiteur`, il sera recréé.
-
-## En-têtes HTTP : CSP complète (plus tard)
-
-- Aujourd'hui : CSP partielle (`base-uri`, `form-action`, `frame-ancestors`, `object-src`) dans `public/.htaccess`. À faire plus tard (hash des scripts en ligne) : les pages construites contiennent deux scripts en ligne : le menu (`src/components/Header.astro`, `is:inline`) et le formulaire de contact (`src/scripts/contact.ts`, qu'Astro insère dans la page en `type="module"`). Une `Content-Security-Policy` devra autoriser leurs empreintes (`'sha256-…'`, recalculées à chaque construction) et `connect-src 'self'` (le formulaire écrit à `/api/contact.php`, même origine) ; `/admin` (Sveltia charge des ressources depuis unpkg.com, cdn.jsdelivr.net, api.github.com) demandera sa propre politique.
+- `public/api/contact.php` (logique dans `public/api/lib/contact.php`) envoie un e-mail à
+  `contact@fan2harmonie.fr` par la messagerie de l’hébergeur ; limiteur par adresse IP (empreinte HMAC, une
+  heure) et global (20 messages par heure).
+- Configuration `config.php` créée sur le serveur à partir de `public/api/config.sample.php` (refusé tel quel),
+  de préférence dans `<compte>/fan2harmonie-contact/`, hors de la racine web ; sinon la variable
+  `FAN2HARMONIE_CONFIG`, ou `api/config.php` en dernier recours. Jamais versionnée.
+- Exigences : PHP ≥ 8.1, extensions mbstring, ctype, filter, json, hash, PCRE (UTF-8), `posix` recommandée,
+  `mail()` acceptant `-f`, dossier privé du limiteur (0700, hors racine web, jamais `/tmp`).
 
 ## Administration
 
-- Adresse : `/admin` (Sveltia CMS, en français si le navigateur l'est). Rendez-vous, actualités (photo facultative) et textes des pages.
-- Connexion avec un compte GitHub ayant accès au dépôt (collaborateurs du dépôt) ; chaque enregistrement est un commit, le site se reconstruit seul.
-- Configuration : `public/admin/config.yml` ; `repo` et `base_url` (relais d'authentification) valent `À_COMPLÉTER` jusqu'à la mise en ligne.
-- Le script du CMS (version exacte épinglée dans `package.json`, non versionné) est copié dans `public/admin/` par `npm install` / `npm ci` (postinstall), `npm run dev` et `npm run build`. La commande de construction (workflow de déploiement) doit donc être `npm run build` (pas `astro build` seul).
-- Les tests e2e de `/admin` (vrai Sveltia CMS) ont besoin d'Internet (textes français sur unpkg.com, polices sur cdn.jsdelivr.net) et dépendent des libellés de l'interface Sveltia (« Parcourir », « Téléverser », « Insérer », « Enregistrer ») : à revoir à chaque nouvelle version de `@sveltia/cms`.
-- En local, sur http://localhost:4321/admin, « Travailler avec un dépôt local » édite directement les fichiers du projet (Chrome ou Edge, une fois `repo` renseigné).
+- Adresse : `https://fan2harmonie.fr/admin` (Sveltia CMS, en français si le navigateur l’est) : rendez-vous,
+  actualités (photo facultative, réduite et convertie en WebP), textes des pages. Accès : les collaborateurs du
+  dépôt GitHub, en double authentification.
+- **Relais de connexion GitHub en PHP** (`public/oauth/`), servi par le site lui-même : `config.yml` a
+  `base_url: https://fan2harmonie.fr` et `auth_endpoint: oauth/auth.php`.
+  - `auth.php` tire un `state` aléatoire, le pose dans un cookie `HttpOnly; Secure; SameSite=Lax` limité à
+    `/oauth/` et redirige vers GitHub avec les seules valeurs de la configuration ;
+  - `callback.php` vérifie le `state` (comparaison en temps constant), échange le code par cURL (TLS vérifié,
+    HTTPS seul, sans redirection) et rend une page à CSP « nonce » qui transmet le jeton à `/admin` par
+    `postMessage`, vers l’origine autorisée exacte, selon le protocole de Sveltia ;
+  - logique et tests : `public/oauth/lib/oauth.php`, `tests/php/tests/oauth*.php` ; le jeton n’apparaît jamais dans
+    une adresse, un journal, un cookie ni un fichier ;
+  - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `repo` ou `public_repo`) :
+    `oauth-config.php` créé sur le serveur à partir de `public/oauth/config.sample.php` (refusé tel quel), de
+    préférence dans `<compte>/fan2harmonie-contact/` ; sinon `FAN2HARMONIE_OAUTH_CONFIG` ou `oauth/config.php`.
+- `repo` (dépôt GitHub `propriétaire/dépôt`) vaut `À_COMPLÉTER` jusqu’à la mise en ligne.
+- Le script du CMS est copié dans `public/admin/` par `npm install`/`npm ci` (postinstall), `npm run dev` et
+  `npm run build` : la construction doit toujours passer par `npm run build`.
+
+## En-têtes HTTP : CSP complète (plus tard)
+
+Aujourd’hui : CSP partielle (`base-uri`, `form-action`, `frame-ancestors`, `object-src`) dans `public/.htaccess` ;
+les pages du formulaire et du relais OAuth ont leur propre CSP stricte. À faire : empreintes (`'sha256-…'`) des deux
+scripts en ligne des pages (menu de `src/components/Header.astro`, formulaire `src/scripts/contact.ts`) et
+`connect-src 'self'` ; `/admin` demandera sa propre politique (unpkg.com, cdn.jsdelivr.net, api.github.com).

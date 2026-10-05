@@ -6,9 +6,16 @@
 
 **Architecture:** Site statique Astro 5 (TypeScript strict). Les contenus (rendez-vous, actualités, textes de pages) sont des fichiers Markdown validés par des schémas Zod ; Sveltia CMS (`/admin`) les édite via GitHub. Cloudflare Pages construit et héberge ; une reconstruction quotidienne retire automatiquement les rendez-vous passés.
 
-**Tech Stack:** Astro 5, TypeScript, Zod (content collections), Vitest, Playwright + @axe-core/playwright, @lhci/cli, sharp, Sveltia CMS, Cloudflare Pages + Workers, GitHub, polices @fontsource.
+**Tech Stack:** Astro 5, TypeScript, Zod (content collections), Vitest, Playwright + @axe-core/playwright, @lhci/cli, sharp, Sveltia CMS, Cloudflare Pages + Workers (remplacés : voir la mise à jour ci-dessous), GitHub, polices @fontsource.
 
 **Spec:** `docs/superpowers/specs/2026-10-04-fan2harmonie-site-design.md`
+
+> **Mise à jour (hébergement français), octobre 2026.** Ce plan reste l’historique de la réalisation, mais
+> Cloudflare Pages, Cloudflare Workers et le service de formulaire tiers (Formspree ou Web3Forms) ont été
+> remplacés : hébergeur 100 % français (PHP, Apache/LiteSpeed, SSH), mise en ligne par GitHub Actions et rsync
+> (`.github/workflows/deploiement.yml`), formulaire en PHP sur le même hébergement (`public/api/`), relais de
+> connexion GitHub de `/admin` en PHP (`public/oauth/`). Les Tasks 8, 9 et 11 ci-dessous sont annotées en
+> conséquence ; référence à jour : `README.md` et `docs/MISE-EN-LIGNE.md`.
 
 ## Global Constraints
 
@@ -23,6 +30,8 @@
 - Lighthouse ≥ 95 (performance, accessibilité, bonnes pratiques, SEO) ; zéro violation axe ; aucun défilement horizontal dès 360 px de large.
 - Aucun traceur ; carte en simple lien ; formulaire avec champ piège anti-spam et mention RGPD ; aucun secret dans le dépôt.
 - Aucune valeur de substitution (`À_COMPLÉTER`) ne peut subsister au déploiement (Task 11).
+- *Mise à jour (hébergement français)* : aucune donnée de visiteur ne quitte la France ; ni Cloudflare ni
+  service de formulaire tiers ; secrets uniquement dans l’environnement GitHub `production` et sur le serveur.
 - **Docker uniquement** : rien n'est installé sur le PC de l'utilisatrice (ni Node, ni paquets npm, ni navigateurs Playwright). Toute commande `npm …`, `npx …`, `node …` du plan s'exécute via `docker compose run --rm app <commande>`. `node_modules` vit dans un volume Docker nommé, pas dans le dossier du projet. Image de base : `mcr.microsoft.com/playwright` (Node + navigateurs inclus), version épinglée alignée sur `@playwright/test`. Seul `git` tourne sur l'hôte.
 
 ## Review Focus
@@ -203,6 +212,9 @@ docs/GUIDE-STEPHANIE.md
 - [ ] **Step 4:** Relancer. Attendu : PASS.
 - [ ] **Step 5:** Commit `feat: formulaire de contact et mentions légales`.
 
+> *Mise à jour (hébergement français)* : la réception passe par `public/api/contact.php` sur l’hébergeur
+> français (ni Formspree ni Web3Forms) ; l’hébergeur des mentions légales est celui-ci, plus Cloudflare.
+
 ---
 
 ### Task 9: Espace d'administration Sveltia CMS
@@ -220,6 +232,9 @@ docs/GUIDE-STEPHANIE.md
 - [ ] **Step 3:** Écrire `config.yml` avec des libellés clairs (« Date », « Heure », « Remarque — par ex. annulé en cas de pluie », « Séance annulée ») et `index.html` chargeant Sveltia CMS depuis un paquet épinglé en version exacte (aucune version flottante).
 - [ ] **Step 4:** Relancer. Attendu : PASS.
 - [ ] **Step 5:** Commit `feat: espace d'administration Sveltia CMS`.
+
+> *Mise à jour (hébergement français)* : `base_url: https://fan2harmonie.fr` et `auth_endpoint: oauth/auth.php`
+> désignent le relais PHP du site (`public/oauth/`), vérifiés par le garde-fou de mise en ligne.
 
 ---
 
@@ -254,6 +269,13 @@ docs/GUIDE-STEPHANIE.md
 - [ ] **Step 3:** Renseigner `site.ts` avec les vraies valeurs ; créer le dépôt GitHub (au nom de Stéphanie), le projet Cloudflare Pages relié, le domaine et son HTTPS ; déployer le relais d'authentification (`sveltia-cms-auth`) sur Cloudflare Workers avec l'application OAuth GitHub, secrets stockés dans Cloudflare uniquement ; inviter Stéphanie comme collaboratrice.
 - [ ] **Step 4:** Workflow `rebuild-daily.yml` : cron quotidien à 00:10 heure de Paris appelant le « deploy hook » Cloudflare (URL en secret GitHub). Relancer tous les tests ; sur le site en ligne, vérifier : un rendez-vous ajouté par `/admin` apparaît en moins de 2 minutes ; sa suppression ; un retour arrière depuis l'historique.
 - [ ] **Step 5:** Rédiger `GUIDE-STEPHANIE.md` (1 page, captures d'écran : se connecter, ajouter un rendez-vous, annuler une séance, publier une actualité, changer une photo, que faire en cas d'erreur) ; démonstration en direct avec Stéphanie, qui réalise elle-même un ajout et une suppression. Commit `docs: guide de Stéphanie` et étiquette `v1.0.0`.
+
+> *Mise à jour (hébergement français)* : Steps 3 et 4 remplacés. Plus de projet Cloudflare Pages, de relais
+> `sveltia-cms-auth` sur Cloudflare Workers ni de « deploy hook » : `.github/workflows/deploiement.yml` construit
+> et copie le site chez l’hébergeur français (à chaque modification et chaque nuit), le relais de connexion est
+> `public/oauth/` (secret de l’application OAuth sur le serveur uniquement), le garde-fou est
+> `npm run verifier:mise-en-ligne` (`tests/deploy/no-placeholder.test.ts`). Étapes de mise en ligne :
+> `docs/MISE-EN-LIGNE.md` ; guide : `docs/GUIDE-STEPHANIE.md`.
 
 ---
 

@@ -7,7 +7,8 @@
  * 1. `php -l` de chaque fichier PHP du projet (public/api/, public/oauth/ et tests/php/) ;
  * 2. tests unitaires de la bibliothèque (tests/php/tests/*.php), dont le limiteur sur fichier et le vrai mail()
  *    vers un faux sendmail ;
- * 3. test d'intégration HTTP avec le serveur intégré de PHP (tests/php/tests/integration.php).
+ * 3. tests d'intégration HTTP avec le serveur intégré de PHP (tests/php/tests/integration.php pour le formulaire,
+ *    tests/php/tests/oauth-integration.php pour le relais OAuth, avec un faux GitHub local).
  * Code de sortie non nul au moindre échec.
  */
 
