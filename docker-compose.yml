@@ -31,5 +31,74 @@ services:
     volumes:
       - .:/app
 
+  # Vrai Apache 2.4 + PHP 8.3 servant dist/ (avec ses .htaccess), comme l'hébergeur : `npm run test:apache`,
+  # après `npm run build`. Profil « apache » : jamais lancé par un simple `docker compose up`.
+  # Réseau interne sans accès à Internet. Configuration du formulaire de TEST : tests/apache/config-test.php,
+  # copiée hors de la racine web et désignée par FAN2HARMONIE_CONFIG (jamais dans public/ ni dist/).
+  apache:
+    profiles: [apache]
+    build: tests/apache
+    image: fan2harmonie-apache-test:local
+    environment:
+      - FAN2HARMONIE_CONFIG=/srv/fan2harmonie-test/config.php
+      - MAIL_TRANSPORT=file
+    volumes:
+      - ./dist:/dist:ro
+      - ./tests/apache:/tests:ro
+    networks: [apache-test]
+    healthcheck: &sante-apache
+      test: ["CMD", "curl", "-sk", "-o", "/dev/null", "https://localhost/"]
+      interval: 1s
+      timeout: 5s
+      retries: 60
+
+  # Même serveur privé d'un module : sans mod_rewrite, tout doit échouer (500) plutôt que servir sans refus ;
+  # sans mod_headers, les refus doivent rester actifs.
+  apache-sans-rewrite:
+    profiles: [apache]
+    image: fan2harmonie-apache-test:local
+    pull_policy: never
+    environment:
+      - DESACTIVER_MODULE=rewrite
+    volumes:
+      - ./dist:/dist:ro
+      - ./tests/apache:/tests:ro
+    networks: [apache-test]
+    healthcheck: *sante-apache
+
+  apache-sans-headers:
+    profiles: [apache]
+    image: fan2harmonie-apache-test:local
+    pull_policy: never
+    environment:
+      - DESACTIVER_MODULE=headers
+    volumes:
+      - ./dist:/dist:ro
+      - ./tests/apache:/tests:ro
+    networks: [apache-test]
+    healthcheck: *sante-apache
+
+  # Les requêtes de test (tests/apache/run.sh, curl) contre le service « apache ».
+  apache-tests:
+    profiles: [apache]
+    image: fan2harmonie-apache-test:local
+    pull_policy: never
+    depends_on:
+      apache:
+        condition: service_healthy
+      apache-sans-rewrite:
+        condition: service_healthy
+      apache-sans-headers:
+        condition: service_healthy
+    entrypoint: ["sh", "/tests/run.sh"]
+    volumes:
+      - ./dist:/dist:ro
+      - ./tests/apache:/tests:ro
+    networks: [apache-test]
+
+networks:
+  apache-test:
+    internal: true
+
 volumes:
   fan2harmonie_node_modules:
