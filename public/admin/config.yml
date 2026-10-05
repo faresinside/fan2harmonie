@@ -1,13 +1,18 @@
 # Configuration de Sveltia CMS (espace d'administration /admin).
 # Les champs correspondent exactement aux schémas Zod de src/lib/schemas.ts (vérifié par tests/unit/cms-config.test.ts).
-# À la mise en ligne, renseigner `repo` (dépôt GitHub « propriétaire/dépôt ») et `base_url` (adresse du relais
-# d'authentification sveltia-cms-auth) : voir docs/MISE-EN-LIGNE.md, vérifié par `npm run verifier:mise-en-ligne`.
+# À la mise en ligne, renseigner `repo` (dépôt GitHub « propriétaire/dépôt ») : voir docs/MISE-EN-LIGNE.md,
+# vérifié par `npm run verifier:mise-en-ligne`.
 
 backend:
   name: github
   repo: À_COMPLÉTER
   branch: main
-  base_url: À_COMPLÉTER
+  # Connexion avec GitHub par le relais PHP du site lui-même (public/oauth/, hébergeur français) : Sveltia ouvre
+  # une fenêtre sur https://fan2harmonie.fr/oauth/auth.php ; GitHub revient sur oauth/callback.php (adresse de
+  # retour déclarée dans l'OAuth App). base_url = https://<hôte de site.url> exactement (vérifié par le
+  # garde-fou de mise en ligne).
+  base_url: https://fan2harmonie.fr
+  auth_endpoint: oauth/auth.php
 
 publish_mode: simple
 app_title: Administration Fan 2 Harmonie

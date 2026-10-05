@@ -154,16 +154,55 @@ export function verifierSite(s: SiteAVerifier): string[] {
   return problemes;
 }
 
+/** Ce dont la vérification de config.yml a besoin : l'adresse du site et un test d'existence dans public/. */
+export interface ContexteBackend {
+  /** site.url (src/config/site.ts). */
+  urlSite: string;
+  /** Vrai si `chemin` (relatif à public/, sans « / » initial) désigne un fichier existant. */
+  existeDansPublic: (chemin: string) => boolean;
+}
+
+/**
+ * Relais de connexion GitHub : `base_url` doit être exactement l'origine https du site (le relais PHP est servi
+ * par le site lui-même, public/oauth/) et `auth_endpoint` le chemin d'un fichier existant de public/
+ * (oauth/auth.php). Sveltia joint les deux en retirant les « / » de bord : « base_url/auth_endpoint ».
+ */
+function baseUrlDuSite(baseUrl: string, urlSite: string): boolean {
+  let hote: string;
+  try {
+    hote = new URL(urlSite).hostname;
+  } catch {
+    return false;
+  }
+  return baseUrl.replace(/\/$/, '') === `https://${hote}`;
+}
+
+function pointAuthValide(point: string, existe: (chemin: string) => boolean): boolean {
+  const chemin = point.replace(/^\//, '');
+  return /^[a-z0-9_-]+(\/[a-z0-9_-]+)*\.php$/i.test(chemin) && existe(chemin);
+}
+
 /** Problèmes de la section `backend` de public/admin/config.yml (vide si tout est prêt). */
-export function verifierBackendCms(backend: Record<string, unknown>): string[] {
+export function verifierBackendCms(backend: Record<string, unknown>, contexte: ContexteBackend): string[] {
   const problemes: string[] = [];
   const repo = backend['repo'];
   const baseUrl = backend['base_url'];
+  const point = backend['auth_endpoint'];
   if (typeof repo !== 'string' || !validerDepot(repo) || contientPlaceholder(repo)) {
     problemes.push(`backend.repo : ${decrire(repo)} n'est pas un dépôt GitHub (attendu : proprietaire/depot).`);
   }
-  if (typeof baseUrl !== 'string' || !validerUrlHttps(baseUrl) || contientPlaceholder(baseUrl)) {
-    problemes.push(`backend.base_url : ${decrire(baseUrl)} n'est pas l'adresse https du relais d'authentification (sveltia-cms-auth).`);
+  const attendu = (() => {
+    try {
+      return `https://${new URL(contexte.urlSite).hostname}`;
+    } catch {
+      return 'https://<hôte de site.url>';
+    }
+  })();
+  if (typeof baseUrl !== 'string' || contientPlaceholder(baseUrl) || !baseUrlDuSite(baseUrl, contexte.urlSite)) {
+    problemes.push(`backend.base_url : ${decrire(baseUrl)} n'est pas l'adresse du relais de connexion du site (attendu : ${attendu}).`);
+  }
+  if (typeof point !== 'string' || contientPlaceholder(point) || !pointAuthValide(point, contexte.existeDansPublic)) {
+    problemes.push(`backend.auth_endpoint : ${decrire(point)} ne désigne pas le script du relais dans public/ (attendu : oauth/auth.php).`);
   }
   return problemes;
 }

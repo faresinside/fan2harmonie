@@ -124,6 +124,10 @@ jobs:
           test -f dist/.htaccess
           test -f dist/api/.htaccess
           test -f dist/api/contact.php
+          test -f dist/oauth/.htaccess
+          test -f dist/oauth/auth.php
+          test -f dist/oauth/callback.php
+          test -f dist/oauth/lib/oauth.php
           # Jamais de fichier propre au serveur dans dist/ (il écraserait celui de l'hébergement).
           for interdit in dist/api/config.php dist/oauth/config.php dist/.htpasswd dist/error_log dist/api/error_log dist/.fan2harmonie-site; do
             if [ -e "$interdit" ]; then

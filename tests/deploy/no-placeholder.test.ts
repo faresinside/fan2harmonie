@@ -3,7 +3,7 @@
  * Ce test n'est PAS lancé par `npm test` (vitest.config.ts n'inclut que tests/unit/) : en développement,
  * les valeurs de substitution sont normales. Il doit passer avant toute mise en ligne (docs/MISE-EN-LIGNE.md).
  */
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -35,7 +35,13 @@ describe('mise en ligne : plus aucune valeur provisoire', () => {
     const occurrences = listerPlaceholders([...fichiersTexte('src'), ...fichiersTexte('public')]);
     const problemes = [
       ...verifierSite(site).map((p) => `src/config/site.ts — ${p}`),
-      ...verifierBackendCms(config.backend ?? {}).map((p) => `public/admin/config.yml — ${p}`),
+      ...verifierBackendCms(config.backend ?? {}, {
+        urlSite: site.url,
+        existeDansPublic: (chemin) => {
+          const complet = path.join(RACINE, 'public', chemin);
+          return existsSync(complet) && statSync(complet).isFile();
+        },
+      }).map((p) => `public/admin/config.yml — ${p}`),
       ...occurrences.map((o) => `${o.chemin}:${o.ligne} — valeur provisoire : ${o.texte}`),
     ];
 
