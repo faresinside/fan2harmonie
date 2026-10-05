@@ -134,14 +134,14 @@ RewriteRule ^(api|oauth)/lib(/|$) - [F,NC]
 # Fichiers de Composer et documentation (README…).
 RewriteRule (^|/)composer\.[^/]*$ - [F,NC]
 RewriteRule \.md$ - [F,NC]
-# Double extension (x.php.jpg) : jamais servie (le code source partirait comme une image).
-RewriteRule \.(php[0-9s]?|phtml|phar)\. - [F,NC]
+# Double extension (x.php.jpg, x.pht.jpg, x.inc.txt) : jamais servie (le code source partirait comme une image).
+RewriteRule \.(php[0-9s]?|phtml|phar|pht|inc)\. - [F,NC]
 # Seuls scripts PHP exécutables : api/contact.php (formulaire) et oauth/auth.php, oauth/callback.php (relais
 # de connexion GitHub de /admin, versionné dans public/oauth/ ; oauth/config.php reste sur le serveur).
 RewriteCond %{REQUEST_URI} !^/(api/contact|oauth/auth|oauth/callback)\.php$
 RewriteRule \.(php[0-9s]?|phtml|phar|pht|inc)$ - [F,NC]
 
-<FilesMatch "(?i)(^\.|~$|\.(bak|swp|save|orig|old|dist|md|inc)$|\.sample\.php$|^error_log$|^composer\.|^config.*\.php$|\.(php[0-9s]?|phtml|phar)\.)">
+<FilesMatch "(?i)(^\.|~$|\.(bak|swp|save|orig|old|dist|md|inc)$|\.sample\.php$|^error_log$|^composer\.|^config.*\.php$|\.(php[0-9s]?|phtml|phar|pht|inc)\.)">
     Require all denied
 </FilesMatch>
 <FilesMatch "(?i)^(?!(contact|auth|callback)\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">

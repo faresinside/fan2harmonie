@@ -48,6 +48,16 @@ printf '%s\n' "$piege_php" > "$racine/API/lib/x.php"
 printf '<?php return ["PIEGE-CONFIG"]; // PIEGE-SOURCE\n' > "$racine/api/CONFIG.PHP"
 printf '%s\n' "$piege_php" > "$racine/api/Autre.PHP"
 printf '%s\n' "$piege_php" > "$racine/x.php.jpg"
+printf '%s\n' "$piege_php" > "$racine/x.pht.jpg"
+printf '%s\n' "$piege_php" > "$racine/x.inc.txt"
+# Variantes de casse de /oauth/ (autres fichiers sur ce système sensible à la casse) : refusées par les
+# règles du projet, pas parce qu'elles n'existent pas.
+mkdir -p "$racine/OAUTH"
+printf '%s\n' "$piege_php" > "$racine/OAUTH/auth.php"
+printf '%s\n' "$piege_php" > "$racine/oauth/Auth.PHP"
+# Fichiers inoffensifs (ni PHP, ni caché) dans les dossiers lib/ : seuls les refus de lib/ les couvrent.
+printf 'PIEGE-LIB\n' > "$racine/api/lib/inoffensif.txt"
+printf 'PIEGE-LIB\n' > "$racine/oauth/lib/inoffensif.txt"
 printf 'jeton-acme\n' > "$racine/.well-known/acme-challenge/jeton"
 chown -R root:root "$racine"
 chmod -R u=rwX,go=rX "$racine"

@@ -1,0 +1,9 @@
+# Dossier oauth/ : relais de connexion GitHub de /admin (auth.php, callback.php). S'ajoute aux règles de la
+# racine (../.htaccess), qui n'autorisent ici que ces deux scripts et refusent lib/ et config*.php.
+#
+# Pas de « chemin en plus » après le nom du script : /oauth/auth.php/x et /oauth/callback.php/x/y.css → 404.
+#
+# RÈGLE : aucune directive Rewrite ici (ni « RewriteEngine ») : elle remplacerait les règles de réécriture de
+# la racine pour tout ce dossier, et leurs refus disparaîtraient en silence. Rien d'autre que la ligne
+# ci-dessous : les en-têtes et le cache de /oauth/ sont réglés par la racine et par les scripts eux-mêmes.
+AcceptPathInfo Off

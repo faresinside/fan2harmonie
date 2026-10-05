@@ -12,7 +12,8 @@
 #   1. « construire », SANS aucun secret : tests unitaires → garde-fou de mise en ligne (bloque tant qu'une
 #      valeur provisoire subsiste) → construction → contrôle de dist/ → dist/ mis de côté (artefact).
 #   2. « deployer », seulement depuis main, dans l'environnement GitHub « production » (qui détient les
-#      secrets), sans Node ni npm : garde-fous (REMOTE_PATH, fichier témoin sur le serveur) → rsync.
+#      secrets), sans Node ni npm : garde-fous (paramètres SSH, REMOTE_PATH, fichier témoin sur le serveur,
+#      passage à blanc qui compte les suppressions) → rsync → clé effacée → le site répond-il ?
 # Si une étape échoue, rien n'est copié et le site en ligne reste tel quel.
 #
 # Revenir à une version précédente :
@@ -183,13 +184,10 @@ jobs:
           REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
         run: |
           set -euo pipefail
-          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
-            echo "::error::Secrets SSH_HOST et SSH_USER requis."
-            exit 1
-          fi
-          port="${SSH_PORT:-22}"
-          if [[ ! "$port" =~ ^[0-9]{1,5}$ ]]; then
-            echo "::error::SSH_PORT doit être un numéro de port."
+          # Nom d'hôte et compte : lettres, chiffres, . _ - (jamais « - » en premier) ; port : chiffres (1 à
+          # 65535) ou vide (= 22).
+          if ! sh scripts/valider-ssh.sh "$SSH_HOST" "$SSH_USER" "$SSH_PORT"; then
+            echo "::error::Secrets SSH_HOST, SSH_USER ou SSH_PORT invalides (voir scripts/valider-ssh.sh)."
             exit 1
           fi
           # Couche 1 : forme du chemin (absolu, au moins trois éléments, ni « . », « .. », « ~ »…).
@@ -233,20 +231,42 @@ jobs:
             exit 1
           fi
           # Fichiers propres au serveur, JAMAIS envoyés ni supprimés : exclus (« - ») ET protégés (« P »).
-          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents. Couche 3 :
-          # --max-delete=200, au-delà rsync s'arrête. --delay-updates : fichiers mis en place à la fin.
-          rsync -rlpt --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
-            --itemize-changes --stats \
-            --filter='- /.fan2harmonie-site' --filter='P /.fan2harmonie-site' \
-            --filter='- /api/config.php' --filter='P /api/config.php' \
-            --filter='- /oauth/config.php' --filter='P /oauth/config.php' \
-            --filter='- error_log' --filter='P error_log' \
-            --filter='- /.well-known/acme-challenge/' --filter='P /.well-known/acme-challenge/' \
-            --filter='- /cgi-bin/' --filter='P /cgi-bin/' \
-            --filter='- /.htpasswd' --filter='P /.htpasswd' \
-            --filter='- /.user.ini' --filter='P /.user.ini' \
-            -e "$ssh_cmd" \
-            dist/ "$distant/" > "$RUNNER_TEMP/rsync.log"
+          # Une seule liste, pour le passage à blanc et pour la vraie copie.
+          filtres=(
+            --filter='- /.fan2harmonie-site' --filter='P /.fan2harmonie-site'
+            --filter='- /api/config.php' --filter='P /api/config.php'
+            --filter='- /oauth/config.php' --filter='P /oauth/config.php'
+            --filter='- error_log' --filter='P error_log'
+            --filter='- /.well-known/acme-challenge/' --filter='P /.well-known/acme-challenge/'
+            --filter='- /cgi-bin/' --filter='P /cgi-bin/'
+            --filter='- /.htpasswd' --filter='P /.htpasswd'
+            --filter='- /.user.ini' --filter='P /.user.ini'
+          )
+          # Couche 4 : passage à blanc (rien n'est modifié) ; au-delà de SEUIL_SUPPRESSIONS fichiers à
+          # supprimer, arrêt AVANT toute copie (REMOTE_PATH valide mais mauvais dossier, dist/ incomplet…).
+          SEUIL_SUPPRESSIONS=100
+          if ! rsync -rlpt --dry-run --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
+            --itemize-changes "${filtres[@]}" -e "$ssh_cmd" \
+            dist/ "$distant/" > "$RUNNER_TEMP/rsync-essai.log" 2>&1; then
+            echo "::error::échec du passage à blanc de rsync (fin du journal ci-dessous)."
+            tail -n 50 "$RUNNER_TEMP/rsync-essai.log"
+            exit 1
+          fi
+          suppressions=$(grep -c '^\*deleting' "$RUNNER_TEMP/rsync-essai.log" || true)
+          if [ "$suppressions" -gt "$SEUIL_SUPPRESSIONS" ]; then
+            echo "::error::$suppressions fichiers seraient supprimés sur le serveur (seuil : $SEUIL_SUPPRESSIONS). Rien n'a été copié. Vérifier REMOTE_PATH et dist/ ; premiers fichiers concernés :"
+            grep '^\*deleting' "$RUNNER_TEMP/rsync-essai.log" | head -n 20
+            exit 1
+          fi
+          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents. Couche 3 : au-delà de
+          # 200 suppressions, rsync s'arrête (--max-delete). --delay-updates : fichiers mis en place à la fin.
+          if ! rsync -rlpt --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
+            --itemize-changes --stats "${filtres[@]}" -e "$ssh_cmd" \
+            dist/ "$distant/" > "$RUNNER_TEMP/rsync.log" 2>&1; then
+            echo "::error::échec de rsync (fin du journal ci-dessous)."
+            tail -n 50 "$RUNNER_TEMP/rsync.log"
+            exit 1
+          fi
           modifies=$(grep -c '^[<>ch*]' "$RUNNER_TEMP/rsync.log" || true)
           {
             echo "## Mise en ligne"
@@ -256,16 +276,26 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           tail -n 15 "$RUNNER_TEMP/rsync.log"
 
+      # Aussitôt la copie terminée (réussie ou non) : la clé ne sert plus.
+      - name: Effacer la clé SSH (après la copie)
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ssh"
+
       - name: Vérifier que le site répond
         env:
           ADRESSE: ${{ needs.construire.outputs.adresse }}
         run: |
           set -euo pipefail
-          if curl -fsSI --max-time 20 "$ADRESSE" > /dev/null; then
-            echo "Le site répond : $ADRESSE"
-          else
-            echo "::warning::$ADRESSE ne répond pas encore (nom de domaine pas encore pointé vers l'hébergeur ?)."
-          fi
+          # Adresse calculée par le job « construire » : forme exacte exigée avant tout usage.
+          [[ "$ADRESSE" =~ ^https://[a-z0-9.-]+/$ ]] || exit 1
+          statut=$(curl -sS -o /dev/null -w '%{http_code}' -I --max-time 20 -- "$ADRESSE") || statut=000
+          case "$statut" in
+            000) echo "::warning::$ADRESSE ne répond pas encore (nom de domaine pas encore pointé vers l'hébergeur ?)." ;;
+            5[0-9][0-9]) echo "::error::$ADRESSE répond par une erreur du serveur ($statut) : vérifier le site et les .htaccess."
+              exit 1 ;;
+            2[0-9][0-9]|3[0-9][0-9]) echo "Le site répond : $ADRESSE ($statut)" ;;
+            *) echo "::warning::$ADRESSE répond $statut." ;;
+          esac
 
       - name: Effacer la clé SSH
         if: always()

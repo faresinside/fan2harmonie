@@ -139,6 +139,15 @@ describe('déploiement : deux jobs', () => {
     expect(derniere?.run).toMatch(/rm -rf "\$RUNNER_TEMP\/ssh"/);
   });
 
+  it('clé SSH et known_hosts effacés AUSSITÔT après rsync (always), avant la vérification du site', () => {
+    const s = deployer.steps;
+    const copie = rang(deployer, 'rsync -r');
+    const effacement = s[copie + 1];
+    expect(effacement?.if).toBe('always()');
+    expect(effacement?.run).toMatch(/rm -rf "\$RUNNER_TEMP\/ssh"/);
+    expect(rang(deployer, 'curl ')).toBeGreaterThan(copie + 1);
+  });
+
   it('Node.js : version lue dans .node-version, égale à la version majeure du conteneur de développement', () => {
     const node = construire.steps.find((e) => e.uses?.startsWith('actions/setup-node@'));
     expect(node?.with?.['node-version-file']).toBe('.node-version');
@@ -152,6 +161,55 @@ describe('déploiement : deux jobs', () => {
       expect(script.trimStart().startsWith('set -euo pipefail')).toBe(true);
     }
   });
+});
+
+describe('déploiement : derniers garde-fous (N3 à N6)', () => {
+  const verification = deployer.steps.find((e) => (e.run ?? '').includes('curl '));
+  const run = rsync?.run ?? '';
+
+  it('N3 : adresse issue du job 1 validée (https://hôte/) AVANT tout curl, et « -- » avant l’adresse', () => {
+    const script = verification?.run ?? '';
+    expect(verification?.env).toEqual({ ADRESSE: '${{ needs.construire.outputs.adresse }}' });
+    const controle = script.indexOf('[[ "$ADRESSE" =~ ^https://[a-z0-9.-]+/$ ]] || exit 1');
+    expect(controle).toBeGreaterThan(-1);
+    expect(script.indexOf('curl ')).toBeGreaterThan(controle);
+    for (const appel of script.match(/curl [^\n]*/g) ?? []) expect(appel).toMatch(/ -- "\$ADRESSE"/);
+    // L'expression régulière de bash : vraie pour l'adresse attendue, fausse pour une injection d'option.
+    const motif = /^https:\/\/[a-z0-9.-]+\/$/;
+    expect(motif.test('https://fan2harmonie.fr/')).toBe(true);
+    for (const ko of ['-K/etc/passwd', 'https://fan2harmonie.fr', 'http://fan2harmonie.fr/', 'https://x/ -o /tmp/y', 'https://a@b/', 'https://x/\n-K']) {
+      expect(motif.test(ko), ko).toBe(false);
+    }
+  });
+
+  it('N6 : réponse 5xx du site → échec du job ; connexion impossible (DNS) → simple avertissement', () => {
+    const script = verification?.run ?? '';
+    expect(script).toMatch(/5\[0-9\]\[0-9\]\)[^;]*::error::[^\n]*\n\s*exit 1/);
+    expect(script).toMatch(/000\)[^;]*::warning::/);
+  });
+
+  it('N4 : passage à blanc (-n --itemize-changes, mêmes filtres) avant la vraie copie ; trop de suppressions → arrêt', () => {
+    const essai = run.search(/rsync [^\n]*--dry-run|rsync [^\n]*-n /);
+    const vraie = run.lastIndexOf('rsync -rlpt');
+    expect(essai).toBeGreaterThan(run.indexOf('.fan2harmonie-site absent'));
+    expect(vraie).toBeGreaterThan(essai);
+    // Mêmes filtres pour les deux passages : une seule liste, réutilisée.
+    expect(run).toMatch(/filtres=\(/);
+    expect(run.match(/"\$\{filtres\[@\]\}"/g)).toHaveLength(2);
+    expect(run).toContain("grep -c '^\\*deleting'");
+    expect(run).toMatch(/SEUIL_SUPPRESSIONS=100\b/);
+    expect(run).toMatch(/-gt "\$SEUIL_SUPPRESSIONS"[^\n]*\n[^\n]*::error::/);
+    expect(run).toMatch(/grep '\^\\\*deleting' [^\n]*\| head -n \d+/);
+    // Toute erreur de rsync (passage à blanc ou vrai) : les 50 dernières lignes du journal, puis arrêt.
+    expect(run.match(/tail -n 50 /g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(run.match(/--max-delete=200/g)).toHaveLength(2);
+  });
+
+  it('A5 : SSH_HOST, SSH_USER et SSH_PORT validés par scripts/valider-ssh.sh', () => {
+    expect(texteJob(deployer)).toContain('sh scripts/valider-ssh.sh \\"$SSH_HOST\\" \\"$SSH_USER\\" \\"$SSH_PORT\\"');
+    expect(rang(deployer, 'scripts/valider-ssh.sh')).toBeLessThan(rang(deployer, 'rsync -r'));
+  });
+
 });
 
 describe('déploiement : sécurité', () => {
@@ -221,7 +279,10 @@ describe('déploiement : sécurité', () => {
   });
 
   it('aucune adresse, aucun hôte ni identifiant écrit en dur', () => {
-    const code = [...scripts, ...etapes.flatMap((e) => Object.values(e.env ?? {}))].join('\n');
+    const code = [...scripts, ...etapes.flatMap((e) => Object.values(e.env ?? {}))]
+      .join('\n')
+      // Seule exception : l'expression qui VALIDE l'adresse lue dans site.ts (N3).
+      .replace('^https://[a-z0-9.-]+/$', '');
     expect(code).not.toMatch(/https?:\/\//);
     expect(code).not.toMatch(/\b\d{1,3}(\.\d{1,3}){3}\b/);
     expect(code).not.toMatch(/fan2harmonie\.fr/i);

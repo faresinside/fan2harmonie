@@ -183,8 +183,12 @@ for script in auth callback; do
     entetes_securite "/oauth/$script.php"
 done
 for chemin in /oauth/lib/x.php /oauth/lib/ /oauth/lib /oauth/config.php /oauth/other.php /oauth/ /OAUTH/auth.php \
-    /oauth/lib/.htaccess /oauth/Auth.PHP; do
+    /oauth/lib/.htaccess /oauth/Auth.PHP /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt; do
     refus_sans_source "$chemin"
+done
+# Les .htaccess des dossiers lib/ et de oauth/ sont bien ceux du projet (copiés dans dist/).
+for fichier in /dist/api/lib/.htaccess /dist/oauth/lib/.htaccess /dist/oauth/.htaccess; do
+    if [ -f "$fichier" ]; then ok "$fichier présent dans dist/"; else ko "$fichier" "absent de dist/"; fi
 done
 requete GET "https://$DOMAINE/"
 attendre_entete "/ garde la CSP partielle (absente seulement sous /admin, /oauth, /api)" Content-Security-Policy "$CSP"
@@ -196,7 +200,7 @@ for chemin in \
     /api/config.sample.php /api/config.php /api/.user.ini /api/.htaccess \
     /README.md /api/LISEZMOI.md /api/autre.php /api/autre.phtml /script.php \
     /.git/config /.git/ /.git /.env /index.html.bak '/index.html~' /.index.html.swp /api/contact.php.orig \
-    /error_log /api/error_log /composer.json /x.php.jpg \
+    /error_log /api/error_log /composer.json /x.php.jpg /x.pht.jpg /x.inc.txt \
     /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP \
     //api//lib/contact.php /api/lib/../lib/contact.php /api/./lib/contact.php /api/%6cib/contact.php \
     /%2eenv /.%65nv
@@ -209,11 +213,17 @@ refuser_corps "POST /api/autre.php non exécuté" "PIEGE"
 requete GET "https://$DOMAINE/.well-known/acme-challenge/jeton"
 attendre_statut "/.well-known/ reste accessible (certificats)" 200
 
-echo "== Chemin en plus après le script (AcceptPathInfo Off) =="
-for chemin in /api/contact.php/x /api/contact.php/x.md '/api/contact.php%2f..%2flib%2fcontact.php'; do
+echo "== Chemin en plus après le script (AcceptPathInfo Off dans api/ et oauth/) =="
+for chemin in /api/contact.php/x /api/contact.php/x.md; do
     requete GET "https://$DOMAINE$chemin" -H 'Accept: application/json'
     attendre_statut "$chemin" "403|404"
     refuser_corps "$chemin : le script n'est pas exécuté" '"ok"'
+done
+# Sans « AcceptPathInfo Off » (oauth/.htaccess), PHP exécuterait le script pour ces adresses (200).
+for chemin in /oauth/auth.php/x /oauth/callback.php/x/y.css; do
+    requete GET "https://$DOMAINE$chemin"
+    attendre_statut "$chemin" 404
+    refuser_corps "$chemin : le script n'est pas exécuté" 'OAUTH-'
 done
 
 echo "== Constats informatifs (refusés par le serveur lui-même, quelles que soient nos règles) =="
@@ -221,6 +231,8 @@ requete TRACE "https://$DOMAINE/"
 info "TRACE / → $statut (Debian : TraceEnable Off ; notre règle TRACE/TRACK sert ailleurs)"
 requete GET "https://$DOMAINE/.htaccess"
 info "/.htaccess → $statut (aussi refusé par la configuration Debian <FilesMatch \"^\\.ht\">)"
+requete GET "https://$DOMAINE/api/contact.php%2f..%2flib%2fcontact.php"
+info "/api/contact.php%2f..%2flib%2fcontact.php → $statut (« %2f » refusé par Apache lui-même : AllowEncodedSlashes Off)"
 
 echo "== Listes de dossiers =="
 for chemin in /_astro/ /api/ /vide/ /admin/../api/; do
@@ -307,7 +319,8 @@ requete GET "https://$DOMAINE/oauth/auth.php"
 attendre_statut "sans refus mod_rewrite : /oauth/auth.php reste exécuté" 200
 for chemin in /.git/config /.git/ /.env /api/lib/contact.php /api/lib/exigences.php /oauth/lib/x.php \
     /api/config.php /api/config.sample.php /oauth/config.php /oauth/other.php /api/autre.php /script.php \
-    /README.md /x.php.jpg /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP /index.html.bak /error_log /composer.json; do
+    /README.md /x.php.jpg /x.pht.jpg /x.inc.txt /API/lib/x.php /api/CONFIG.PHP /api/Autre.PHP /index.html.bak /error_log \
+    /composer.json /oauth/lib/inoffensif.txt /api/lib/inoffensif.txt; do
     refus_sans_source "$chemin" "sans refus mod_rewrite : $chemin toujours refusé"
 done
 SERVEUR=apache

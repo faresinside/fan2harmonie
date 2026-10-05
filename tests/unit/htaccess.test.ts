@@ -99,7 +99,7 @@ describe('public/.htaccess', () => {
     for (const regle of [
       'RewriteRule (^|/)\\.(?!well-known(/|$)) - [F]',
       'RewriteRule ^(api|oauth)/lib(/|$) - [F,NC]',
-      'RewriteRule \\.(php[0-9s]?|phtml|phar)\\. - [F,NC]',
+      'RewriteRule \\.(php[0-9s]?|phtml|phar|pht|inc)\\. - [F,NC]',
       'RewriteRule \\.sample\\.php$ - [F,NC]',
       'RewriteRule (^|/)config[^/]*\\.php$ - [F,NC]',
       'RewriteRule \\.md$ - [F,NC]',
@@ -108,6 +108,11 @@ describe('public/.htaccess', () => {
       expect(lignes).toContain(regle);
     }
     expect(lignes.filter((l) => l === 'Require all denied')).toHaveLength(2);
+    // Double extension (x.php.jpg, x.pht.jpg, x.inc.txt) : même liste dans <FilesMatch> que dans RewriteRule.
+    const doubleExtension = /\.(php[0-9s]?|phtml|phar|pht|inc)\./i;
+    expect(lignes).toContain('<FilesMatch "(?i)(^\\.|~$|\\.(bak|swp|save|orig|old|dist|md|inc)$|\\.sample\\.php$|^error_log$|^composer\\.|^config.*\\.php$|\\.(php[0-9s]?|phtml|phar|pht|inc)\\.)">');
+    for (const nom of ['x.php.jpg', 'x.PHP5.png', 'x.pht.jpg', 'x.inc.txt', 'x.phar.gif']) expect(doubleExtension.test(nom), nom).toBe(true);
+    for (const nom of ['photo.jpg', 'index.html', 'incipit.txt', 'phtx.jpg']) expect(doubleExtension.test(nom), nom).toBe(false);
     expect(lignes).toContain('ErrorDocument 404 /404.html');
     expect(lignes).toContain('ErrorDocument 403 /404.html');
     expect(lignes).toContain('Options -Indexes -MultiViews');
@@ -169,8 +174,13 @@ describe('.htaccess des sous-dossiers de public/', () => {
     }
   });
 
+  it('oauth/ : « AcceptPathInfo Off » seulement (aucun « chemin en plus » après auth.php ou callback.php)', () => {
+    expect(sousDossiers).toContain('oauth/.htaccess');
+    expect(directives(lire('public/oauth/.htaccess'))).toEqual(['AcceptPathInfo Off']);
+  });
+
   it('aucun ne contient de directive Rewrite (les refus de la racine ne seraient plus hérités)', () => {
-    expect(sousDossiers.length).toBeGreaterThanOrEqual(3);
+    expect(sousDossiers.length).toBeGreaterThanOrEqual(4);
     for (const f of sousDossiers) expect(directives(lire(`public/${f}`)).join('\n'), f).not.toMatch(/^Rewrite/im);
   });
 });

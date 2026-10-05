@@ -41,6 +41,57 @@ describe('scripts/valider-remote-path.sh (REMOTE_PATH)', () => {
   });
 });
 
+describe('scripts/valider-ssh.sh (SSH_HOST, SSH_USER, SSH_PORT)', () => {
+  const bons: [string, string, string][] = [
+    ['ssh.hebergeur.fr', 'compte', '22'],
+    ['ssh.hebergeur.fr', 'compte', ''],
+    ['ssh-1.cluster_2.hebergeur.fr', 'u.ser-1_x', '2222'],
+    ['192.0.2.10', 'compte', '65535'],
+    ['serveur', 'c', '1'],
+  ];
+  const mauvais: [string, string, string][] = [
+    ['', 'compte', '22'],
+    ['ssh.hebergeur.fr', '', '22'],
+    ['-oProxyCommand=id', 'compte', '22'],
+    ['ssh.hebergeur.fr', '-lroot', '22'],
+    ['ssh.hebergeur.fr', 'compte', '-1'],
+    ['ssh hebergeur.fr', 'compte', '22'],
+    ['ssh.hebergeur.fr\nx', 'compte', '22'],
+    ['ssh.hebergeur.fr', 'com\npte', '22'],
+    ['ssh.hebergeur.fr', 'compte@x', '22'],
+    ['user@ssh.hebergeur.fr', 'compte', '22'],
+    ['ssh.hebergeur.fr:22', 'compte', '22'],
+    ['ssh.hebergeur.fr', 'compte', '22a'],
+    ['ssh.hebergeur.fr', 'compte', '0'],
+    ['ssh.hebergeur.fr', 'compte', '65536'],
+    ['ssh.hebergeur.fr', 'compte', '123456'],
+    ['ssh.hebergeur.fr', 'compte', ' 22'],
+    ['ssh.hebergeur.fr', 'compte', '22\n'],
+    ['$(id)', 'compte', '22'],
+    ['ssh.hebergeur.fr', '`id`', '22'],
+    ['[::1]', 'compte', '22'],
+    ['ssh.hebergeur.fr', 'compte;id', '22'],
+  ];
+  for (const [hote, compte, port] of bons) {
+    it(`accepte ${JSON.stringify([hote, compte, port])}`, () => {
+      const r = lancer('sh', 'valider-ssh.sh', hote, compte, port);
+      expect(r.erreurs).toBe('');
+      expect(r.code).toBe(0);
+    });
+  }
+  for (const [hote, compte, port] of mauvais) {
+    it(`refuse ${JSON.stringify([hote, compte, port])}`, () => {
+      const r = lancer('sh', 'valider-ssh.sh', hote, compte, port);
+      expect(r.code).not.toBe(0);
+      expect(r.erreurs).toMatch(/SSH_(HOST|USER|PORT)/);
+    });
+  }
+  it('refuse un nombre d’arguments autre que trois', () => {
+    expect(lancer('sh', 'valider-ssh.sh', 'a', 'b').code).not.toBe(0);
+    expect(lancer('sh', 'valider-ssh.sh', 'a', 'b', '22', 'x').code).not.toBe(0);
+  });
+});
+
 describe('scripts/valider-ref.sh syntaxe (champ « ref » du lancement manuel)', () => {
   const sha = 'a'.repeat(39) + '0';
   const cas: [string, string | null][] = [
