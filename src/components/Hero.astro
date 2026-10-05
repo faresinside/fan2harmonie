@@ -3,7 +3,7 @@
  * Accueil : photo d'ambiance sous un voile crème (texte lisible avec une photo floue comme nette),
  * mots de l'affiche de Stéphanie, un seul appel à l'action, quatre bienfaits illustrés.
  */
-import { Image } from 'astro:assets';
+import { Image, Picture } from 'astro:assets';
 import logo from '../assets/logo/logo.png';
 import photo from '../assets/photos/hero.jpg';
 import IconSouffle from './IconSouffle.astro';
@@ -21,8 +21,11 @@ const bienfaits = [
 
 <section id="accueil" class="accueil" aria-labelledby="accueil-titre">
   <div class="accueil__scene">
-    <Image
+    {/* Image du plus grand affichage (LCP) : AVIF (≈ moitié du WebP), WebP en repli, chargée en priorité, jamais animée. */}
+    <Picture
       src={photo}
+      formats={['avif']}
+      fallbackFormat="webp"
       alt=""
       class="accueil__photo"
       widths={[640, 960, 1280, 1600]}
@@ -35,22 +38,32 @@ const bienfaits = [
     <div class="accueil__contenu container">
       <div class="accueil__texte">
         <p class="script accueil__accent apparait" style="--retard: 0ms">1 heure pour vous…</p>
-        <h1 id="accueil-titre" class="accueil__titre apparait" style="--retard: 120ms">
+        <h1 id="accueil-titre" class="accueil__titre apparait" style="--retard: 60ms">
           <span class="accueil__titre-principal">Qi Gong</span><span class="sr-only"> : </span>
           <span class="accueil__titre-second">Animation découverte</span>
         </h1>
-        <p class="accueil__devise apparait" style="--retard: 240ms">Respirez, Bougez, Équilibrez-vous</p>
-        <p class="accueil__infos apparait" style="--retard: 360ms">
+        <p class="accueil__devise apparait" style="--retard: 120ms">Respirez, Bougez, Équilibrez-vous</p>
+        <p class="accueil__infos apparait" style="--retard: 180ms">
           Parc de Rambouillet <span aria-hidden="true">·</span> samedis ou dimanches à 16h00
           <span aria-hidden="true">·</span> gratuit
         </p>
-        <div class="apparait" style="--retard: 480ms">
+        <div class="apparait" style="--retard: 240ms">
           <a class="bouton bouton--rose accueil__appel" href="#rdv">Venez essayer</a>
         </div>
       </div>
 
-      <div class="accueil__embleme apparait" style="--retard: 200ms">
-        <Image src={logo} alt="Fan 2 Harmonie" widths={[200, 320, 440]} sizes="(min-width: 56rem) 22rem, 11rem" class="accueil__logo" loading="eager" />
+      <div class="accueil__embleme apparait" style="--retard: 100ms">
+        {/* Dessin au trait en quelques couleurs : PNG à palette, 2 à 3 fois plus léger que le WebP. Tailles = largeurs CSS ci-dessous. */}
+        <Image
+          src={logo}
+          alt="Fan 2 Harmonie"
+          format="png"
+          quality={80}
+          widths={[180, 260, 320, 420, 560, 704]}
+          sizes="(min-width: 56rem) 22rem, (min-width: 43rem) 11rem, (min-width: 25rem) calc(5rem + 14vw), 8.5rem"
+          class="accueil__logo"
+          loading="eager"
+        />
       </div>
     </div>
   </div>
@@ -59,7 +72,7 @@ const bienfaits = [
     <ul class="bienfaits container" role="list">
       {
         bienfaits.map(({ Icone, libelle }, i) => (
-          <li class="bienfaits__item apparait" style={`--retard: ${600 + i * 120}ms`}>
+          <li class="bienfaits__item apparait" style={`--retard: ${300 + i * 80}ms`}>
             <Icone />
             <span>{libelle}</span>
           </li>
@@ -242,15 +255,20 @@ const bienfaits = [
     }
   }
 
-  /* ---------- Apparition lente, décalée (désactivée si mouvement réduit) ---------- */
+  /*
+   * ---------- Apparition décalée (désactivée si mouvement réduit) ----------
+   * Le texte devient lisible très vite (opacité pleine à 40 % de l'animation, retards ≤ 240 ms) puis finit de
+   * glisser en douceur : l'entrée ne retarde pas le premier affichage utile. Opacité et transformation seulement
+   * (animations composées par le GPU, sans flou).
+   */
   @media (prefers-reduced-motion: no-preference) {
     .apparait {
-      animation: apparition 900ms var(--ease-sortie) var(--retard, 0ms) both;
+      animation: apparition 700ms var(--ease-sortie) var(--retard, 0ms) both;
     }
 
     .accueil__embleme.apparait {
       animation-name: apparition-embleme;
-      animation-duration: 1400ms;
+      animation-duration: 1000ms;
     }
   }
 
@@ -259,13 +277,18 @@ const bienfaits = [
       opacity: 0;
       transform: translateY(0.75rem);
     }
+    40% {
+      opacity: 1;
+    }
   }
 
   @keyframes apparition-embleme {
     from {
       opacity: 0;
       transform: scale(0.97);
-      filter: blur(2px);
+    }
+    40% {
+      opacity: 1;
     }
   }
 </style>

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
 import { urlJeu } from '../fixtures/jeux';
+import { sansDebordement, sansViolationAxe } from './outils';
 
 /**
  * Prochains rendez-vous et actualités, sur des jeux de contenus de test (tests/fixtures/jeux.ts).
@@ -9,18 +9,6 @@ import { urlJeu } from '../fixtures/jeux';
 
 const rendezvous = (page: Page) => page.locator('#rdv .rdv-liste > li');
 const actualites = (page: Page) => page.locator('#actualites article');
-
-async function sansViolationAxe(page: Page) {
-  const { violations } = await new AxeBuilder({ page }).analyze();
-  expect(violations.map((v) => `${v.id} : ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
-}
-
-async function sansDebordement(page: Page) {
-  const deborde = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(deborde).toBe(false);
-}
 
 test.describe('aucun rendez-vous à venir (jeu « vide »)', () => {
   test.use({ baseURL: urlJeu('vide') });

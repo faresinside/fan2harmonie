@@ -5,6 +5,8 @@
     "dist",
     "dist-fixture",
     "dist-fixture-*",
+    "dist-audit",
+    ".lighthouseci",
     "node_modules",
     "public/admin/sveltia-cms.js",
     "source",

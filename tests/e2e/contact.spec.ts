@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
 import { site } from '../../src/config/site';
 import { lienMailto } from '../../src/lib/contact';
+import { REGLES_WCAG, sansDebordement, sansViolationAxe } from './outils';
 
 /**
  * Formulaire de contact (#contact) et page /mentions-legales.
@@ -43,19 +43,6 @@ async function remplir(page: Page, { consentement = true } = {}) {
   if (consentement) await f.getByRole('checkbox').check();
 }
 
-async function sansViolationAxe(page: Page, zone?: string) {
-  let axe = new AxeBuilder({ page });
-  if (zone) axe = axe.include(zone);
-  const { violations } = await axe.analyze();
-  expect(violations.map((v) => `${v.id} : ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
-}
-
-async function sansDebordement(page: Page) {
-  const deborde = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(deborde).toBe(false);
-}
 
 test.describe('formulaire de contact : structure', () => {
   test('envoi POST vers site.formEndpoint, sans novalidate', async ({ page }) => {
@@ -394,34 +381,35 @@ test.describe('mentions légales', () => {
   });
 });
 
-for (const largeur of [390, 1280]) {
+for (const largeur of [360, 390, 1280]) {
   test.describe(`accessibilité et mise en page (${largeur} px)`, () => {
     test.use({ viewport: { width: largeur, height: 900 } });
 
-    test('section contact : zéro violation axe, y compris en état d’erreur', async ({ page }) => {
+    test('section contact : zéro violation axe, y compris champs invalides et état d’erreur', async ({ page }) => {
+      const contact = { zone: '#contact', regles: REGLES_WCAG };
       await page.goto('/');
-      await sansViolationAxe(page, '#contact');
+      await sansViolationAxe(page, contact);
+
+      // Formulaire vide envoyé : champs invalides, indications visibles.
+      await bouton(page).click();
+      await expect(formulaire(page).getByLabel('Votre nom')).toHaveAttribute('aria-invalid', 'true');
+      await expect(formulaire(page).getByText('Indiquez votre nom.')).toBeVisible();
+      await sansViolationAxe(page, contact);
+      await sansDebordement(page);
+
+      // Envoi refusé par le service : message d'erreur.
       await intercepter(page, (r) => r.fulfill({ status: 500 }));
       await remplir(page);
       await bouton(page).click();
       await expect(page.locator('#contact').getByRole('alert')).not.toHaveText('');
-      await sansViolationAxe(page, '#contact');
+      await sansViolationAxe(page, contact);
     });
 
-    test('mentions légales : zéro violation axe', async ({ page }) => {
-      expect((await page.goto('/mentions-legales'))?.status()).toBe(200);
-      await sansViolationAxe(page);
-    });
+    if (largeur !== 360) {
+      test('mentions légales : zéro violation axe', async ({ page }) => {
+        expect((await page.goto('/mentions-legales'))?.status()).toBe(200);
+        await sansViolationAxe(page);
+      });
+    }
   });
 }
-
-test.describe('360 px', () => {
-  test.use({ viewport: { width: 360, height: 780 } });
-
-  for (const chemin of ['/', '/mentions-legales']) {
-    test(`aucun défilement horizontal (${chemin})`, async ({ page }) => {
-      expect((await page.goto(chemin))?.status()).toBe(200);
-      await sansDebordement(page);
-    });
-  }
-});

@@ -9,6 +9,11 @@ Tout tourne dans Docker (rien à installer sur le PC).
   - Les rendez-vous et actualités de test sont dans `tests/fixtures/content/<jeu>/` (dates 2099 = à venir, 2020 = passées).
     Playwright construit chaque jeu avec `CONTENT_FIXTURE=1 CONTENT_FIXTURE_SET=<jeu>` dans `dist-fixture-<jeu>/`
     et le sert sur le port indiqué dans `tests/fixtures/jeux.ts` (4322 et suivants) ; le vrai contenu reste sur `dist/` et le port 4321.
+- Portes de qualité :
+  - `npm run test:e2e` inclut `tests/e2e/quality.spec.ts` : axe (WCAG 2.x A/AA et bonnes pratiques) à 360, 768 et 1280 px, clavier et focus visible, aucun débordement de 320 à 1920 px, mouvement réduit, `robots.txt` et plan du site.
+  - Lighthouse : `docker compose run --rm app npm run lighthouse` (`lighthouserc.json`) construit le site dans `dist-audit/` puis audite `/` et `/mentions-legales/` en mobile, 3 passages chacun, avec le Chromium de l'image Playwright.
+    Échec si une catégorie (performance, accessibilité, bonnes pratiques, SEO) est sous 0,95, ou si LCP > 2,5 s, CLS > 0,1, TBT > 200 ms. Rapports : `.lighthouseci/rapports/`.
+  - Pour l'audit seulement, `AUDIT_SITE_URL=http://localhost:4400` remplace l'adresse du site (canonique, plan du site, `robots.txt`) ; c'est une variable d'environnement, jamais écrite dans `src/config/site.ts`.
 - Développement : `docker compose up`, puis http://localhost:4321
 
 ## Administration

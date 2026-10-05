@@ -22,13 +22,6 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
 ---
 
 <article class:list={['actu', { 'actu--image': image }]}>
-  <div class="actu__texte">
-    <h3 class="actu__titre">{titre}</h3>
-    <time class="actu__date" datetime={date.toISOString().slice(0, 10)}>{formatDateLongueFr(date)}</time>
-    <div class="prose actu__corps">
-      <slot />
-    </div>
-  </div>
   {
     image && (
       <Image
@@ -43,6 +36,13 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
       />
     )
   }
+  <div class="actu__texte">
+    <h3 class="actu__titre">{titre}</h3>
+    <time class="actu__date" datetime={date.toISOString().slice(0, 10)}>{formatDateLongueFr(date)}</time>
+    <div class="prose actu__corps">
+      <slot />
+    </div>
+  </div>
 </article>
 
 <style>
@@ -90,9 +90,8 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
     margin-top: var(--s-2);
   }
 
-  /* L'image vient avant le texte à l'écran, comme une photo de une. */
+  /* L'image vient avant le texte, dans le document comme à l'écran, comme une photo de une. */
   .actu__image {
-    order: -1;
     width: 100%;
     aspect-ratio: 3 / 2;
     object-fit: cover;
@@ -108,13 +107,7 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
     }
 
     .actu--image .actu__image {
-      grid-row: 1;
-      grid-column: 1;
       aspect-ratio: 4 / 5;
-    }
-
-    .actu--image .actu__texte {
-      grid-column: 2;
     }
   }
 </style>

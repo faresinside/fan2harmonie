@@ -1,7 +1,7 @@
 ---
 /**
  * Mise en page de base : métadonnées SEO, Open Graph, JSON-LD LocalBusiness, polices, styles globaux.
- * Chaque page fournit son propre <main id="contenu"> (cible du lien d'évitement).
+ * Chaque page fournit son propre <main id="contenu" tabindex="-1"> (cible du lien d'évitement, qui y place le focus).
  */
 import '../styles/fonts.css';
 import '../styles/tokens.css';
@@ -9,6 +9,8 @@ import '../styles/global.css';
 import { getImage } from 'astro:assets';
 import { site } from '../config/site';
 import { serialiserJsonLd } from '../lib/jsonld';
+import { jeton } from '../lib/jetons';
+import tokens from '../styles/tokens.css?raw';
 import favicon from '../assets/logo/favicon.png';
 import hero from '../assets/photos/hero.jpg';
 import cormorantLatin from '@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2?url';
@@ -22,6 +24,8 @@ interface Props {
 const { titre, description } = Astro.props;
 
 const absolue = (chemin: string) => new URL(chemin, site.url).href;
+/** Couleur de la barre du navigateur mobile : le fond crème de la page, lu dans tokens.css. */
+const couleurTheme = jeton(tokens, 'creme');
 const canonique = absolue(Astro.url.pathname);
 
 const [icone32, icone180, imageOg] = await Promise.all([
@@ -57,7 +61,7 @@ const jsonLd = {
     <title>{titre}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonique} />
-    <meta name="theme-color" content="#faf5e8" />
+    <meta name="theme-color" content={couleurTheme} />
 
     <link rel="preload" href={cormorantLatin} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={sourceSansLatin} as="font" type="font/woff2" crossorigin />

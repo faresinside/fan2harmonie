@@ -1,24 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { contrastRatio } from '../../src/lib/contrast';
+import { jeton as jetonDe, lireJetons } from '../../src/lib/jetons';
 
 /** Lit les jetons de couleur directement dans tokens.css : tests et CSS ne peuvent pas diverger. */
-function lireJetons(): Record<string, string> {
-  const css = readFileSync('src/styles/tokens.css', 'utf8');
-  const jetons: Record<string, string> = {};
-  for (const m of css.matchAll(/--([\w-]+)\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?)\b/gi)) {
-    const [, nom, valeur] = m;
-    if (nom && valeur) jetons[nom] = valeur;
-  }
-  return jetons;
-}
+const css = readFileSync('src/styles/tokens.css', 'utf8');
+const jeton = (nom: string) => jetonDe(css, nom);
 
-const jetons = lireJetons();
-function jeton(nom: string): string {
-  const valeur = jetons[nom];
-  if (!valeur) throw new Error(`jeton --${nom} absent de tokens.css`);
-  return valeur;
-}
+describe('lireJetons', () => {
+  it('lit les couleurs hexadécimales, ignore les autres jetons', () => {
+    expect(lireJetons(':root { --a: #fff; --b:#12AB34; --c: var(--a); --d: 1rem; }')).toEqual({ a: '#fff', b: '#12AB34' });
+  });
+
+  it('jeton absent : erreur explicite', () => {
+    expect(() => jetonDe(':root { --a: #fff; }', 'b')).toThrow('--b');
+  });
+});
 
 describe('contrastRatio', () => {
   it('blanc sur noir = 21', () => {

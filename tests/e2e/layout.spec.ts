@@ -157,15 +157,3 @@ test.describe('script du menu en échec (390 px)', () => {
     await navigationUtilisable(page);
   });
 });
-
-test.describe('360 px', () => {
-  test.use({ viewport: { width: 360, height: 780 } });
-
-  test('aucun défilement horizontal', async ({ page }) => {
-    await page.goto('/');
-    const deborde = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    );
-    expect(deborde).toBe(false);
-  });
-});

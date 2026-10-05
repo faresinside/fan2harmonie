@@ -11,3 +11,5 @@ test-results
 playwright-report
 # Copié depuis node_modules par scripts/copy-cms.mjs (predev, prebuild).
 public/admin/sveltia-cms.js
+dist-audit
+.lighthouseci

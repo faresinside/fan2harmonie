@@ -194,6 +194,14 @@ a:hover {
   outline-color: var(--foret);
 }
 
+/*
+ * Cible du lien d'évitement : <main tabindex="-1"> reçoit le focus pour que la tabulation reprenne dans le
+ * contenu. Ce n'est pas un élément interactif : pas d'anneau autour de toute la page.
+ */
+main[tabindex='-1']:focus {
+  outline: none;
+}
+
 /* Boutons : pilule, lettrage espacé, transitions lentes. */
 .bouton {
   display: inline-flex;

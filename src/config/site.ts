@@ -10,7 +10,12 @@ export const site: {
   editeur: string;
 } = {
   nom: 'Fan 2 Harmonie',
-  url: 'https://a-completer.invalid',
+  /**
+   * Adresse publique du site (canonique, Open Graph, plan du site, robots.txt).
+   * AUDIT_SITE_URL ne sert qu'à l'audit Lighthouse (scripts/lighthouse.mjs) : variable d'environnement
+   * seulement, jamais écrite dans un fichier. Hors audit, c'est toujours la valeur ci-dessous qui compte.
+   */
+  url: process.env['AUDIT_SITE_URL'] || 'https://a-completer.invalid',
   email: 'À_COMPLÉTER',
   formEndpoint: 'À_COMPLÉTER',
   gps: { lat: 48.64703, lon: 1.811268 },
