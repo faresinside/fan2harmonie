@@ -2,14 +2,17 @@
 # refus (lib/, config*.php, *.sample.php, fichiers cachés…) s'appliquent aussi ici : ce fichier n'utilise
 # volontairement pas mod_rewrite, sinon les règles de réécriture de la racine ne seraient plus héritées.
 
-# Corps de requête limité à 32 Ko (le formulaire en envoie bien moins ; le script refuse lui-même au-delà de 20 Ko).
-LimitRequestBody 32768
+# Corps de requête limité à 64 Ko. Le script refuse lui-même au-delà de 56 Ko (pire cas d'un envoi sans
+# JavaScript ≈ 45 Ko) ; PHP au-delà de 72 Ko (.user.ini).
+LimitRequestBody 65536
 
-# Pas de liste du contenu du dossier.
-Options -Indexes
+# Pas de liste du contenu du dossier, pas de négociation de contenu ; pas de « chemin en plus » après le nom
+# du script (/api/contact.php/x → 404).
+Options -Indexes -MultiViews
+AcceptPathInfo Off
 
 # Seul contact.php peut être exécuté.
-<FilesMatch "^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
+<FilesMatch "(?i)^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
     Require all denied
 </FilesMatch>
 

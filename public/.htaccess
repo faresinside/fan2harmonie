@@ -11,10 +11,13 @@
 # ==========================================================================================================
 
 # ---------- 1. Généralités ----------
-# Pas de liste du contenu des dossiers, pas de signature du serveur sur ses pages, UTF-8 par défaut.
-Options -Indexes
-ServerSignature Off
+# Pas de liste du contenu des dossiers, pas de négociation de contenu (MultiViews servirait « x.php » pour
+# « /x »), UTF-8 par défaut.
+Options -Indexes -MultiViews
 AddDefaultCharset UTF-8
+# Sans effet sur l'en-tête « Server », mais retire la signature (version du serveur) des pages d'erreur
+# produites par Apache lui-même, par exemple la page 413 (vérifié par tests/apache/run.sh).
+ServerSignature Off
 
 <IfModule mod_dir.c>
     DirectoryIndex index.html
@@ -32,6 +35,10 @@ AddDefaultCharset UTF-8
 # ---------- 2. HTTPS et nom de domaine canonique ----------
 # mod_rewrite est OBLIGATOIRE, volontairement hors de tout <IfModule> : s'il manquait, le serveur répondrait
 # par une erreur 500 plutôt que de servir le site sans HTTPS et sans les refus de la section 5.
+#
+# RÈGLE : aucun .htaccess d'un sous-dossier (api/, oauth/, …) ne doit contenir de directive Rewrite
+# (« RewriteEngine On » ou autre) : il remplacerait les règles de ce fichier pour tout son dossier, et les
+# refus de la section 5 disparaîtraient en silence. Les sous-dossiers n'utilisent que Require / FilesMatch.
 RewriteEngine On
 
 # http:// → https://fan2harmonie.fr/… (301), quel que soit le nom demandé. X-Forwarded-Proto : certains
@@ -41,16 +48,19 @@ RewriteCond %{HTTPS} !=on
 RewriteCond %{HTTP:X-Forwarded-Proto} !=https
 RewriteRule ^ https://fan2harmonie.fr%{REQUEST_URI} [R=301,L]
 
-# www.fan2harmonie.fr → fan2harmonie.fr (301).
-RewriteCond %{HTTP_HOST} ^www\.fan2harmonie\.fr\.?(:[0-9]+)?$ [NC]
+# Tout autre nom que fan2harmonie.fr (www.…, adresse provisoire de l'hébergeur, nom étranger) → 301 vers
+# https://fan2harmonie.fr/… : le nom demandé n'est jamais repris dans une redirection (ni ici, ni dans celle
+# de mod_dir de « /admin » vers « /admin/ »). Avant que le DNS pointe vers l'hébergeur, tester avec
+# « curl --resolve fan2harmonie.fr:443:<adresse IP du serveur> » ou une ligne du fichier hosts.
+RewriteCond %{HTTP_HOST} !^fan2harmonie\.fr\.?(:443)?$ [NC]
 RewriteRule ^ https://fan2harmonie.fr%{REQUEST_URI} [R=301,L]
 
-# Méthodes de diagnostic jamais utiles ici.
+# Méthodes de diagnostic jamais utiles ici (souvent déjà refusées par le serveur lui-même).
 RewriteCond %{REQUEST_METHOD} ^(TRACE|TRACK)$ [NC]
 RewriteRule ^ - [F]
 
 # ---------- 3. En-têtes de sécurité ----------
-# « always » : aussi sur les réponses d'erreur (403, 404…) et sur celles du script PHP.
+# « always » : aussi sur les réponses d'erreur (403, 404…) et sur celles des scripts PHP.
 #
 # - Referrer-Policy strict-origin-when-cross-origin, JAMAIS no-referrer : api/contact.php vérifie l'origine
 #   avec l'en-tête Origin et, à défaut, avec Referer.
@@ -60,7 +70,7 @@ RewriteRule ^ - [F]
 #   mail, outil de l'hébergeur…) deviendrait inaccessible, et preload est quasi irréversible.
 # - Content-Security-Policy PARTIELLE (base-uri, form-action, frame-ancestors, object-src) : le site a des
 #   scripts et styles en ligne. CSP complète : plus tard, avec hachages (voir README).
-#   Pas de CSP du site sur /admin/ et /oauth/ (Sveltia CMS et la fenêtre de connexion GitHub ont leurs propres
+#   Pas de CSP du site sur /admin/ et /oauth/ (Sveltia CMS et le relais de connexion GitHub ont leurs propres
 #   besoins), ni sur /api/ (api/contact.php pose sa propre CSP, plus stricte, sur ses pages HTML).
 # - Aucun Cross-Origin-Opener-Policy : il casserait la fenêtre de connexion GitHub de /admin.
 # - Aucun en-tête CORS (Access-Control-*) : rien sur ce site n'est destiné à d'autres origines.
@@ -103,8 +113,12 @@ RewriteRule ^ - [F]
 </IfModule>
 
 # ---------- 5. Fichiers jamais servis ----------
-# Deux couches. 1) mod_rewrite (obligatoire, voir section 2) : refus 403 sur le chemin complet, dossiers
-# compris. 2) <FilesMatch> + Require (mod_authz_core, toujours présent en 2.4) sur le nom du fichier.
+# Couches indépendantes :
+#   1) mod_rewrite (obligatoire, voir section 2) : refus 403 sur le chemin complet, dossiers compris ;
+#   2) <FilesMatch> + Require (mod_authz_core, toujours présent en 2.4) sur le nom du fichier, sans tenir
+#      compte de la casse ;
+#   3) RedirectMatch (mod_alias) : 404 pour les fichiers et dossiers cachés ;
+#   4) api/lib/.htaccess et oauth/lib/.htaccess : « Require all denied ».
 #
 # Fichiers et dossiers cachés (.git/, .env, .htaccess, .user.ini, .gitattributes…), sauf /.well-known/.
 RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
@@ -112,24 +126,30 @@ RewriteRule (^|/)\.(?!well-known(/|$)) - [F]
 RewriteRule (~|\.(bak|swp|save|orig|old|dist))$ - [F,NC]
 # Journal d'erreurs PHP (créé par certains hébergeurs à côté du script).
 RewriteRule (^|/)error_log$ - [F,NC]
-# Modèles et configurations PHP (api/config.sample.php, api/config.php…).
+# Modèles et configurations PHP (api/config.sample.php, api/config.php, oauth/config.php…).
 RewriteRule \.sample\.php$ - [F,NC]
 RewriteRule (^|/)config[^/]*\.php$ - [F,NC]
-# Bibliothèque du script de contact.
-RewriteRule ^api/lib(/|$) - [F,NC]
+# Bibliothèques du script de contact et du relais de connexion de /admin.
+RewriteRule ^(api|oauth)/lib(/|$) - [F,NC]
 # Fichiers de Composer et documentation (README…).
 RewriteRule (^|/)composer\.[^/]*$ - [F,NC]
 RewriteRule \.md$ - [F,NC]
-# Aucun autre script PHP que api/contact.php.
-RewriteCond %{REQUEST_URI} !^/api/contact\.php$
+# Double extension (x.php.jpg) : jamais servie (le code source partirait comme une image).
+RewriteRule \.(php[0-9s]?|phtml|phar)\. - [F,NC]
+# Seuls scripts PHP exécutables : api/contact.php (formulaire) et oauth/auth.php, oauth/callback.php (relais
+# de connexion GitHub de /admin, versionné dans public/oauth/ ; oauth/config.php reste sur le serveur).
+RewriteCond %{REQUEST_URI} !^/(api/contact|oauth/auth|oauth/callback)\.php$
 RewriteRule \.(php[0-9s]?|phtml|phar|pht|inc)$ - [F,NC]
 
-<FilesMatch "(^\.|~$|\.(bak|swp|save|orig|old|dist|md|inc)$|\.sample\.php$|^error_log$|^composer\.|^config.*\.php$)">
+<FilesMatch "(?i)(^\.|~$|\.(bak|swp|save|orig|old|dist|md|inc)$|\.sample\.php$|^error_log$|^composer\.|^config.*\.php$|\.(php[0-9s]?|phtml|phar)\.)">
     Require all denied
 </FilesMatch>
-<FilesMatch "^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
+<FilesMatch "(?i)^(?!(contact|auth|callback)\.php$).*\.(php[0-9s]?|phtml|phar|pht)$">
     Require all denied
 </FilesMatch>
+<IfModule mod_alias.c>
+    RedirectMatch 404 "/\.(?!well-known/)"
+</IfModule>
 
 # ---------- 6. Pages d'erreur ----------
 # Même page « introuvable » pour 403 et 404 : rien n'indique ce qui existe.

@@ -1,0 +1,3 @@
+# Bibliothèque PHP du relais de connexion de /admin (écrite plus tard) : jamais servie ni exécutée depuis le web (couche de repli des refus de ../../.htaccess).
+# Pas de directive Rewrite ici (voir la RÈGLE de la section 2 du .htaccess de la racine).
+Require all denied

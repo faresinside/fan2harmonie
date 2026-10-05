@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { contientPlaceholder } from '../../src/lib/misenligne';
@@ -35,12 +35,15 @@ describe('public/.htaccess', () => {
     expect(cibles).toEqual([`https://${hote}`, `https://${hote}`]);
     // Aucune autre adresse ni aucun autre nom de domaine dans les directives.
     const domaines = directives(racine).join('\n').match(/[a-z0-9-]+(\\?\.[a-z0-9-]+)*\\?\.(fr|com|net|org|eu)\b/gi) ?? [];
-    expect([...new Set(domaines.map((d) => d.replace(/\\/g, '')))].sort()).toEqual([hote, `www.${hote}`].sort());
+    expect([...new Set(domaines.map((d) => d.replace(/\\/g, '')))]).toEqual([hote]);
   });
 
-  it('www → domaine nu : condition sur www.<hôte de site.url>', () => {
+  it('tout autre nom que <hôte de site.url> (www., nom étranger…) → 301 vers le domaine canonique', () => {
     const echappe = hote.replace(/\./g, '\\.');
-    expect(racine).toContain(`RewriteCond %{HTTP_HOST} ^www\\.${echappe}\\.?(:[0-9]+)?$ [NC]`);
+    const lignes = directives(racine);
+    const i = lignes.indexOf(`RewriteCond %{HTTP_HOST} !^${echappe}\\.?(:443)?$ [NC]`);
+    expect(i).toBeGreaterThan(-1);
+    expect(lignes[i + 1]).toBe(`RewriteRule ^ https://${hote}%{REQUEST_URI} [R=301,L]`);
   });
 
   it('HTTPS forcé (redirection 301) avant tout le reste ; mod_rewrite obligatoire (hors <IfModule>)', () => {
@@ -95,7 +98,8 @@ describe('public/.htaccess', () => {
     const lignes = directives(racine);
     for (const regle of [
       'RewriteRule (^|/)\\.(?!well-known(/|$)) - [F]',
-      'RewriteRule ^api/lib(/|$) - [F,NC]',
+      'RewriteRule ^(api|oauth)/lib(/|$) - [F,NC]',
+      'RewriteRule \\.(php[0-9s]?|phtml|phar)\\. - [F,NC]',
       'RewriteRule \\.sample\\.php$ - [F,NC]',
       'RewriteRule (^|/)config[^/]*\\.php$ - [F,NC]',
       'RewriteRule \\.md$ - [F,NC]',
@@ -106,7 +110,21 @@ describe('public/.htaccess', () => {
     expect(lignes.filter((l) => l === 'Require all denied')).toHaveLength(2);
     expect(lignes).toContain('ErrorDocument 404 /404.html');
     expect(lignes).toContain('ErrorDocument 403 /404.html');
-    expect(lignes).toContain('Options -Indexes');
+    expect(lignes).toContain('Options -Indexes -MultiViews');
+    expect(lignes).toContain('RedirectMatch 404 "/\\.(?!well-known/)"');
+    expect(lignes.join('\n')).not.toMatch(/^LimitRequestBody/m);
+    expect(lignes).toContain('ServerSignature Off');
+  });
+
+  it('scripts PHP exécutables : api/contact.php, oauth/auth.php et oauth/callback.php seulement', () => {
+    const lignes = directives(racine);
+    const i = lignes.indexOf('RewriteCond %{REQUEST_URI} !^/(api/contact|oauth/auth|oauth/callback)\\.php$');
+    expect(i).toBeGreaterThan(-1);
+    expect(lignes[i + 1]).toBe('RewriteRule \\.(php[0-9s]?|phtml|phar|pht|inc)$ - [F,NC]');
+    const motif = /^(?!(contact|auth|callback)\.php$).*\.(php[0-9s]?|phtml|phar|pht)$/i;
+    expect(lignes).toContain('<FilesMatch "(?i)^(?!(contact|auth|callback)\\.php$).*\\.(php[0-9s]?|phtml|phar|pht)$">');
+    for (const nom of ['contact.php', 'auth.php', 'callback.php']) expect(motif.test(nom), nom).toBe(false);
+    for (const nom of ['config.php', 'x.PHP', 'AUTH.php5', 'autre.phtml', 'callback.php.php']) expect(motif.test(nom), nom).toBe(true);
   });
 
   it('aucune valeur provisoire', () => {
@@ -116,13 +134,14 @@ describe('public/.htaccess', () => {
 });
 
 describe('public/api/.htaccess', () => {
-  it('corps limité à 32 Ko, seul contact.php exécutable, jamais en cache, pas de liste', () => {
+  it('corps limité à 64 Ko, seul contact.php exécutable, jamais en cache, pas de liste', () => {
     const lignes = directives(api);
-    expect(lignes).toContain('LimitRequestBody 32768');
-    expect(lignes).toContain('<FilesMatch "^(?!contact\\.php$).*\\.(php[0-9s]?|phtml|phar|pht)$">');
+    expect(lignes).toContain('LimitRequestBody 65536');
+    expect(lignes).toContain('<FilesMatch "(?i)^(?!contact\\.php$).*\\.(php[0-9s]?|phtml|phar|pht)$">');
     expect(lignes).toContain('Require all denied');
     expect(lignes).toContain('Header always set Cache-Control "no-store"');
-    expect(lignes).toContain('Options -Indexes');
+    expect(lignes).toContain('Options -Indexes -MultiViews');
+    expect(lignes).toContain('AcceptPathInfo Off');
   });
 
   it('aucune directive mod_rewrite (sinon les refus de la racine ne seraient plus hérités)', () => {
@@ -130,10 +149,28 @@ describe('public/api/.htaccess', () => {
   });
 
   it('expression de <FilesMatch> : tout .php sauf contact.php', () => {
-    const motif = /^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$/;
+    const motif = /^(?!contact\.php$).*\.(php[0-9s]?|phtml|phar|pht)$/i;
     expect(motif.test('contact.php')).toBe(false);
     for (const nom of ['autre.php', 'config.php', 'config.sample.php', 'contact.php.php', 'x.phtml', 'x.php5', 'xcontact.php']) {
       expect(motif.test(nom), nom).toBe(true);
     }
+  });
+});
+
+describe('.htaccess des sous-dossiers de public/', () => {
+  const sousDossiers = readdirSync(path.join(RACINE, 'public'), { recursive: true, encoding: 'utf8' })
+    .map((f) => f.split(path.sep).join('/'))
+    .filter((f) => f.endsWith('.htaccess') && f !== '.htaccess');
+
+  it('api/lib/ et oauth/lib/ : « Require all denied »', () => {
+    for (const f of ['api/lib/.htaccess', 'oauth/lib/.htaccess']) {
+      expect(sousDossiers).toContain(f);
+      expect(directives(lire(`public/${f}`))).toEqual(['Require all denied']);
+    }
+  });
+
+  it('aucun ne contient de directive Rewrite (les refus de la racine ne seraient plus hérités)', () => {
+    expect(sousDossiers.length).toBeGreaterThanOrEqual(3);
+    for (const f of sousDossiers) expect(directives(lire(`public/${f}`)).join('\n'), f).not.toMatch(/^Rewrite/im);
   });
 });
