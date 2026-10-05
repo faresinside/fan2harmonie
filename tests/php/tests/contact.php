@@ -461,11 +461,14 @@ test('emplacement de config.php : variable FAN2HARMONIE_CONFIG, puis dossier voi
         return in_array($chemin, $existants, true);
     };
     $env = ['FAN2HARMONIE_CONFIG' => '/secret/conf.php'];
-    egal(null, trouverConfig($env, $api, $existe), 'aucun fichier');
-    $existants = ['/srv/compte/www/api/config.php'];
-    egal('/srv/compte/www/api/config.php', trouverConfig($env, $api, $existe), 'dernier recours');
-    $existants[] = '/srv/compte/fan2harmonie-contact/config.php';
-    egal('/srv/compte/fan2harmonie-contact/config.php', trouverConfig($env, $api, $existe), 'hors racine web avant api/');
+    // Variable posée vers un fichier absent : une ligne de journal par recherche (voir durcissement.php).
+    journalPendant(static function () use ($env, $api, $existe, &$existants): void {
+        egal(null, trouverConfig($env, $api, $existe), 'aucun fichier');
+        $existants = ['/srv/compte/www/api/config.php'];
+        egal('/srv/compte/www/api/config.php', trouverConfig($env, $api, $existe), 'dernier recours');
+        $existants[] = '/srv/compte/fan2harmonie-contact/config.php';
+        egal('/srv/compte/fan2harmonie-contact/config.php', trouverConfig($env, $api, $existe), 'hors racine web avant api/');
+    });
     $existants[] = '/secret/conf.php';
     egal('/secret/conf.php', trouverConfig($env, $api, $existe), 'variable d’environnement en premier');
 });
@@ -479,7 +482,7 @@ test('chargerConfig : fichier absent ou ne renvoyant pas de tableau → null ; c
     vrai(is_array($exemple), 'config.sample.php renvoie un tableau');
     vrai(!configValide($exemple), 'copiée sans être adaptée, config.sample.php est refusée');
     egal('CHANGER-MOI', $exemple['secret_limiteur']);
-    vrai(configValide(array_replace($exemple, ['dossier_limiteur' => dossierLimiteurTest(), 'secret_limiteur' => str_repeat('k', 40)])), 'valide une fois dossier et secret renseignés');
+    vrai(configValide(array_replace($exemple, ['dossier_limiteur' => dossierLimiteurTest(), 'secret_limiteur' => bin2hex(random_bytes(32))])), 'valide une fois dossier et secret renseignés');
     egal(20, $exemple['limite_globale_par_heure']);
     egal(2000, $exemple['entrees_max']);
     egal('contact@fan2harmonie.fr', $exemple['destinataire']);

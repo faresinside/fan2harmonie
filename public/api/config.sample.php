@@ -36,14 +36,17 @@ return [
     // Nombre maximal de clients suivis à la fois par le limiteur ; au-delà, les nouveaux sont refusés (429).
     'entrees_max' => 2000,
 
-    // OBLIGATOIRE : dossier privé du compte, inscriptible par PHP, HORS de la racine web, ni ouvert à tous ni
-    // partagé (pas /tmp). Ex. '/home/<compte>/fan2harmonie-contact/limiteur' (droits 0700). Il ne contient que
-    // des empreintes d'adresses IP et des instants, gardés une heure au plus. Le chemin ci-dessous est à remplacer.
+    // OBLIGATOIRE : dossier privé du compte, inscriptible par PHP, HORS de la racine web, pas partagé (pas /tmp),
+    // vrai dossier (pas un lien symbolique), appartenant au compte sous lequel PHP s'exécute, ouvert en écriture
+    // ni au groupe ni aux autres : droits 0700 (ou 0750/0755). Ex. '/home/<compte>/fan2harmonie-contact/limiteur'.
+    // Il ne contient que des empreintes d'adresses IP et des instants, gardés une heure au plus.
+    // Le chemin ci-dessous est à remplacer.
     'dossier_limiteur' => '/chemin/vers/un/dossier/prive/a/creer',
 
-    // OBLIGATOIRE : secret de l'empreinte (HMAC-SHA256) des adresses IP, 32 caractères au moins, propre à ce
-    // site. Par exemple le résultat de : php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
-    // La valeur ci-dessous est volontairement refusée.
+    // OBLIGATOIRE : secret de l'empreinte (HMAC-SHA256) des adresses IP, propre à ce site : 32 caractères au
+    // moins, variés (12 caractères différents au moins), sans le mot « CHANGER ». À générer avec :
+    //     php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+    // et à coller ici. La valeur ci-dessous est volontairement refusée.
     'secret_limiteur' => 'CHANGER-MOI',
 
     // Longueur maximale du message, en caractères.

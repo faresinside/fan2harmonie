@@ -102,7 +102,10 @@ test('limiteur : plafond global par heure, tous clients confondus → refus avec
         $maintenant = DEBUT + $i * 100;
         egal(OUI, $limiteur($ip), $ip);
     }
-    egal(['autorise' => false, 'reessayer' => 3400], $limiteur('192.0.2.4'), 'plafond global atteint');
+    // Le plafond atteint est journalisé (une ligne par heure, voir durcissement.php).
+    journalPendant(static function () use ($limiteur): void {
+        egal(['autorise' => false, 'reessayer' => 3400], $limiteur('192.0.2.4'), 'plafond global atteint');
+    });
     $maintenant = DEBUT + 3601;
     egal(OUI, $limiteur('192.0.2.4'), 'le plus ancien envoi est sorti de la fenêtre');
 });

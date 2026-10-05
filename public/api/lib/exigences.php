@@ -40,6 +40,29 @@ function exigencesManquantes(int $versionPhp, callable $extensionChargee, callab
     return $manquantes;
 }
 
+/**
+ * Extensions RECOMMANDÉES, jamais exigées : sans posix, le compte du processus PHP est lu sur une sonde créée
+ * dans le dossier du limiteur (voir proprietaireAttendu dans lib/contact.php), un peu moins direct.
+ */
+const EXTENSIONS_RECOMMANDEES = ['posix'];
+
+/**
+ * Extensions recommandées absentes (noms seulement).
+ *
+ * @param callable $extensionChargee Nom d'extension → bool (extension_loaded).
+ * @return string[]
+ */
+function recommandationsManquantes(callable $extensionChargee): array
+{
+    $manquantes = [];
+    foreach (EXTENSIONS_RECOMMANDEES as $extension) {
+        if (!$extensionChargee($extension)) {
+            $manquantes[] = $extension;
+        }
+    }
+    return $manquantes;
+}
+
 /** Exigences non remplies par le PHP qui exécute ce code. */
 function exigencesManquantesIci(): array
 {

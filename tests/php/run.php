@@ -83,7 +83,8 @@ function supprimerDossier(string $dossier): void
         RecursiveIteratorIterator::CHILD_FIRST,
     );
     foreach ($elements as $element) {
-        $element->isDir() ? rmdir($element->getPathname()) : unlink($element->getPathname());
+        // Un lien symbolique vers un dossier se supprime comme un fichier (unlink), sans toucher à sa cible.
+        ($element->isDir() && !$element->isLink()) ? rmdir($element->getPathname()) : unlink($element->getPathname());
     }
     rmdir($dossier);
 }

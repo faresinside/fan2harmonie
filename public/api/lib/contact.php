@@ -39,6 +39,14 @@ const ENTREES_MAX_DEFAUT = 2000;
 /** Attente maximale du verrou du limiteur, en secondes, avant d'abandonner (refus). */
 const ATTENTE_VERROU = 2.0;
 const LONGUEUR_MIN_SECRET = 32;
+/**
+ * Caractères différents exigés dans le secret. 12 et non 16 : la commande documentée (bin2hex(random_bytes(32)))
+ * produit 64 chiffres hexadécimaux, et l'un des 16 y manque une fois sur quatre environ ; moins de 12 différents
+ * n'arrive presque jamais (≈ 2 × 10⁻⁷) mais écarte les secrets répétitifs (« kkkk… », « s3cr3t-s3cr3t-… »).
+ */
+const DIFFERENTS_MIN_SECRET = 12;
+/** Clé réservée du fichier du limiteur : instant de la dernière ligne de journal « plafond global atteint ». */
+const CLE_ALERTE = '!';
 /** Dossier de la configuration, voisin de la racine web : <compte>/fan2harmonie-contact/config.php. */
 const DOSSIER_CONFIG_HORS_WEB = 'fan2harmonie-contact';
 /** Octets de texte par mot encodé RFC 2047 : 45 octets → 60 caractères base64 → mot de 72 caractères (≤ 75). */
@@ -166,7 +174,11 @@ function executer(array $post, array $serveur, ?array $config, array $env, array
         try {
             return fabriquerLimiteur($config ?? [])($ip, $compter);
         } catch (Throwable) {
-            error_log('contact.php : limiteur indisponible (vérifier dossier_limiteur).');
+            // Journalisé seulement pour un vrai envoi : les purges seules (champ piège, erreurs de saisie) ne
+            // doivent pas permettre de remplir le journal d'erreurs à volonté.
+            if ($compter) {
+                error_log('contact.php : limiteur indisponible (vérifier dossier_limiteur).');
+            }
             throw new RuntimeException('limiteur indisponible');
         }
     };
@@ -179,7 +191,7 @@ function purger(callable $limiteur, string $ip): void
     try {
         $limiteur($ip, false);
     } catch (Throwable) {
-        // Déjà journalisé par le limiteur réel ; la réponse (faux succès ou 422) reste la même.
+        // Volontairement non journalisé (voir executer) ; la réponse (faux succès ou 422) reste la même.
     }
 }
 
@@ -249,33 +261,65 @@ function candidatsConfig(array $env, string $dossierApi): array
 }
 
 /**
- * Premier emplacement de candidatsConfig() où le fichier existe, ou null.
+ * Premier emplacement de candidatsConfig() où le fichier existe, ou null. Si FAN2HARMONIE_CONFIG est posée mais
+ * ne désigne aucun fichier, une ligne générique (sans le chemin) va dans le journal, puis la recherche continue.
  *
  * @param (callable(string): bool)|null $existe Test d'existence (is_file par défaut ; injecté dans les tests).
  */
 function trouverConfig(array $env, string $dossierApi, ?callable $existe = null): ?string
 {
     $existe ??= static fn (string $chemin): bool => is_file($chemin);
-    foreach (candidatsConfig($env, $dossierApi) as $chemin) {
+    $variable = $env['FAN2HARMONIE_CONFIG'] ?? '';
+    foreach (candidatsConfig($env, $dossierApi) as $rang => $chemin) {
         if ($existe($chemin)) {
             return $chemin;
+        }
+        // Le chemin de la variable est toujours le premier candidat (candidatsConfig).
+        if ($rang === 0 && is_string($variable) && $variable !== '') {
+            error_log('contact.php : chemin de configuration invalide (FAN2HARMONIE_CONFIG).');
         }
     }
     return null;
 }
 
 /**
- * Vrai si `$dossier` peut recevoir les fichiers du limiteur : un dossier existant, ni ouvert en écriture à tous
- * les comptes, ni à bit collant (comme /tmp) — un autre compte pourrait y préparer des fichiers piégés.
+ * Vrai si `$dossier` peut recevoir les fichiers du limiteur : un vrai dossier (pas un lien symbolique), du compte
+ * du processus PHP (proprietaireAttendu), ouvert en écriture ni au groupe ni aux autres comptes, sans bit collant
+ * (comme /tmp) — sinon un autre compte pourrait y préparer ou y échanger des fichiers piégés.
  */
 function dossierPriveValide(mixed $dossier): bool
 {
-    if (!is_string($dossier) || $dossier === '' || !is_dir($dossier)) {
+    if (!is_string($dossier) || $dossier === '') {
         return false;
     }
+    // « /chemin/lien/ » suivrait le lien : le dernier élément est examiné sans sa barre finale.
+    $dossier = rtrim($dossier, '/') === '' ? '/' : rtrim($dossier, '/');
     clearstatcache(true, $dossier);
-    $droits = fileperms($dossier);
-    return $droits !== false && ($droits & 0o002) === 0 && ($droits & 0o1000) === 0;
+    if (is_link($dossier) || !is_dir($dossier)) {
+        return false;
+    }
+    $infos = @lstat($dossier);
+    if ($infos === false || ($infos['mode'] & 0o022) !== 0 || ($infos['mode'] & 0o1000) !== 0) {
+        return false;
+    }
+    try {
+        $proprietaire = proprietaireAttendu($dossier);
+    } catch (Throwable) {
+        return false;
+    }
+    return $proprietaire === null || $infos['uid'] === $proprietaire;
+}
+
+/**
+ * Secret du limiteur acceptable : 32 caractères au moins, au moins DIFFERENTS_MIN_SECRET caractères différents,
+ * et jamais la valeur d'exemple (tout secret contenant « CHANGER », en majuscules ou non).
+ */
+function secretValide(mixed $secret): bool
+{
+    return is_string($secret)
+        && strlen($secret) >= LONGUEUR_MIN_SECRET
+        && stripos($secret, 'CHANGER') === false
+        && count(array_unique(str_split($secret))) >= DIFFERENTS_MIN_SECRET;
 }
 
 /** Vrai si la configuration a toutes les clés attendues, de bons types et des adresses sûres. */
@@ -309,9 +353,8 @@ function configValide(array $config): bool
     if (!dossierPriveValide($config['dossier_limiteur'] ?? null)) {
         return false;
     }
-    // Secret obligatoire, d'au moins 32 caractères (la valeur « CHANGER-MOI » de config.sample.php est refusée).
-    $secret = $config['secret_limiteur'] ?? null;
-    if (!is_string($secret) || strlen($secret) < LONGUEUR_MIN_SECRET) {
+    // Secret obligatoire et de qualité (la valeur « CHANGER-MOI » de config.sample.php est refusée).
+    if (!secretValide($config['secret_limiteur'] ?? null)) {
         return false;
     }
     $transportTest = $config['transport_test'] ?? false;
@@ -722,8 +765,9 @@ function cleClient(string $ip): string
  * Avec `$compter` faux : purge seule, jamais de refus.
  *
  * Le fichier `fan2harmonie-limiteur.json` de `$dossier` (droits 0600, voir ouvrirPrive) ne contient que des
- * empreintes HMAC-SHA256 des clés client (clé `$secret`), la clé réservée « * » (compteur global) et des
- * instants Unix ; tout instant de plus d'une heure est supprimé à chaque appel. Lecture-modification-écriture
+ * empreintes HMAC-SHA256 des clés client (clé `$secret`), la clé réservée « * » (compteur global), la clé réservée
+ * « ! » (dernière ligne de journal « plafond global atteint », une par heure au plus) et des instants Unix ; tout
+ * instant de plus d'une heure est supprimé à chaque appel. Lecture-modification-écriture
  * sous verrou exclusif borné (verrouiller). Lève RuntimeException si le fichier est inutilisable.
  *
  * @param (callable(): int)|null $horloge Instant courant (tests) ; time() par défaut.
@@ -753,7 +797,7 @@ function limiteurFichier(
             } else {
                 $cle = hash_hmac('sha256', cleClient($ip), $secret);
                 $global = $entrees[CLE_GLOBALE] ?? [];
-                $clients = array_diff_key($entrees, [CLE_GLOBALE => true]);
+                $clients = array_diff_key($entrees, [CLE_GLOBALE => true, CLE_ALERTE => true]);
                 $recents = $entrees[$cle] ?? [];
                 $attente = static fn (array $instants): int => max(1, min($instants) + FENETRE_LIMITEUR - $maintenant);
 
@@ -761,12 +805,17 @@ function limiteurFichier(
                     $decision = ['autorise' => false, 'reessayer' => $attente($recents)];
                 } elseif (count($global) >= $limiteGlobale) {
                     $decision = ['autorise' => false, 'reessayer' => $attente($global)];
+                    // Une ligne de journal au plus par heure glissante : le marqueur expire comme un envoi.
+                    if (!isset($entrees[CLE_ALERTE])) {
+                        error_log('contact.php : plafond global atteint');
+                        $entrees[CLE_ALERTE] = [$maintenant];
+                    }
                 } elseif ($recents === [] && count($clients) >= $entreesMax) {
                     $decision = ['autorise' => false, 'reessayer' => $attente(array_map('min', $clients))];
                 } else {
                     $global[] = $maintenant;
                     $recents[] = $maintenant;
-                    $entrees = [CLE_GLOBALE => $global] + $clients;
+                    $entrees = [CLE_GLOBALE => $global] + $entrees;
                     $entrees[$cle] = $recents;
                     $decision = ['autorise' => true, 'reessayer' => 0];
                 }
@@ -787,7 +836,7 @@ function limiteurFichier(
 }
 
 /**
- * Entrées lues du fichier, nettoyées : seules les clés attendues (« * » ou empreinte hexadécimale de 64
+ * Entrées lues du fichier, nettoyées : seules les clés attendues (« * », « ! » ou empreinte hexadécimale de 64
  * caractères) et les instants entiers de moins d'une heure restent ; les clés vides disparaissent ; « * » en tête.
  *
  * @return array<string, list<int>>
@@ -797,7 +846,7 @@ function purgerEntrees(mixed $lues, int $maintenant): array
     $entrees = [];
     foreach (is_array($lues) ? $lues : [] as $cle => $instants) {
         $cle = (string) $cle;
-        if (($cle !== CLE_GLOBALE && preg_match('/^[0-9a-f]{64}$/', $cle) !== 1) || !is_array($instants)) {
+        if (($cle !== CLE_GLOBALE && $cle !== CLE_ALERTE && preg_match('/^[0-9a-f]{64}$/', $cle) !== 1) || !is_array($instants)) {
             continue;
         }
         $recents = array_values(array_filter(
@@ -828,8 +877,9 @@ function fabriquerLimiteur(array $config): Closure
 
 /**
  * Ouvre (ou crée) un fichier privé en lecture-écriture. Refuse (RuntimeException) : un lien symbolique, autre
- * chose qu'un fichier ordinaire, un fichier remplacé entre la vérification et l'ouverture, un fichier d'un autre
- * compte (si le système le permet de le savoir), un échec de chmod 0600. Création sous masque 0077.
+ * chose qu'un fichier ordinaire, un fichier à plusieurs liens physiques (un autre nom pourrait désigner le même
+ * contenu ailleurs), un fichier remplacé entre la vérification et l'ouverture, un fichier d'un autre compte (si le
+ * système le permet de le savoir), un échec de chmod 0600. Création sous masque 0077.
  *
  * @return resource
  */
@@ -858,7 +908,10 @@ function ouvrirPrive(string $chemin)
         if ($ouvert['ino'] !== $chemine['ino'] || $ouvert['dev'] !== $chemine['dev']) {
             throw new RuntimeException('fichier remplacé');
         }
-        $proprietaire = proprietaireAttendu();
+        if ($ouvert['nlink'] !== 1) {
+            throw new RuntimeException('plusieurs liens physiques');
+        }
+        $proprietaire = proprietaireAttendu(dirname($chemin));
         if ($proprietaire !== null && $ouvert['uid'] !== $proprietaire) {
             throw new RuntimeException("fichier d'un autre compte");
         }
@@ -872,8 +925,14 @@ function ouvrirPrive(string $chemin)
     return $fichier;
 }
 
-/** Compte qui doit posséder les fichiers du limiteur : celui du processus PHP ; null si inconnu (Windows). */
-function proprietaireAttendu(): ?int
+/**
+ * Compte qui doit posséder le dossier et les fichiers du limiteur : l'uid effectif du processus PHP ; null sous
+ * Windows (pas de propriétaire au sens POSIX). Jamais getmyuid(), qui donne le propriétaire du SCRIPT : sur un
+ * hébergement où PHP tourne sous un autre compte que celui des fichiers, il tromperait la vérification.
+ * Sans l'extension posix (recommandée), l'uid est lu sur une sonde que le processus crée lui-même dans `$dossier`
+ * (uidParSonde). RuntimeException si on ne peut pas le savoir.
+ */
+function proprietaireAttendu(string $dossier): ?int
 {
     if (PHP_OS_FAMILY === 'Windows') {
         return null;
@@ -881,8 +940,35 @@ function proprietaireAttendu(): ?int
     if (function_exists('posix_geteuid')) {
         return posix_geteuid();
     }
-    $uid = getmyuid();
-    return $uid === false ? null : $uid;
+    return uidParSonde($dossier);
+}
+
+/**
+ * Uid du processus, lu (fstat) sur un fichier neuf qu'il vient de créer dans `$dossier` (création exclusive, qui
+ * ne suit aucun lien), aussitôt supprimé. RuntimeException si la création échoue.
+ */
+function uidParSonde(string $dossier): int
+{
+    $chemin = rtrim($dossier, '/') . '/.sonde-' . bin2hex(random_bytes(8));
+    $masque = umask(0o077);
+    try {
+        $sonde = @fopen($chemin, 'xb');
+    } finally {
+        umask($masque);
+    }
+    if ($sonde === false) {
+        throw new RuntimeException('sonde impossible');
+    }
+    try {
+        $infos = fstat($sonde);
+    } finally {
+        fclose($sonde);
+        @unlink($chemin);
+    }
+    if ($infos === false) {
+        throw new RuntimeException('sonde illisible');
+    }
+    return $infos['uid'];
 }
 
 /**
