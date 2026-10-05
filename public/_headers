@@ -1,0 +1,21 @@
+# En-têtes HTTP appliqués par Cloudflare Pages (syntaxe : https://developers.cloudflare.com/pages/configuration/headers/).
+# Vérifiés par tests/unit/headers.test.ts. Cloudflare cumule les blocs dont le chemin correspond.
+#
+# - Aucun Cross-Origin-Opener-Policy : « same-origin » casserait la fenêtre de connexion GitHub de /admin,
+#   et _headers ne permet pas de retirer un en-tête posé par /* pour un sous-chemin.
+# - Permissions-Policy sans « interest-cohort » : fonction retirée des navigateurs, Chrome signale une erreur
+#   en console (pénalité Lighthouse « bonnes pratiques »).
+# - Pas encore de Content-Security-Policy : le menu utilise un script en ligne (voir le README).
+# - X-Frame-Options DENY : aucune page du site n'est faite pour être affichée dans un cadre.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/admin/*
+  Cache-Control: no-store
