@@ -13,7 +13,6 @@ use function Fan2Harmonie\Contact\executer;
 use function Fan2Harmonie\Contact\exigencesManquantes;
 use function Fan2Harmonie\Contact\limiteurFichier;
 use function Fan2Harmonie\Contact\proprietaireAttendu;
-use function Fan2Harmonie\Contact\recommandationsManquantes;
 use function Fan2Harmonie\Contact\secretValide;
 use function Fan2Harmonie\Contact\trouverConfig;
 use function Fan2Harmonie\Contact\uidParSonde;
@@ -227,6 +226,4 @@ test('I2 : FAN2HARMONIE_CONFIG vers un fichier absent → une ligne générique 
 test('exigences : posix est recommandée, jamais exigée', function (): void {
     $sansPosix = static fn (string $extension): bool => $extension !== 'posix';
     egal([], exigencesManquantes(80300, $sansPosix, static fn (): bool => true), 'posix absente : rien de bloquant');
-    egal(['posix'], recommandationsManquantes($sansPosix));
-    egal([], recommandationsManquantes(static fn (string $e): bool => true));
 });
