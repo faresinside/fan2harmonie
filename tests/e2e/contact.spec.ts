@@ -365,8 +365,9 @@ test.describe('mentions légales', () => {
     await expect(donnees.getByRole('link', { name: site.email }).first()).toHaveAttribute('href', lienMailto(site.email));
     await expect(donnees).toContainText('vos données ne sont pas enregistrées sur le site et ne sont pas transmises à des tiers');
     await expect(donnees).toContainText(
-      'une empreinte non réversible de votre adresse IP et l’heure de l’envoi sont conservées une heure au plus, puis effacées.',
+      'une empreinte pseudonymisée de l’adresse IP et l’heure d’envoi sont conservées au plus une heure et supprimées au plus tard lors de la prochaine utilisation du formulaire.',
     );
+    await expect(donnees).not.toContainText('non réversible');
     await expect(donnees).toContainText(
       'L’hébergeur peut conserver les journaux techniques de connexion (adresse IP, date) conformément à la loi.',
     );
