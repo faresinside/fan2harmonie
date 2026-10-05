@@ -19,9 +19,11 @@ import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-san
 interface Props {
   titre: string;
   description: string;
+  /** Page à ne pas indexer (page 404) : balise robots « noindex » et aucune adresse canonique. */
+  noindex?: boolean;
 }
 
-const { titre, description } = Astro.props;
+const { titre, description, noindex = false } = Astro.props;
 
 const absolue = (chemin: string) => new URL(chemin, site.url).href;
 /** Couleur de la barre du navigateur mobile : le fond crème de la page, lu dans tokens.css. */
@@ -50,7 +52,7 @@ const jsonLd = donneesLocalBusiness({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{titre}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonique} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonique} />}
     <meta name="theme-color" content={couleurTheme} />
 
     <link rel="preload" href={cormorantLatin} as="font" type="font/woff2" crossorigin />

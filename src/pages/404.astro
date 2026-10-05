@@ -1,0 +1,69 @@
+---
+/**
+ * Page « introuvable » (dist/404.html). L'hébergeur la sert pour toute adresse inconnue ET pour tout fichier
+ * refusé (public/.htaccess : ErrorDocument 404 et 403) : elle ne dit rien de ce qui existe sur le serveur.
+ * Non indexée (noindex) et absente du plan du site. Même en-tête et même pied de page que les autres pages.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Separateur from '../components/Separateur.astro';
+
+const avecActualites = (await getCollection('actualites')).length > 0;
+---
+
+<Base
+  titre="Page introuvable — Fan 2 Harmonie"
+  description="Cette page n’existe pas ou n’existe plus sur le site Fan 2 Harmonie."
+  noindex
+>
+  <Header actualites={avecActualites} surAccueil={false} />
+
+  <main id="contenu" tabindex="-1" class="introuvable">
+    <div class="container introuvable__corps">
+      <Separateur class="introuvable__ornement" />
+      <p class="script introuvable__accent">Fan&nbsp;2&nbsp;Harmonie</p>
+      <h1>Page introuvable</h1>
+      <p class="introuvable__texte">
+        Cette page s’est envolée comme un souffle : elle n’existe pas ou plus, mais l’accueil vous attend.
+      </p>
+      <p>
+        <a class="bouton bouton--contour" href="/">Retour à l’accueil</a>
+      </p>
+    </div>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .introuvable {
+    padding-block: var(--s-8) var(--s-section);
+    background-color: var(--creme);
+    text-align: center;
+  }
+
+  .introuvable__corps > * + * {
+    margin-top: var(--s-4);
+  }
+
+  .introuvable__corps :global(.introuvable__ornement) {
+    margin-bottom: var(--s-3);
+  }
+
+  .introuvable__accent {
+    color: var(--rose);
+    font-size: clamp(2.125rem, 1.8rem + 1.4vw, 2.875rem);
+    margin-bottom: 0.15em;
+  }
+
+  .introuvable__corps .introuvable__accent + h1 {
+    margin-top: 0;
+  }
+
+  .introuvable__texte {
+    max-width: 36rem;
+    margin-inline: auto;
+  }
+</style>
