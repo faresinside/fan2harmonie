@@ -1,6 +1,7 @@
 ---
 /**
- * Une actualité : date, titre, image facultative, texte (Markdown rendu, passé dans le slot).
+ * Une actualité : image facultative, date, titre, texte (Markdown rendu, passé dans le slot), dans cet ordre
+ * dans le document comme à l'écran (aucune propriété CSS « order »).
  * Sans image, aucun élément <img> et aucun emplacement vide. Le titre et le texte se coupent
  * au besoin (titres de 90 caractères, mots très longs) sans jamais déborder.
  * Le titre est affiché comme du texte (échappement d'Astro) ; le HTML brut du Markdown est neutralisé
@@ -37,8 +38,8 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
     )
   }
   <div class="actu__texte">
-    <h3 class="actu__titre">{titre}</h3>
     <time class="actu__date" datetime={date.toISOString().slice(0, 10)}>{formatDateLongueFr(date)}</time>
+    <h3 class="actu__titre">{titre}</h3>
     <div class="prose actu__corps">
       <slot />
     </div>
@@ -70,9 +71,8 @@ const { titre, date, image, imageAlt = titre } = Astro.props;
     min-width: 0;
   }
 
-  /* La date se lit au-dessus du titre, mais vient après lui dans l'ordre du document. */
+  /* La date, au-dessus du titre : même ordre dans le document qu'à l'écran (image, date, titre, texte). */
   .actu__date {
-    order: -1;
     margin-bottom: var(--s-1);
     font-size: var(--fs-xs);
     font-weight: 600;

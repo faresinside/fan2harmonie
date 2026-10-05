@@ -229,24 +229,35 @@ test.describe('mise en page', () => {
 test.describe('actualités : ordre du document = ordre visuel (WCAG 1.3.2)', () => {
   test.use({ baseURL: urlJeu('annule') });
 
+  /**
+   * Parties de la carte dans l'ordre du document, avec le haut de chaque boîte à l'écran.
+   * Attendu : image (si présente) → date → titre → texte, et chaque partie commence au même niveau ou plus bas
+   * que la précédente (l'ordre de lecture à l'écran est celui du document).
+   */
+  const partiesDeLaCarte = (page: Page, selecteur: string) =>
+    page.locator(selecteur).first().evaluate((article) =>
+      [...article.querySelectorAll('img, time, h3, .actu__corps')].map((el) => ({
+        partie: el.matches('img') ? 'image' : el.matches('time') ? 'date' : el.matches('h3') ? 'titre' : 'texte',
+        haut: el.getBoundingClientRect().top,
+      })),
+    );
+
   for (const largeur of [360, 1280]) {
-    test(`l’image précède le texte dans le document comme à l’écran (${largeur} px)`, async ({ page }) => {
-      await page.setViewportSize({ width: largeur, height: 900 });
-      await page.goto('/');
-      const carte = page.locator('#actualites article:has(img)').first();
-      await expect(carte).toBeVisible();
-      const ordre = await carte.evaluate((article) => {
-        const image = article.querySelector('img')!;
-        const titre = article.querySelector('h3')!;
-        const ri = image.getBoundingClientRect();
-        const rt = titre.getBoundingClientRect();
-        return {
-          imageAvantDansLeDocument: !!(image.compareDocumentPosition(titre) & Node.DOCUMENT_POSITION_FOLLOWING),
-          imageAvantALEcran: ri.bottom <= rt.top + 1 || ri.right <= rt.left + 1,
-        };
+    for (const [cas, selecteur, attendu] of [
+      ['avec image', '#actualites article:has(img)', ['image', 'date', 'titre', 'texte']],
+      ['sans image', '#actualites article:not(:has(img))', ['date', 'titre', 'texte']],
+    ] as const) {
+      test(`carte ${cas} (${largeur} px) : ${attendu.join(' → ')}, dans le document comme à l’écran`, async ({ page }) => {
+        await page.setViewportSize({ width: largeur, height: 900 });
+        await page.goto('/');
+        await expect(page.locator(selecteur).first()).toBeVisible();
+        const parties = await partiesDeLaCarte(page, selecteur);
+        expect(parties.map((p) => p.partie)).toEqual(attendu);
+        parties.slice(1).forEach((p, i) => {
+          expect(p.haut, `${p.partie} commence sous ${parties[i]!.partie}`).toBeGreaterThanOrEqual(parties[i]!.haut - 0.5);
+        });
       });
-      expect(ordre).toEqual({ imageAvantDansLeDocument: true, imageAvantALEcran: true });
-    });
+    }
   }
 });
 
@@ -260,11 +271,22 @@ test.describe('mouvement', () => {
         .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`),
     );
 
+  /**
+   * Mouvement réduit : toute animation encore listée est instantanée (≤ 1 ms, durées forcées par global.css),
+   * puis la liste se vide aussitôt.
+   */
+  async function aucuneAnimation(page: Page) {
+    const durees = await page.evaluate(() =>
+      document.getAnimations().map((a) => ({ nom: (a as CSSAnimation).animationName ?? a.constructor.name, fin: Number(a.effect?.getComputedTiming().endTime ?? 0) })),
+    );
+    expect(durees.filter((d) => d.fin > 1)).toEqual([]);
+    await expect.poll(() => page.evaluate(() => document.getAnimations().length), { timeout: 1000 }).toBe(0);
+  }
+
   test('mouvement réduit : aucune animation ni transition en cours, contenu visible d’emblée', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
-    await page.waitForTimeout(100);
-    expect(await page.evaluate(() => document.getAnimations().map((a) => (a as CSSAnimation).animationName ?? a.constructor.name))).toEqual([]);
+    await aucuneAnimation(page);
     expect(await accueilTransparent(page)).toEqual([]);
     await expect(page.locator('#accueil h1')).toBeVisible();
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
@@ -275,8 +297,8 @@ test.describe('mouvement', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/');
     await page.locator('header button[aria-controls]').click();
-    await page.waitForTimeout(50);
-    expect(await page.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running').length)).toBe(0);
+    await expect(page.locator('header button[aria-controls]')).toHaveAttribute('aria-expanded', 'true');
+    await aucuneAnimation(page);
     await expect(page.locator('header nav a').first()).toBeVisible();
   });
 

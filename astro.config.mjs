@@ -14,7 +14,7 @@ export default defineConfig({
   site: site.url,
   ...(jeu && { outDir: `./dist-fixture-${jeu}`, cacheDir: `./node_modules/.astro-fixture-${jeu}` }),
   ...(audit && { outDir: './dist-audit' }),
-  // Feuilles de style en ligne (≈ 10 Ko) : aucune requête ne bloque le premier affichage.
+  // Feuilles de style en ligne (le CSS du site est petit) : aucune requête ne bloque le premier affichage.
   build: { inlineStylesheets: 'always' },
   // /admin est un fichier statique de public/ : il n'est pas une page et n'entre donc pas dans le plan du site.
   integrations: [sitemap()],

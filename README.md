@@ -14,6 +14,7 @@ Tout tourne dans Docker (rien à installer sur le PC).
   - Lighthouse : `docker compose run --rm app npm run lighthouse` (`lighthouserc.json`) construit le site dans `dist-audit/` puis audite `/` et `/mentions-legales/` en mobile, 3 passages chacun, avec le Chromium de l'image Playwright.
     Échec si une catégorie (performance, accessibilité, bonnes pratiques, SEO) est sous 0,95, ou si LCP > 2,5 s, CLS > 0,1, TBT > 200 ms. Rapports : `.lighthouseci/rapports/`.
   - Pour l'audit seulement, `AUDIT_SITE_URL=http://localhost:4400` remplace l'adresse du site (canonique, plan du site, `robots.txt`) ; c'est une variable d'environnement, jamais écrite dans `src/config/site.ts`.
+    Elle est posée uniquement par `scripts/lighthouse.mjs` : ne JAMAIS la définir chez l'hébergeur (tableau de bord Cloudflare Pages), sinon le site publié aurait une canonique et un plan du site faux.
 - Développement : `docker compose up`, puis http://localhost:4321
 
 ## Administration
