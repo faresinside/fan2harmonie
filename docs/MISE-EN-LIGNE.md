@@ -314,7 +314,7 @@ Remplacer `$S` par `https://fan2harmonie.fr` (ou utiliser `--resolve`, étape 1)
 | Trop gros (70 Ko) | `head -c 70000 /dev/zero \| tr '\0' x > gros.txt` puis `curl -s -o /dev/null -w '%{http_code}\n' -H "Origin: $S" --data-urlencode "x@gros.txt" $S/api/contact.php` | 413 |
 | Origine étrangère | `curl -s -o /dev/null -w '%{http_code}\n' -H 'Origin: https://exemple.org' -d 'nom=a' $S/api/contact.php` | 403 |
 | Vrai message | formulaire du site, depuis un téléphone | message reçu dans `contact@fan2harmonie.fr` (regarder aussi les indésirables) |
-| Relais OAuth | `curl -sI "$S/oauth/auth.php?provider=github"` | 302 vers `https://github.com/login/oauth/authorize?client_id=…`, cookie `__Host-fan2h_oauth_state` (Path=/, HttpOnly, Secure, SameSite=Lax) |
+| Relais OAuth | `curl -s -D - -o /dev/null "$S/oauth/auth.php?provider=github"` (vrai GET ; un `curl -I` enverrait HEAD, refusé en 405) | 302 vers `https://github.com/login/oauth/authorize?client_id=…` et `Set-Cookie: __Host-fan2h_oauth_state=…; Max-Age=600; Path=/; Secure; HttpOnly; SameSite=Lax` |
 | Relais : page de retour | `curl -sI https://fan2harmonie.fr/oauth/callback.php` | 405 (méthode HEAD) ; `Cache-Control: no-store`, `Referrer-Policy: no-referrer` et `Content-Security-Policy` à nonce, chacun UNE seule fois. Même chose avec `curl -s -D - -o /dev/null https://fan2harmonie.fr/oauth/callback.php` (GET sans cookie : 403) |
 | Erreurs PHP jamais affichées | panneau de l’hébergeur (`php.ini`) ou une page qui provoque une erreur | `display_errors` à Off pour le compte (sinon vérifier que `api/.user.ini` et `oauth/.user.ini` sont bien pris en compte) |
 | Relais : fichiers privés | `$S/oauth/lib/oauth.php`, `$S/oauth/config.php`, `$S/oauth/auth.php/x` | 403 ou 404 |

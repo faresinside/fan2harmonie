@@ -165,3 +165,17 @@ describe('docs/MISE-EN-LIGNE.md : points de la revue (round 1)', () => {
     expect(plan[6]).toContain('(remplacé : hébergement français, voir la note de mise à jour)');
   });
 });
+
+describe('docs/MISE-EN-LIGNE.md : commandes du relais OAuth (revue finale)', () => {
+  it('jamais de HEAD (curl -I / -sI) sur auth.php ou callback.php, sauf quand 405 est le résultat attendu', () => {
+    const lignes = texte.split('\n').filter((l) => /curl[^\n]*\s-s?I\b/.test(l) && /oauth\/(auth|callback)\.php/.test(l));
+    for (const ligne of lignes) expect(ligne, ligne).toContain('405');
+  });
+
+  it('auth.php vérifié par un vrai GET : 302 et cookie __Host-', () => {
+    const ligne = texte.split('\n').find((l) => l.includes('curl -s -D - -o /dev/null "$S/oauth/auth.php?provider=github"'));
+    expect(ligne).toBeDefined();
+    expect(ligne).toContain('302');
+    expect(ligne).toContain('Set-Cookie: __Host-fan2h_oauth_state=');
+  });
+});
