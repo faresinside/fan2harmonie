@@ -393,6 +393,9 @@ Stéphanie :
 - `src/assets/photos/hero.jpg` est **provisoire** : un recadrage flouté d’un fichier personnel de Stéphanie
   (`source/ImageAnimation.jpeg`). Le remplacer par une photo définitive (personnelle ou sous licence libre).
 - Pour chaque photo : source et licence notées dans `source/CREDITS-PHOTOS.md`.
+- Les images distantes ne sont pas affichées : une image insérée dans un texte par son adresse sur un autre
+  site (`https://…`) est remplacée par son texte de remplacement ; seules les photos téléversées dans `/admin`
+  (ou présentes dans le projet) s’affichent. Aucune ressource n’est chargée ailleurs que sur le site.
 - Les images du site sont préparées depuis `source/` par `docker compose run --rm app npm run assets`, puis
   vérifiées (`npm test`, `npm run test:e2e`) avant d’être publiées. Les photos des actualités, elles, sont
   ajoutées par Stéphanie dans `/admin` (réduites automatiquement).

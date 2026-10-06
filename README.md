@@ -91,6 +91,10 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 
 ## Administration
 
+- Textes écrits dans `/admin` : le HTML s’affiche comme du texte (`src/lib/remark-html-en-texte.ts`) ; une image
+  distante (adresse `https://…` ou `//…`) n’est PAS affichée (seul son texte de remplacement l’est) et un lien
+  autre que `https:`, `http:`, `mailto:`, `tel:` ou interne devient du texte (`src/lib/remark-liens-surs.ts`) :
+  la construction n’échoue jamais pour autant.
 - Adresse : `https://fan2harmonie.fr/admin` (Sveltia CMS, en français si le navigateur l’est) : rendez-vous,
   actualités (photo facultative, réduite et convertie en WebP), textes des pages. Accès : les collaborateurs du
   dépôt GitHub, en double authentification.

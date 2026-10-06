@@ -264,6 +264,24 @@ test.describe('texte contenant du HTML (jeu « xss »)', () => {
     await expect(page.locator('#rdv :is(b, i, img), #actualites :is(b, i, img)')).toHaveCount(0);
     expect(erreurs).toEqual([]);
   });
+
+  test('images distantes et liens dangereux neutralisés : texte seulement, rien chargé ailleurs', async ({ page, request }) => {
+    const html = await (await request.get('/')).text();
+    expect(html).not.toMatch(/<img[^>]+src="(https?:)?\/\//i);
+    expect(html).not.toContain('evil.example');
+    expect(html).not.toMatch(/href="\s*(javascript|vbscript|data):/i);
+    const externes: string[] = [];
+    page.on('request', (r) => {
+      if (!r.url().startsWith('http://localhost')) externes.push(r.url());
+    });
+    await page.goto('/');
+    const article = actualites(page).first();
+    await expect(article).toContainText('Photo distante et Autre photo');
+    await expect(article).toContainText('lien piège, autre piège, données, référence piège et bon lien.');
+    await expect(article.locator('a')).toHaveCount(1);
+    await expect(article.locator('a')).toHaveAttribute('href', 'https://fan2harmonie.fr/');
+    expect(externes).toEqual([]);
+  });
 });
 
 test.describe('actualité sans image (jeu « sans-image »)', () => {
