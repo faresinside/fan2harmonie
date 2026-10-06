@@ -26,5 +26,5 @@ function convertir(parent: Noeud): void {
 }
 
 export function remarkHtmlEnTexte() {
-  return (arbre: Noeud): void => convertir(arbre);
+  return (arbre: unknown): void => convertir(arbre as Noeud);
 }

@@ -72,5 +72,5 @@ function neutraliser(parent: Noeud, table: Map<string, string>): void {
 }
 
 export function remarkLiensSurs() {
-  return (arbre: Noeud): void => neutraliser(arbre, definitions(arbre, new Map()));
+  return (arbre: unknown): void => neutraliser(arbre as Noeud, definitions(arbre as Noeud, new Map()));
 }
