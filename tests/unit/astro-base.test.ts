@@ -44,6 +44,6 @@ describe('astro.config.mjs : ASTRO_BASE', () => {
   it('jamais posée par le déploiement vers l’hébergeur', () => {
     const workflow = readFileSync(path.join(RACINE, '.github/workflows/deploiement.yml'), 'utf8');
     expect(workflow).not.toContain('ASTRO_BASE');
-    expect(readFileSync(path.join(RACINE, 'README.md'), 'utf8')).toMatch(/ASTRO_BASE[^\n]*jamais[^\n]*production/);
+    expect(readFileSync(path.join(RACINE, 'README.md'), 'utf8')).toMatch(/`ASTRO_BASE` ne sert qu’à cet aperçu,\s+jamais en production/);
   });
 });
