@@ -95,7 +95,8 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
   - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `repo` ou `public_repo`) :
     `oauth-config.php` créé sur le serveur à partir de `public/oauth/config.sample.php` (refusé tel quel), de
     préférence dans `<compte>/fan2harmonie-contact/` ; sinon `FAN2HARMONIE_OAUTH_CONFIG` ou `oauth/config.php`.
-- `repo` (dépôt GitHub `propriétaire/dépôt`) vaut `À_COMPLÉTER` jusqu’à la mise en ligne.
+- `repo` : dépôt GitHub du site, `faresinside/fan2harmonie` (public). Portée de l’application OAuth :
+  `public_repo` tant que le dépôt est public (voir `docs/MISE-EN-LIGNE.md`).
 - Le script du CMS est copié dans `public/admin/` par `npm install`/`npm ci` (postinstall), `npm run dev` et
   `npm run build` : la construction doit toujours passer par `npm run build`.
 
