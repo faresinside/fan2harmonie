@@ -282,7 +282,9 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
    - `ville` : facultative (`null` = non affichée).
 2. `public/admin/config.yml` : `repo` (`faresinside/fan2harmonie`), `base_url` (`https://fan2harmonie.fr`)
    et `auth_endpoint` (`oauth/auth.php`) sont déjà définitifs.
-3. Lancer le garde-fou jusqu’à ce qu’il réussisse (le déploiement le relance et s’arrête tant qu’il échoue) :
+3. `docs/GUIDE-STEPHANIE.md` : remplacer `[adresse e-mail du technicien — à remplacer]` par la vraie adresse
+   du technicien (le garde-fou refuse tout marqueur « [… à remplacer] » dans le guide).
+4. Lancer le garde-fou jusqu’à ce qu’il réussisse (le déploiement le relance et s’arrête tant qu’il échoue) :
 
    ```sh
    docker compose run --rm app npm run verifier:mise-en-ligne

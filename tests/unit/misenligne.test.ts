@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  contientMarqueurARemplacer,
   contientPlaceholder,
+  listerMarqueursARemplacer,
   listerPlaceholders,
   validerDepot,
   validerEmail,
@@ -269,4 +271,20 @@ describe('verifierSite et verifierBackendCms', () => {
       expect(problemes[0]).toMatch(/^backend\.auth_endpoint /);
     },
   );
+});
+
+describe('marqueur « à remplacer » des documents remis (guide de Stéphanie)', () => {
+  it('reconnaît « [… à remplacer] », même sans accent ou en majuscules', () => {
+    expect(contientMarqueurARemplacer('écrivez à **[adresse e-mail du technicien — à remplacer]**')).toBe(true);
+    expect(contientMarqueurARemplacer('[téléphone a remplacer]')).toBe(true);
+    expect(contientMarqueurARemplacer('[À REMPLACER]')).toBe(true);
+    expect(contientMarqueurARemplacer('écrivez à technicien@exemple.fr')).toBe(false);
+    expect(contientMarqueurARemplacer('la photo provisoire est à remplacer plus tard')).toBe(false);
+  });
+
+  it('liste chaque ligne concernée', () => {
+    expect(listerMarqueursARemplacer([{ chemin: 'docs/GUIDE-STEPHANIE.md', contenu: 'a\nb [x — à remplacer]\n' }])).toEqual([
+      { chemin: 'docs/GUIDE-STEPHANIE.md', ligne: 2, texte: 'b [x — à remplacer]' },
+    ]);
+  });
 });

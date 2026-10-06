@@ -7,7 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { listerPlaceholders, verifierBackendCms, verifierSite } from '../../src/lib/misenligne';
+import { listerMarqueursARemplacer, listerPlaceholders, verifierBackendCms, verifierSite } from '../../src/lib/misenligne';
 
 const RACINE = path.resolve(__dirname, '../..');
 /** Fichiers binaires (images, polices) et bundle tiers copié depuis node_modules (non versionné) : non parcourus. */
@@ -43,6 +43,10 @@ describe('mise en ligne : plus aucune valeur provisoire', () => {
         },
       }).map((p) => `public/admin/config.yml — ${p}`),
       ...occurrences.map((o) => `${o.chemin}:${o.ligne} — valeur provisoire : ${o.texte}`),
+      // Documents remis à la propriétaire : aucun « [… à remplacer] » (ex. adresse du technicien dans le guide).
+      ...listerMarqueursARemplacer(
+        ['docs/GUIDE-STEPHANIE.md'].map((chemin) => ({ chemin, contenu: readFileSync(path.join(RACINE, chemin), 'utf8') })),
+      ).map((o) => `${o.chemin}:${o.ligne} — à remplacer avant la remise : ${o.texte}`),
     ];
 
     const message = [

@@ -33,6 +33,22 @@ export function listerPlaceholders(fichiers: ReadonlyArray<{ chemin: string; con
   );
 }
 
+/**
+ * Vrai si le texte contient un marqueur entre crochets à remplacer avant la remise (« [… à remplacer] »,
+ * accents et casse ignorés), comme l'adresse du technicien dans docs/GUIDE-STEPHANIE.md.
+ */
+export function contientMarqueurARemplacer(texte: string): boolean {
+  const sansAccents = texte.normalize('NFD').replace(/\p{M}/gu, '');
+  return /\[[^\]\n]*\ba remplacer\]/i.test(sansAccents);
+}
+
+/** Chaque ligne de chaque document qui contient encore un marqueur « [… à remplacer] ». */
+export function listerMarqueursARemplacer(fichiers: ReadonlyArray<{ chemin: string; contenu: string }>): Occurrence[] {
+  return fichiers.flatMap(({ chemin, contenu }) =>
+    contenu.split(/\r?\n/).flatMap((texte, i) => (contientMarqueurARemplacer(texte) ? [{ chemin, ligne: i + 1, texte: texte.trim() }] : [])),
+  );
+}
+
 /** SIRET : 14 chiffres (espaces ignorés) dont la clé de Luhn est juste. */
 export function validerSiret(siret: string): boolean {
   const chiffres = siret.replace(/ /g, '');

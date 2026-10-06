@@ -228,3 +228,12 @@ describe('docs : procédure en cas de compromission et suites (revue finale, N1)
     expect(plat).toMatch(/rrsync/);
   });
 });
+
+describe('docs : points bloquants du garde-fou (revue finale)', () => {
+  it('l’étape 7 demande de remplacer l’adresse du technicien dans le guide, vérifiée par le garde-fou', () => {
+    const sept = texte.slice(texte.indexOf('## 7. '), texte.indexOf('## 8. '));
+    expect(sept).toContain('`docs/GUIDE-STEPHANIE.md`');
+    expect(sept).toContain('[adresse e-mail du technicien — à remplacer]');
+    expect(sept).toMatch(/garde-fou refuse/);
+  });
+});
