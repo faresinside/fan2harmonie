@@ -11,7 +11,6 @@ import { site } from '../config/site';
 import { donneesLocalBusiness, serialiserJsonLd } from '../lib/jsonld';
 import { jeton } from '../lib/jetons';
 import tokens from '../styles/tokens.css?raw';
-import favicon from '../assets/logo/favicon.png';
 import hero from '../assets/photos/hero.jpg';
 import cormorantLatin from '@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2?url';
 import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
@@ -30,11 +29,8 @@ const absolue = (chemin: string) => new URL(chemin, site.url).href;
 const couleurTheme = jeton(tokens, 'creme');
 const canonique = absolue(Astro.url.pathname);
 
-const [icone32, icone180, imageOg] = await Promise.all([
-  getImage({ src: favicon, width: 32, height: 32, format: 'png' }),
-  getImage({ src: favicon, width: 180, height: 180, format: 'png' }),
-  getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 }),
-]);
+// Image de partage (Open Graph) : la photo d'accueil recadrée (l'affiche n'est pas utilisée pour le partage).
+const imageOg = await getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 });
 
 const jsonLd = donneesLocalBusiness({
   nom: site.nom,
@@ -58,8 +54,10 @@ const jsonLd = donneesLocalBusiness({
     <link rel="preload" href={cormorantLatin} as="font" type="font/woff2" crossorigin />
     <link rel="preload" href={sourceSansLatin} as="font" type="font/woff2" crossorigin />
 
-    <link rel="icon" href={icone32.src} type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href={icone180.src} />
+    <!-- Icônes : lotus simplifié (public/favicon.svg) et PNG tirés de lui par scripts/prepare-assets.mjs. -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.nom} />

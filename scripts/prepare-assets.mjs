@@ -1,7 +1,7 @@
 // Prépare les assets du site depuis source/ (idempotent).
 // Usage : npm run assets   (dans le conteneur Docker)
 import sharp from 'sharp';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const SRC = 'source';
 const LOGO_DIR = 'src/assets/logo';
@@ -58,14 +58,17 @@ await writeFile(`${LOGO_DIR}/logo.png`, logo);
 await writeFile(`${LOGO_DIR}/logo-blanc.png`, await inkToPng('Logo_FondBlanc3.jpeg', CREAM));
 await writeFile(`${LOGO_DIR}/logo-long.png`, await inkToPng('LogoLong.jpeg', GREEN));
 
-// Favicon : logo centré (contain) sur carré transparent 512x512, avec marge.
+// Icônes du site, tirées de public/favicon.svg (lotus simplifié au trait épais, crème sur vert forêt) : le logo
+// dessiné au crayon est illisible à 16-32 px. PNG servis à la racine du site (public/) :
+// - favicon-32.png (repli des navigateurs sans SVG), icon-512.png : coins arrondis transparents ;
+// - apple-touch-icon.png (180 px) : carré OPAQUE (iOS arrondit lui-même les coins).
+const iconeSvg = await readFile('public/favicon.svg');
+const icone = (taille) => sharp(iconeSvg, { density: Math.ceil((72 * taille) / 64) * 2 }).resize(taille, taille);
+await writeFile('public/favicon-32.png', await icone(32).png({ compressionLevel: 9 }).toBuffer());
+await writeFile('public/icon-512.png', await icone(512).png({ compressionLevel: 9 }).toBuffer());
 await writeFile(
-  `${LOGO_DIR}/favicon.png`,
-  await sharp(logo)
-    .resize(448, 448, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .extend({ top: 32, bottom: 32, left: 32, right: 32, background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .png({ compressionLevel: 9 })
-    .toBuffer(),
+  'public/apple-touch-icon.png',
+  await icone(180).flatten({ background: { r: GREEN[0], g: GREEN[1], b: GREEN[2] } }).png({ compressionLevel: 9 }).toBuffer(),
 );
 
 // Photo d'accueil PROVISOIRE : bande de feuillage ensoleillé (entre le logo et la

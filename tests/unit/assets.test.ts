@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import sharp from 'sharp';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const LOGO_DIR = 'src/assets/logo';
 
@@ -44,9 +44,38 @@ describe('logos transparents', () => {
 });
 
 describe('favicon et photo', () => {
-  it('favicon.png fait 512x512', async () => {
-    const meta = await sharp(`${LOGO_DIR}/favicon.png`).metadata();
-    expect([meta.width, meta.height]).toEqual([512, 512]);
+  it('icône SVG : lotus crème sur carré arrondi vert forêt (couleurs de tokens.css)', () => {
+    const svg = readFileSync('public/favicon.svg', 'utf8');
+    const tokens = readFileSync('src/styles/tokens.css', 'utf8');
+    const jeton = (nom: string) => new RegExp(`--${nom}: (#[0-9a-f]{6});`).exec(tokens)?.[1];
+    expect(svg).toContain(`fill="${jeton('foret')}"`);
+    expect(svg).toContain(`stroke="${jeton('creme')}"`);
+    expect(svg).toMatch(/viewBox="0 0 64 64"/);
+    expect(svg).toMatch(/<rect [^>]*rx="\d+"/);
+    // XML valide : aucun « -- » à l'intérieur d'un commentaire (sharp refuserait le fichier).
+    expect(svg.replace(/<!--/g, '').replace(/-->/g, '')).not.toContain('--');
+    expect(Number(/stroke-width="(\d+(?:\.\d+)?)"/.exec(svg)?.[1])).toBeGreaterThanOrEqual(4);
+  });
+
+  it.each([
+    ['public/favicon-32.png', 32, true],
+    ['public/apple-touch-icon.png', 180, false],
+    ['public/icon-512.png', 512, true],
+  ] as const)('%s : %i px, transparence %s', async (fichier, taille, alpha) => {
+    expect(existsSync(fichier)).toBe(true);
+    const meta = await sharp(fichier).metadata();
+    expect([meta.format, meta.width, meta.height]).toEqual(['png', taille, taille]);
+    expect(Boolean(meta.hasAlpha)).toBe(alpha);
+    // Centre crème (pétale) ou vert, coin : transparent (icônes arrondies) ou vert (apple-touch-icon opaque).
+    const { data, info } = await sharp(fichier).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    const pixel = (x: number, y: number) => Array.from(data.subarray((y * info.width + x) * 4, (y * info.width + x) * 4 + 4));
+    expect(pixel(0, 0)[3]).toBe(alpha ? 0 : 255);
+    const centre = pixel(Math.floor(taille / 2), Math.floor(taille * 0.75));
+    expect(centre[3]).toBe(255);
+  });
+
+  it('ancien favicon tiré du logo (trait trop fin) retiré', () => {
+    expect(existsSync(`${LOGO_DIR}/favicon.png`)).toBe(false);
   });
 
   it('hero.jpg existe et fait au moins 1000 px de large', async () => {

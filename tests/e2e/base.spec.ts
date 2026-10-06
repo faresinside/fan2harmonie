@@ -119,3 +119,23 @@ test.describe('mise en page de base', () => {
     expect(erreurs).toEqual([]);
   });
 });
+
+test.describe('icônes du site (favicon)', () => {
+  test('SVG, PNG 32 px de repli et apple-touch-icon : liens présents, fichiers servis avec le bon type', async ({ page, request }) => {
+    await page.goto('/');
+    const attendus: [string, string, string][] = [
+      ['link[rel="icon"][type="image/svg+xml"]', '/favicon.svg', 'image/svg+xml'],
+      ['link[rel="icon"][type="image/png"][sizes="32x32"]', '/favicon-32.png', 'image/png'],
+      ['link[rel="apple-touch-icon"]', '/apple-touch-icon.png', 'image/png'],
+    ];
+    for (const [selecteur, href, type] of attendus) {
+      await expect(page.locator(selecteur), selecteur).toHaveAttribute('href', href);
+      const reponse = await request.get(href);
+      expect(reponse.status(), href).toBe(200);
+      expect(reponse.headers()['content-type'], href).toContain(type);
+    }
+    expect((await request.get('/icon-512.png')).status()).toBe(200);
+    // L'image de partage reste la photo d'accueil recadrée.
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/_astro\/hero\..*\.jpg$/);
+  });
+});
