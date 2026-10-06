@@ -163,6 +163,34 @@ describe('déploiement : deux jobs', () => {
   });
 });
 
+describe('déploiement : contenu et documentation jamais bloquants ; variables de test interdites', () => {
+  const etape = (fragment: string) => construire.steps.find((e) => (e.run ?? '').includes(fragment));
+
+  it('npm test et le garde-fou restent bloquants', () => {
+    expect(etape('npm test')?.['continue-on-error' as keyof Etape]).toBeUndefined();
+    expect(etape('npm run verifier:mise-en-ligne')?.['continue-on-error' as keyof Etape]).toBeUndefined();
+  });
+
+  it('verifier:contenu et test:docs : NON bloquants (continue-on-error), avertissement ::warning::, après la construction', () => {
+    for (const commande of ['npm run verifier:contenu', 'npm run test:docs']) {
+      const e = etape(commande) as (Etape & { 'continue-on-error'?: boolean }) | undefined;
+      expect(e, commande).toBeDefined();
+      expect(e?.['continue-on-error'], commande).toBe(true);
+      expect(e?.run, commande).toMatch(/::warning::/);
+      expect(rang(construire, commande), commande).toBeGreaterThan(rang(construire, 'find dist -type l'));
+      expect(rang(construire, commande), commande).toBeLessThan(construire.steps.findIndex((s) => s.uses?.startsWith('actions/upload-artifact@')));
+    }
+  });
+
+  it('L-c : aucune variable de test (ASTRO_BASE, AUDIT_SITE_URL, CONTENT_FIXTURE*) à la construction, contrôle bloquant avant npm run build', () => {
+    const garde = etape('test -z "${ASTRO_BASE:-}${AUDIT_SITE_URL:-}${CONTENT_FIXTURE:-}${CONTENT_FIXTURE_SET:-}"');
+    expect(garde).toBeDefined();
+    expect(garde?.run).toMatch(/::error::/);
+    expect(garde?.['continue-on-error' as keyof Etape]).toBeUndefined();
+    expect(rang(construire, 'test -z "${ASTRO_BASE')).toBeLessThan(rang(construire, 'npm run build'));
+  });
+});
+
 describe('déploiement : derniers garde-fous (N3 à N6)', () => {
   const verification = deployer.steps.find((e) => (e.run ?? '').includes('curl '));
   const run = rsync?.run ?? '';

@@ -1,5 +1,5 @@
 import { parseFrontmatter } from '@astrojs/markdown-remark';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
@@ -147,11 +147,11 @@ describe('config.yml de Sveltia CMS', () => {
     });
   });
 
-  it('rendez-vous et actualités : dossiers existants, création et suppression autorisées', () => {
+  it('rendez-vous et actualités : dossiers du site, création et suppression autorisées', () => {
     for (const nom of ['rendezvous', 'actualites']) {
       const c = collection(nom);
       expect(c.folder).toBe(`src/content/${nom}`);
-      expect(existsSync(path.join(RACINE, c.folder ?? '')), nom).toBe(true);
+      // Pas de contrôle d'existence : le dossier disparaît (git) si l'éditrice supprime toutes les fiches.
       expect(c['create']).toBe(true);
       expect(c['delete']).toBe(true);
       expect(c['extension']).toBe('md');
@@ -282,23 +282,5 @@ describe('fichiers tels qu’écrits par le CMS (YAML sans guillemets), lus par 
     expect(actualiteSchema.safeParse(fm).success).toBe(true);
     const cible = path.resolve(RACINE, 'src/content/actualites', fm['image'] as string);
     expect(cible).toBe(path.join(RACINE, 'src/assets/actualites/photo.webp'));
-  });
-});
-
-describe('contenus réels : aucun HTML brut', () => {
-  const fichiersMd = (dossier: string): string[] =>
-    readdirSync(path.join(RACINE, dossier), { recursive: true, encoding: 'utf8' })
-      .filter((f) => f.endsWith('.md'))
-      .map((f) => path.join(dossier, f));
-  const fichiers = ['src/content/pages', 'src/content/actualites', 'src/content/rendezvous'].flatMap(fichiersMd);
-
-  it('il y a des contenus à vérifier', () => {
-    expect(fichiers.length).toBeGreaterThanOrEqual(5);
-  });
-
-  it.each(fichiers)('%s : ni <br ni commentaire HTML', (f) => {
-    const texte = readFileSync(path.join(RACINE, f), 'utf8');
-    expect(texte).not.toMatch(/<br/i);
-    expect(texte).not.toContain('<!--');
   });
 });

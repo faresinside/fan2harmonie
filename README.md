@@ -46,6 +46,13 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 | Lighthouse (mobile, 3 passages, seuils 0,95) | `docker compose run --rm app npm run lighthouse` |
 | Types Astro | `docker compose run --rm app npm run check` |
 | Garde-fou de mise en ligne (échoue tant qu’une valeur provisoire subsiste) | `docker compose run --rm app npm run verifier:mise-en-ligne` |
+| Contrôle du contenu réel écrit dans `/admin` (`tests/content/` : encodage, HTML, schémas) — non bloquant au déploiement | `docker compose run --rm app npm run verifier:contenu` |
+| Documentation (`tests/docs/` : README, checklist, guide) — non bloquante au déploiement | `docker compose run --rm app npm run test:docs` |
+
+- `npm test` (bloquant au déploiement) ne teste que le code : il ne lit jamais les rendez-vous, actualités ni la
+  documentation, pour qu’un geste normal de l’éditrice (supprimer la dernière actualité, changer une date) ou
+  une retouche du README n’empêche jamais une mise en ligne. `verifier:contenu` et `test:docs` tournent aussi
+  dans le déploiement, mais en simple avertissement (non bloquant).
 
 - Jeux de contenus de test : `tests/fixtures/content/<jeu>/` (dates 2099 = à venir, 2020 = passées), construits
   dans `dist-fixture-<jeu>/` et servis sur les ports de `tests/fixtures/jeux.ts` ; le vrai contenu reste sur

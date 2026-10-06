@@ -12,6 +12,8 @@
     "preview": "astro preview",
     "test": "vitest run",
     "verifier:mise-en-ligne": "vitest run --config vitest.deploy.config.ts",
+    "verifier:contenu": "vitest run --config vitest.content.config.ts",
+    "test:docs": "vitest run --config vitest.docs.config.ts",
     "test:e2e": "playwright test",
     "test:php": "docker compose run --rm php php tests/php/run.php",
     "test:php81": "docker compose run --rm php81 php tests/php/run.php",

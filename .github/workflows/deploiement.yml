@@ -113,6 +113,15 @@ jobs:
       - name: Garde-fou de mise en ligne
         run: npm run verifier:mise-en-ligne
 
+      - name: Aucune variable de test à la construction
+        run: |
+          set -euo pipefail
+          # Variables réservées aux tests et aux aperçus : elles changeraient l'adresse ou le contenu du site.
+          if ! test -z "${ASTRO_BASE:-}${AUDIT_SITE_URL:-}${CONTENT_FIXTURE:-}${CONTENT_FIXTURE_SET:-}"; then
+            echo "::error::ASTRO_BASE, AUDIT_SITE_URL, CONTENT_FIXTURE et CONTENT_FIXTURE_SET doivent être vides pour la mise en ligne."
+            exit 1
+          fi
+
       - name: Construire le site
         run: npm run build
 
@@ -142,6 +151,26 @@ jobs:
             exit 1
           fi
 
+      # Contenu écrit dans /admin et documentation : contrôlés, mais JAMAIS bloquants (un contenu imparfait ou une
+      # retouche du README ne doit pas empêcher la mise en ligne) : un avertissement apparaît dans le résumé.
+      - name: Contrôle du contenu (non bloquant)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! npm run verifier:contenu; then
+            echo "::warning::Contrôle du contenu en échec (voir ci-dessus) : la mise en ligne continue."
+            exit 1
+          fi
+
+      - name: Tests de la documentation (non bloquants)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! npm run test:docs; then
+            echo "::warning::Tests de la documentation en échec : la mise en ligne continue."
+            exit 1
+          fi
+
       - name: Adresse du site (src/config/site.ts)
         id: adresse
         run: |
@@ -154,7 +183,8 @@ jobs:
         with:
           name: site
           path: dist/
-          # .htaccess, api/.htaccess et api/.user.ini commencent par un point : à inclure explicitement.
+          # .htaccess, api/.htaccess, api/.user.ini, oauth/.htaccess et oauth/.user.ini commencent par un point :
+          # à inclure explicitement.
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7

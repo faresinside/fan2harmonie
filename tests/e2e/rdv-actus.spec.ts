@@ -39,6 +39,23 @@ test.describe('aucun rendez-vous à venir (jeu « vide »)', () => {
   });
 });
 
+test.describe('ni rendez-vous ni actualités, dossiers absents (jeu « aucun »)', () => {
+  test.use({ baseURL: urlJeu('aucun') });
+
+  test('le site se construit : « Prochaines dates bientôt », pas de section ni de lien Actualités, textes des pages présents', async ({ page }) => {
+    const reponse = await page.goto('/');
+    expect(reponse?.status()).toBe(200);
+    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt', { exact: true })).toBeVisible();
+    await expect(rendezvous(page)).toHaveCount(0);
+    await expect(page.locator('#actualites')).toHaveCount(0);
+    await expect(page.locator('header nav a[href="#actualites"]')).toHaveCount(0);
+    for (const id of ['pratique', 'qigong', 'qui', 'contact']) {
+      await expect(page.locator(`[id="${id}"]`), id).toHaveCount(1);
+    }
+    expect((await page.goto('/mentions-legales/'))?.status()).toBe(200);
+  });
+});
+
 test.describe('rendez-vous annulé (jeu « annule »)', () => {
   test.use({ baseURL: urlJeu('annule') });
 

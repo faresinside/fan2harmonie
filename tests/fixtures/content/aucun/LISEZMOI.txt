@@ -1,0 +1,2 @@
+Jeu « aucun » : AUCUN dossier rendezvous/ ni actualites/ (comme quand l'éditrice a tout supprimé dans /admin :
+git ne garde pas les dossiers vides). Le site doit se construire et afficher « Prochaines dates bientôt ».
