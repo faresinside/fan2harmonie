@@ -15,7 +15,8 @@ export default defineConfig({
   site: site.url,
   ...(process.env['ASTRO_BASE'] && { base: process.env['ASTRO_BASE'] }),
   ...(jeu && { outDir: `./dist-fixture-${jeu}`, cacheDir: `./node_modules/.astro-fixture-${jeu}` }),
-  ...(audit && { outDir: './dist-audit' }),
+  // Cache à part aussi : sinon l'audit écrit son adresse de site dans le cache du serveur de développement.
+  ...(audit && { outDir: './dist-audit', cacheDir: './node_modules/.astro-audit' }),
   // Feuilles de style en ligne (le CSS du site est petit) : aucune requête ne bloque le premier affichage.
   build: { inlineStylesheets: 'always' },
   // /admin est un fichier statique de public/ : il n'est pas une page et n'entre donc pas dans le plan du site.
