@@ -306,3 +306,68 @@ test.describe('contenu réel', () => {
     await sansViolationAxe(page);
   });
 });
+
+/**
+ * Script du navigateur (src/scripts/rendezvous.ts) : le jour même, les rendez-vous passés depuis la dernière
+ * construction sont masqués, la mise en avant passe au prochain non annulé, et « Prochaines dates bientôt »
+ * apparaît s'il n'en reste aucun. Date du jour simulée (horloge de Playwright). Jeu « annule » : 14 mars,
+ * 15 mars (annulé), 21 mars 2099.
+ */
+test.describe('rendez-vous passés depuis la construction : masqués dans le navigateur (jeu « annule »)', () => {
+  test.use({ baseURL: urlJeu('annule') });
+  const dates = (page: Page) => rendezvous(page).evaluateAll((lis) => lis.map((li) => (li as HTMLElement).dataset['date']));
+
+  test('le 15 mars : le 14 masqué, l’annulé garde sa place, « Prochain rendez-vous » passe au 21', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2099-03-15T10:00:00+01:00'));
+    await page.goto('/');
+    // Ordre du document inchangé (chronologique), rien n'est déplacé.
+    expect(await dates(page)).toEqual(['2099-03-14', '2099-03-15', '2099-03-21']);
+    await expect(rendezvous(page).nth(0)).toBeHidden();
+    await expect(rendezvous(page).nth(1)).toBeVisible();
+    await expect(rendezvous(page).nth(1).getByText('Annulé', { exact: true })).toBeVisible();
+    await expect(rendezvous(page).nth(1)).not.toHaveClass(/rdv--prochain/);
+    const vingtEtUn = rendezvous(page).nth(2);
+    await expect(vingtEtUn).toHaveClass(/rdv--prochain/);
+    await expect(vingtEtUn.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(1);
+    await expect(rendezvous(page).nth(0)).not.toHaveClass(/rdv--prochain/);
+    // Une colonne, et jamais de propriété CSS order.
+    await expect(page.locator('#rdv .rdv-liste')).not.toHaveClass(/rdv-liste--deux-colonnes/);
+    for (const li of await rendezvous(page).all()) expect(await li.evaluate((e) => getComputedStyle(e).order)).toBe('0');
+    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt')).toBeHidden();
+  });
+
+  test('le 22 mars : tout est passé, « Prochaines dates bientôt » s’affiche', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2099-03-22T08:00:00+01:00'));
+    await page.goto('/');
+    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt', { exact: true })).toBeVisible();
+    for (const li of await rendezvous(page).all()) await expect(li).toBeHidden();
+  });
+
+  test('le 14 mars à 23 h 30 : le rendez-vous du jour reste affiché', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2099-03-14T23:30:00+01:00'));
+    await page.goto('/');
+    await expect(rendezvous(page).nth(0)).toBeVisible();
+    await expect(rendezvous(page).nth(0)).toHaveClass(/rdv--prochain/);
+  });
+
+  test('accessibilité (axe) une fois des rendez-vous masqués', async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2099-03-15T10:00:00+01:00'));
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await expect(rendezvous(page).nth(0)).toBeHidden();
+    await sansViolationAxe(page);
+  });
+});
+
+test.describe('sans JavaScript : comportement de la construction inchangé (jeu « annule »)', () => {
+  test.use({ baseURL: urlJeu('annule'), javaScriptEnabled: false });
+
+  test('trois feuillets visibles, le premier mis en avant, message caché', async ({ page }) => {
+    await page.goto('/');
+    await expect(rendezvous(page)).toHaveCount(3);
+    for (const li of await rendezvous(page).all()) await expect(li).toBeVisible();
+    await expect(rendezvous(page).nth(0)).toHaveClass(/rdv--prochain/);
+    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt')).toBeHidden();
+  });
+});

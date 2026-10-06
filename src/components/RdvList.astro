@@ -5,6 +5,9 @@
  * autres sont plus discrets, dans l'ordre chronologique. Un rendez-vous annulé reste affiché, avec la mention
  * « Annulé » écrite en toutes lettres, et n'est jamais mis en avant.
  * `items` arrive déjà filtré et trié (`upcoming`). Liste vide : « Prochaines dates bientôt ».
+ * Le message est toujours présent dans la page (caché s'il y a des rendez-vous) : le script
+ * src/scripts/rendezvous.ts le montre si tous les rendez-vous sont passés depuis la construction ; chaque
+ * feuillet porte sa date (data-date, AAAA-MM-JJ) pour ce script. Sans JavaScript : rendu de la construction.
  * Tous les champs sont modifiables dans l'administration : affichés comme du texte, jamais comme du HTML.
  */
 import type { Rendezvous } from '../lib/schemas';
@@ -30,13 +33,12 @@ const feuillets = items.map((r, i) => ({
 ---
 
 <div class="rdv-bloc">
+  <p class="rdv-vide" hidden={feuillets.length > 0}>Prochaines dates bientôt</p>
   {
-    feuillets.length === 0 ? (
-      <p class="rdv-vide">Prochaines dates bientôt</p>
-    ) : (
+    feuillets.length > 0 && (
       <ul class:list={['rdv-liste', { 'rdv-liste--deux-colonnes': indexProchain === 0 && feuillets.length > 1 }]} role="list">
         {feuillets.map((r) => (
-          <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]}>
+          <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]} data-date={r.iso}>
             <time class="rdv__date" datetime={r.iso}>
               <span class="rdv__semaine">{r.jourSemaine}</span>{' '}
               <span class="rdv__jour">
@@ -110,6 +112,18 @@ const feuillets = items.map((r, i) => ({
     column-gap: var(--s-2);
     padding: var(--s-3) var(--s-2);
     overflow-wrap: anywhere;
+  }
+
+  /* Masqués par le script (rendez-vous passés depuis la construction) : display de .rdv/.rdv-liste annulé. */
+  .rdv-liste[hidden],
+  .rdv[hidden] {
+    display: none;
+  }
+
+  /* Premier feuillet visible après des feuillets masqués : ni fil séparateur ni marge du feuillet précédent. */
+  .rdv[hidden] + .rdv:not([hidden]) {
+    margin-top: 0;
+    background: none;
   }
 
   /* Les feuillets discrets sont séparés par un fil doré ondoyant, dessiné à la main. */

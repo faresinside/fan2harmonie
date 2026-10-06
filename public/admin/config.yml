@@ -51,7 +51,7 @@ collections:
     label_singular: Rendez-vous
     description: >-
       Les séances de Qi Gong, une fiche par séance. Pour annuler une séance, cochez « Séance annulée » ;
-      pour la retirer du site, supprimez-la. Les rendez-vous passés disparaissent seuls du site.
+      pour la retirer du site, supprimez-la. Les rendez-vous passés disparaissent seuls du site (dès le lendemain).
     folder: src/content/rendezvous
     create: true
     delete: true

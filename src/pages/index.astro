@@ -3,7 +3,8 @@
  * Page unique : Accueil, Prochains rendez-vous, La pratique, Le Qi Gong, Qui est Fan 2 Harmonie,
  * Actualités, Contact. Les textes viennent de la collection « pages » (modifiables dans l'administration).
  * Rendez-vous et actualités sont choisis à la construction du site (`new Date()`) : la reconstruction
- * quotidienne retire les rendez-vous passés. Sans aucune actualité, la section et son lien disparaissent.
+ * quotidienne retire les rendez-vous passés ; src/scripts/rendezvous.ts les masque aussi le jour même dans le
+ * navigateur. Sans aucune actualité, la section et son lien disparaissent.
  */
 import { getCollection, getEntry, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
@@ -98,6 +99,13 @@ const actualites = await Promise.all(
   </main>
 
   <Footer />
+
+  <script>
+    // Rendez-vous passés depuis la construction : masqués dans le navigateur (src/scripts/rendezvous.ts).
+    import { appliquerDates } from '../scripts/rendezvous';
+
+    appliquerDates(document);
+  </script>
 </Base>
 
 <style>

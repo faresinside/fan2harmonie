@@ -88,7 +88,8 @@ capture d’écran aide beaucoup).
 ## i) Bon à savoir
 
 - **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible, le site les distingue tout seul.
-- **Les rendez-vous passés disparaissent tout seuls** du site, chaque nuit.
+- **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain dans la page affichée, puis
+  du site lui-même lors de la mise à jour de la nuit. Inutile de les supprimer.
 - **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont publics sur GitHub, et une photo
   ou un texte supprimé du site reste visible dans l’historique des modifications. Réfléchissez donc avant de
   publier une information personnelle.

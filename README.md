@@ -16,7 +16,9 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
 
 - **Site statique Astro 5** (TypeScript strict) : une page d’accueil défilante et les mentions légales. Les
   contenus (`src/content/` : rendez-vous, actualités, textes des pages) sont des fichiers validés par des schémas
-  Zod (`src/lib/schemas.ts`) ; les rendez-vous passés disparaissent à chaque construction.
+  Zod (`src/lib/schemas.ts`) ; les rendez-vous passés sont retirés à chaque construction (chaque nuit) et, le
+  jour même, masqués dans le navigateur par un petit script (`src/scripts/rendezvous.ts`, amélioration
+  progressive : sans JavaScript, la page reste celle de la construction).
 - **Hébergeur 100 % français** (PHP ≥ 8.1, Apache ou LiteSpeed lisant `.htaccess`, SSH) : il sert `dist/`, le
   script du formulaire de contact (`public/api/`) et le relais de connexion GitHub de l’administration
   (`public/oauth/`). Ni Cloudflare ni Formspree ni autre service tiers ne sont utilisés : aucune donnée de visiteur ne

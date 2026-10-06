@@ -413,7 +413,9 @@ Stéphanie :
   Se déconnecter de `/admin` ne le révoque pas. En cas de doute : « Revoke all user tokens » (étape 6), et
   Settings > Applications > Authorized OAuth Apps sur le compte de l’éditrice.
 - **Dépôt public** : GitHub désactive la reconstruction de la nuit après 60 jours sans activité ; la réactiver
-  dans Actions (un dépôt privé n’a pas cette limite).
+  dans Actions (un dépôt privé n’a pas cette limite). En attendant, les rendez-vous passés restent dans les
+  pages, mais le navigateur des visiteurs les masque le jour même (script `src/scripts/rendezvous.ts` ; pas
+  pour un visiteur sans JavaScript).
 - **Limiteur et sauvegardes** : si le formulaire répond « Service momentanément indisponible » et que le journal
   parle du limiteur, un outil de sauvegarde a pu créer un lien physique vers `fan2harmonie-limiteur.json` :
   supprimer ce fichier dans le dossier `limiteur/`, il sera recréé.
