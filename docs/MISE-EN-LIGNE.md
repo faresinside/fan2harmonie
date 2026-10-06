@@ -200,7 +200,12 @@ Dans Settings > Environments > `production` > « Environment secrets » :
      l’hébergeur, si possible précédée de l’option `restrict` (ni terminal, ni redirection de ports) ; une
      restriction plus forte (`rrsync`, `command=`) est possible si l’hébergeur la permet, mais doit être essayée
      à la main avant (les chemins y deviennent relatifs au dossier autorisé) ;
+   - facultatif, restriction `rrsync` : ligne `command="rrsync /home/compte/www",restrict ssh-ed25519 <clé
+     publique> deploiement fan2harmonie` dans `authorized_keys`. La clé ne peut plus alors que lire et écrire
+     sous la racine web ; le workflow, qui donne des chemins absolus (`REMOTE_PATH`), doit être essayé à la main
+     avec cette restriction avant de l’adopter (non testé ici) ;
    - la clé **privée** est collée dans le secret `SSH_PRIVATE_KEY`, puis le fichier local est effacé.
+
 **`SSH_KNOWN_HOSTS`** : la ligne `known_hosts` du serveur, **vérifiée** contre l’empreinte publiée par
    l’hébergeur (documentation ou support) — jamais un `ssh-keyscan` accepté les yeux fermés :
 
@@ -233,13 +238,28 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
    « Write », jamais « Admin », et eux seuls. Ce sont les éditrices ; chacune a la double authentification.
 5. **Révoquer** : changer le secret (« Generate a new client secret », nouvelle valeur dans `oauth-config.php`,
    ancienne supprimée) ne rend PAS invalides les jetons déjà donnés aux éditrices. Pour les couper, utiliser
-   aussi « Revoke all user tokens » dans les réglages de l’application OAuth. Si un jeton, un ordinateur
-   d’éditrice ou un compte GitHub est soupçonné compromis : révoquer aussitôt (« Revoke all user tokens »,
-   retrait du collaborateur, changement du secret), puis vérifier l’historique de `main` et le site.
+   aussi « Revoke all user tokens » dans les réglages de l’application OAuth.
+
+   **Procédure complète si un jeton, un ordinateur d’éditrice ou un compte GitHub est soupçonné compromis**
+   (un jeton volé peut avoir servi à faire exécuter du code sur l’hébergeur, voir le point 6), aussitôt et
+   dans cet ordre :
+   1. « Revoke all user tokens » dans l’application OAuth ;
+   2. retirer le collaborateur du dépôt (Settings > Collaborators) le temps de remettre son compte en ordre ;
+   3. générer un nouveau `client_secret` et le mettre dans `oauth-config.php` (l’ancien supprimé) ;
+   4. créer une nouvelle paire de clés de déploiement (étape 5.6), mettre la nouvelle clé privée dans
+      `SSH_PRIVATE_KEY` et ne garder que la nouvelle clé publique dans `~/.ssh/authorized_keys` ;
+   5. générer un nouveau `secret_limiteur` (même commande qu’à l’étape 4) et changer le mot de passe de la
+      boîte mail (et celui du compte de l’hébergeur) ;
+   6. vérifier sur le serveur `~/.ssh/authorized_keys` (aucune clé inconnue), la crontab (`crontab -l`), les
+      fichiers hors de la racine web (`fan2harmonie-contact/`, dossier du compte) et la racine web ;
+   7. relire l’historique de `main` (commits récents) pour `scripts/`, `package.json`, `public/**/*.php` et les `.htaccess` ;
+      annuler toute modification suspecte par `git revert`, puis redéployer.
 6. **Ce que permet un jeton volé (à lire).** Le jeton d’une éditrice (portée `public_repo` ou `repo`) n’expire
-   jamais avec une application OAuth. Avec lui, un attaquant peut pousser sur `main` ; le déploiement publie
-   alors ce qu’il a écrit, y compris `.htaccess`, les scripts PHP et le workflow, c’est-à-dire du code sur
-   l’hébergeur, d’où il peut lire le secret de l’application OAuth et la configuration du formulaire.
+   jamais avec une application OAuth. Avec lui, un attaquant peut pousser sur `main`. Un jeton sans la portée
+   `workflow` (cas de ce relais) ne peut pas modifier `.github/workflows/`, mais il peut modifier `scripts/`,
+   `package.json` (lancés par la construction), les scripts PHP et les `.htaccess` : le déploiement publie
+   alors du code sur l’hébergeur, d’où il peut lire le secret de l’application OAuth et la configuration du
+   formulaire.
    Recommandations, dans l’ordre :
    1. le dépôt appartient au technicien ou à une organisation ; Stéphanie y a le rôle « Write », jamais
       « Admin » ;
@@ -409,8 +429,10 @@ Stéphanie :
 - **Empreinte d’adresse IP** : pseudonymisée (HMAC avec un secret), pas anonyme ; elle est supprimée à la
   première utilisation du formulaire qui suit l’heure écoulée.
 - **Accès en écriture au dépôt = pouvoir d’exécuter du code sur l’hébergeur** : pousser sur `main` publie
-  `.htaccess`, scripts PHP et workflow ; depuis le serveur, on lit le secret de l’application OAuth et la
-  configuration du formulaire. Seulement des personnes de confiance, en double authentification, avec le rôle
+  `.htaccess` et scripts PHP, et change `scripts/` et `package.json` lancés à la construction (le workflow
+  lui-même demande en plus la portée `workflow`, que le relais ne donne pas) ; depuis le serveur, on lit le
+  secret de l’application OAuth et la configuration du formulaire. En cas de doute : procédure complète de
+  l’étape 6, point 5. Seulement des personnes de confiance, en double authentification, avec le rôle
   « Write » (jamais « Admin ») ; voir l’étape 6, point 6.
 - **Jeton de connexion GitHub volé** : il n’expire jamais avec une application OAuth et ne peut pas être limité à
   un seul dépôt (il vaut pour tous les dépôts du compte, d’où le compte GitHub DÉDIÉ conseillé à l’étape 6).
@@ -441,5 +463,9 @@ Stéphanie :
   alors adapter le déploiement.
 - Purge quotidienne du fichier du limiteur par une tâche cron de l’hébergeur, pour que « au plus une heure » soit
   vrai même sans nouvel envoi.
-- Application GitHub (« GitHub App ») à la place de l’application OAuth, pour limiter l’accès au seul dépôt du
-  site.
+- Application GitHub à la place de l’OAuth App (« GitHub App »), pour limiter l’accès au seul dépôt du site et
+  avoir des jetons qui expirent.
+- Évaluer les règles de poussée GitHub (push rulesets, restriction de chemins de fichiers) pour interdire aux
+  comptes éditeurs de modifier tout sauf `src/content/**` et `src/assets/actualites/**` — disponibilité selon
+  l’offre/le type de dépôt à vérifier.
+- Restreindre la clé de déploiement avec `rrsync` (facultatif, étape 5.6) si l’hébergeur le permet.

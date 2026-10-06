@@ -195,3 +195,36 @@ describe('docs : version de PHP et portée par défaut (revue finale)', () => {
     expect(texte.replace(/\s+/g, ' ')).toMatch(/`public_repo`\*\* \(valeur par défaut du modèle\) tant que le dépôt est public/);
   });
 });
+
+describe('docs : procédure en cas de compromission et suites (revue finale, N1)', () => {
+  const plat = texte.replace(/\s+/g, ' ');
+  it('procédure complète : jetons, collaborateur, secret OAuth, clé SSH, secret du limiteur, mot de passe de la boîte, vérifications', () => {
+    for (const fragment of [
+      '« Revoke all user tokens »',
+      'retirer le collaborateur',
+      'nouveau `client_secret`',
+      'nouvelle paire de clés',
+      '`SSH_PRIVATE_KEY`',
+      'nouveau `secret_limiteur`',
+      'mot de passe de la boîte',
+      '`~/.ssh/authorized_keys`',
+      'crontab',
+      '`fan2harmonie-contact/`',
+      '`scripts/`, `package.json`, `public/**/*.php` et les `.htaccess`',
+    ]) {
+      expect(plat, fragment).toContain(fragment);
+    }
+  });
+
+  it('un jeton sans la portée workflow ne modifie pas .github/workflows/, mais bien scripts/, package.json, PHP et .htaccess', () => {
+    expect(plat).toMatch(/sans la portée `workflow`/);
+    expect(plat).not.toMatch(/y compris `\.htaccess`, les scripts PHP et le workflow/);
+  });
+
+  it('suites : règles de poussée GitHub limitées aux contenus, application GitHub ; restriction rrsync facultative', () => {
+    expect(plat).toContain('règles de poussée GitHub');
+    expect(plat).toContain('`src/content/**` et `src/assets/actualites/**`');
+    expect(plat).toMatch(/application GitHub à la place de l’OAuth App/i);
+    expect(plat).toMatch(/rrsync/);
+  });
+});
