@@ -25,7 +25,7 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
   (`.github/workflows/deploiement.yml` : construction sans secret, puis copie rsync sur SSH depuis l’environnement
   `production`, à chaque modification de `main` et chaque nuit).
 - **Administration** : Sveltia CMS sous `/admin` (`public/admin/config.yml`), qui enregistre dans le dépôt
-  GitHub ; le site est reconstruit et republié en deux minutes environ.
+  GitHub ; le site est reconstruit et republié en quelques minutes (délai à mesurer à la première mise en ligne).
 - **Règles du serveur** : `public/.htaccess` (HTTPS, domaine canonique, en-têtes de sécurité, cache, refus des
   fichiers sensibles en plusieurs couches, page 404), `public/api/.htaccess`, `public/oauth/.htaccess`
   (`AcceptPathInfo Off` seulement), `public/api/lib/.htaccess` et `public/oauth/lib/.htaccess` (tout refusé),
@@ -63,6 +63,8 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 - **Checklist complète et ordonnée** (domaine, DNS, boîtes mail, réglages PHP, dossiers du serveur, GitHub et ses
   secrets d’environnement, application OAuth, premier déploiement, vérifications, retour arrière, points
   juridiques, risques restants) : [`docs/MISE-EN-LIGNE.md`](docs/MISE-EN-LIGNE.md).
+- GitHub : créer l’environnement `production` limité à `main` AVANT d’ajouter les secrets, qui sont des secrets
+  d’environnement (jamais des secrets de dépôt) ; détail à l’étape 5 de la checklist.
 - **Guide de Stéphanie** pour l’administration : [`docs/GUIDE-STEPHANIE.md`](docs/GUIDE-STEPHANIE.md).
 - Revenir en arrière : durablement par `git revert` sur `main` ; en urgence, lancement manuel du déploiement
   depuis `main` avec `ref` = SHA complet d’un ancien commit (provisoire : écrasé au prochain push ou la nuit).
@@ -85,8 +87,8 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
   dépôt GitHub, en double authentification.
 - **Relais de connexion GitHub en PHP** (`public/oauth/`), servi par le site lui-même : `config.yml` a
   `base_url: https://fan2harmonie.fr` et `auth_endpoint: oauth/auth.php`.
-  - `auth.php` tire un `state` aléatoire, le pose dans un cookie `HttpOnly; Secure; SameSite=Lax` limité à
-    `/oauth/` et redirige vers GitHub avec les seules valeurs de la configuration ;
+  - `auth.php` tire un `state` aléatoire, le pose dans le cookie `__Host-fan2h_oauth_state`
+    (`HttpOnly; Secure; SameSite=Lax`, `Path=/`, 10 minutes) et redirige vers GitHub avec les seules valeurs de la configuration ;
   - `callback.php` vérifie le `state` (comparaison en temps constant), échange le code par cURL (TLS vérifié,
     HTTPS seul, sans redirection) et rend une page à CSP « nonce » qui transmet le jeton à `/admin` par
     `postMessage`, vers l’origine autorisée exacte, selon le protocole de Sveltia ;

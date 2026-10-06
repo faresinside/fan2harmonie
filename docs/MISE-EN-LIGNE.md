@@ -22,7 +22,8 @@ Rappel de l’architecture :
   lui-même).
 - **Hébergement mutualisé français** avec : PHP ≥ 8.1 choisi par compte, accès SSH (clé), fichiers `.htaccess`,
   `.user.ini`, tâches cron, au moins une boîte mail sur le domaine, certificat TLS gratuit (Let’s Encrypt).
-- **Un compte GitHub pour Stéphanie** (gratuit), protégé par la **double authentification (2FA)** ; idem pour
+- **Un compte GitHub pour Stéphanie** (gratuit, DÉDIÉ au site : voir l’étape 6), protégé par la **double
+  authentification (2FA)** ; idem pour
   toute personne qui modifiera le site.
 - Rien d’autre : ni Cloudflare, ni Formspree, ni service d’envoi de courriels tiers (aucun abonnement).
 
@@ -106,7 +107,9 @@ Exemple de compte : `/home/compte/` avec la racine web `/home/compte/www/` (noms
 
    C’est le fichier témoin : sans lui, le déploiement s’arrête sans rien copier ni supprimer.
 2. **Dossier privé** voisin de la racine web (même dossier parent), donc HORS de la racine web :
-   `/home/compte/fan2harmonie-contact/`, droits `0700`. Il contient :
+   `/home/compte/fan2harmonie-contact/`, droits `0700`. Il est créé, avec ses deux fichiers de configuration,
+   **AVANT le premier déploiement** (seul déroulement retenu ici) : les modèles viennent du projet (copie par
+   `scp` ou SFTP depuis le PC du technicien), pas de la racine web, qui est encore vide. Il contient :
    - `config.php` (droits `0600`), copie adaptée de `api/config.sample.php` : `destinataire`
      (`contact@fan2harmonie.fr`), `expediteur` (`site@fan2harmonie.fr`), `origines_autorisees`,
      `dossier_limiteur` (le dossier ci-dessous), `secret_limiteur` généré sur le serveur avec
@@ -116,46 +119,77 @@ Exemple de compte : `/home/compte/` avec la racine web `/home/compte/www/` (noms
      ```
 
      et collé dans le fichier (jamais ailleurs), et **`'transport_test' => false`** ;
-   - `oauth-config.php` (droits `0600`), copie adaptée de `oauth/config.sample.php` (voir l’étape 6) ;
+   - `oauth-config.php` (droits `0600`), copie adaptée de `oauth/config.sample.php` : `client_id` et
+     `client_secret` y sont saisis à l’étape 6 (toujours avant le premier déploiement), `scope` selon l’étape 6,
+     `'transport_test' => false` ;
    - `limiteur/` (droits `0700`) : dossier du limiteur du formulaire. Il doit appartenir au compte sous lequel
      PHP s’exécute (en FPM/LSAPI, c’est en général le compte lui-même : sinon, demander à l’hébergeur), ne jamais
      être ouvert en écriture au groupe ou aux autres, ne jamais être `/tmp`, ni un lien symbolique.
 
    Le script cherche donc `fan2harmonie-contact/config.php` et le relais `fan2harmonie-contact/oauth-config.php`
    à côté de la racine web (emplacements recommandés ; voir les modèles pour les autres emplacements possibles).
-   Commandes :
+   Commandes, sur le serveur (les DEUX dossiers en `0700`) :
 
    ```sh
-   mkdir -m 700 -p /home/compte/fan2harmonie-contact/limiteur
-   cp /home/compte/www/api/config.sample.php /home/compte/fan2harmonie-contact/config.php      # après le 1er déploiement
-   cp /home/compte/www/oauth/config.sample.php /home/compte/fan2harmonie-contact/oauth-config.php
+   mkdir -m 700 /home/compte/fan2harmonie-contact
+   mkdir -m 700 /home/compte/fan2harmonie-contact/limiteur
+   ```
+
+   Puis, depuis le dossier du projet sur le PC du technicien (copie des modèles du projet) :
+
+   ```sh
+   scp public/api/config.sample.php compte@<serveur SSH>:/home/compte/fan2harmonie-contact/config.php
+   scp public/oauth/config.sample.php compte@<serveur SSH>:/home/compte/fan2harmonie-contact/oauth-config.php
+   ```
+
+   Enfin, sur le serveur : `chmod 600` des deux fichiers, puis les compléter (`nano` ou l’éditeur du panneau) :
+
+   ```sh
    chmod 600 /home/compte/fan2harmonie-contact/config.php /home/compte/fan2harmonie-contact/oauth-config.php
+   ls -ld /home/compte/fan2harmonie-contact /home/compte/fan2harmonie-contact/limiteur   # drwx------ attendu
    ```
 
    Copiés tels quels, les deux modèles sont **refusés** (page d’erreur générique) : ils doivent être complétés.
 
 ## 5. GitHub : dépôt, environnement, secrets, clé de déploiement
 
-1. **Dépôt** `propriétaire/dépôt` (par exemple sur le compte de Stéphanie), branche par défaut **`main`**.
-   Privé (recommandé : portée `repo`, minutes Actions gratuites largement suffisantes) ou public (portée
-   `public_repo` ; attention, GitHub désactive les tâches planifiées d’un dépôt public après 60 jours sans
-   activité, voir l’étape 13).
-2. **Double authentification obligatoire** pour chaque collaborateur (Settings > Password and authentication).
-3. **Environnement de déploiement.** Créer D’ABORD l’environnement `production` (Settings > Environments > New
-   environment), régler « Deployment branches and tags » sur « Selected branches » avec la seule branche `main`,
-   PUIS seulement y ajouter les six secrets ci-dessous, comme secrets **de l’environnement** (« Environment
-   secrets ») :
+### 5.1 Dépôt
+
+Dépôt `faresinside/fan2harmonie` (déjà renseigné dans `public/admin/config.yml`), branche par défaut **`main`**.
+Il **appartient au technicien (ou à une organisation)** ; Stéphanie y est collaboratrice avec le rôle « Write »,
+jamais « Admin » (voir l’étape 6). Il est aujourd’hui **public** : portée `public_repo` (étape 6) ; GitHub
+désactive les tâches planifiées d’un dépôt public après 60 jours sans activité (étape 13). Un dépôt privé
+demanderait la portée `repo`.
+
+### 5.2 Double authentification
+
+Obligatoire pour chaque collaborateur (Settings > Password and authentication).
+
+### 5.3 Créer l’environnement `production`
+
+Créer D’ABORD l’environnement `production` (Settings > Environments > New environment), régler « Deployment
+branches and tags » sur « Selected branches » avec la seule branche `main`, PUIS seulement y ajouter les six
+secrets (étape 5.4), comme secrets **de l’environnement** (« Environment secrets »).
+
+### 5.4 Ajouter les six secrets à l’environnement
+
+Dans Settings > Environments > `production` > « Environment secrets » :
+
    - `SSH_HOST` : nom du serveur SSH (lettres, chiffres, `.`, `_`, `-`) ;
    - `SSH_USER` : compte SSH ;
    - `SSH_PORT` : port SSH (vide = 22) ;
    - `REMOTE_PATH` : chemin absolu de la racine web (étape 4) ;
    - `SSH_PRIVATE_KEY` : clé privée dédiée au déploiement (ci-dessous) ;
    - `SSH_KNOWN_HOSTS` : empreinte(s) du serveur (ci-dessous).
-4. **Supprimer tout secret de même nom au niveau du dépôt** (Settings > Secrets and variables > Actions >
+### 5.5 Aucun secret au niveau du dépôt
+
+**Supprimer tout secret de même nom au niveau du dépôt** (Settings > Secrets and variables > Actions >
    « Repository secrets ») : un secret de dépôt est lisible par un workflow lancé depuis n’importe quelle
    branche, donc par toute personne qui peut pousser une branche (ou un compte volé), qui pourrait envoyer la clé
    SSH ailleurs ; un secret d’environnement limité à `main` ne l’est pas.
-5. **Clé SSH de déploiement** dédiée, sans phrase de passe, générée sur le PC du technicien :
+### 5.6 Clé SSH de déploiement et empreinte du serveur
+
+**Clé SSH de déploiement** dédiée, sans phrase de passe, générée sur le PC du technicien :
 
    ```sh
    ssh-keygen -t ed25519 -C "deploiement fan2harmonie" -N "" -f fan2harmonie-deploiement
@@ -166,7 +200,7 @@ Exemple de compte : `/home/compte/` avec la racine web `/home/compte/www/` (noms
      restriction plus forte (`rrsync`, `command=`) est possible si l’hébergeur la permet, mais doit être essayée
      à la main avant (les chemins y deviennent relatifs au dossier autorisé) ;
    - la clé **privée** est collée dans le secret `SSH_PRIVATE_KEY`, puis le fichier local est effacé.
-6. **`SSH_KNOWN_HOSTS`** : la ligne `known_hosts` du serveur, **vérifiée** contre l’empreinte publiée par
+**`SSH_KNOWN_HOSTS`** : la ligne `known_hosts` du serveur, **vérifiée** contre l’empreinte publiée par
    l’hébergeur (documentation ou support) — jamais un `ssh-keyscan` accepté les yeux fermés :
 
    ```sh
@@ -182,7 +216,7 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 `https://fan2harmonie.fr/oauth/auth.php` (configuré dans `public/admin/config.yml`, `base_url` et
 `auth_endpoint`).
 
-1. Sur le compte GitHub de Stéphanie (ou de l’organisation propriétaire du dépôt) : Settings > Developer
+1. Sur le compte GitHub du technicien (ou de l’organisation) propriétaire du dépôt : Settings > Developer
    settings > OAuth Apps > New OAuth App :
    - Application name : par exemple « Fan 2 Harmonie — administration » ;
    - Homepage URL : `https://fan2harmonie.fr` ;
@@ -191,13 +225,31 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 2. Noter le **Client ID**, puis « Generate a new client secret ». Les deux valeurs vont **uniquement** dans
    `/home/compte/fan2harmonie-contact/oauth-config.php` sur le serveur (`client_id`, `client_secret`), saisies
    directement en SSH : jamais dans le dépôt, jamais dans un courriel ou une messagerie.
-3. Portée (`scope` dans `oauth-config.php`) : **`repo`** si le dépôt est privé (valeur par défaut),
-   **`public_repo`** s’il est public. Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
+3. Portée (`scope` dans `oauth-config.php`) : **`public_repo`** tant que le dépôt est public (cas actuel),
+   **`repo`** s’il devient privé (valeur par défaut du modèle). Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
    déjà les bonnes valeurs ; les adresses de GitHub ne doivent jamais être changées.
 4. **Qui peut modifier le site** : les collaborateurs du dépôt (Settings > Collaborators), avec le rôle
-   « Write », et eux seuls. Ce sont les éditrices ; chacune a la double authentification.
-5. Secret de l’application divulgué ou douteux : « Generate a new client secret », mettre la nouvelle valeur
-   dans `oauth-config.php`, supprimer l’ancienne dans GitHub.
+   « Write », jamais « Admin », et eux seuls. Ce sont les éditrices ; chacune a la double authentification.
+5. **Révoquer** : changer le secret (« Generate a new client secret », nouvelle valeur dans `oauth-config.php`,
+   ancienne supprimée) ne rend PAS invalides les jetons déjà donnés aux éditrices. Pour les couper, utiliser
+   aussi « Revoke all user tokens » dans les réglages de l’application OAuth. Si un jeton, un ordinateur
+   d’éditrice ou un compte GitHub est soupçonné compromis : révoquer aussitôt (« Revoke all user tokens »,
+   retrait du collaborateur, changement du secret), puis vérifier l’historique de `main` et le site.
+6. **Ce que permet un jeton volé (à lire).** Le jeton d’une éditrice (portée `public_repo` ou `repo`) n’expire
+   jamais avec une application OAuth. Avec lui, un attaquant peut pousser sur `main` ; le déploiement publie
+   alors ce qu’il a écrit, y compris `.htaccess`, les scripts PHP et le workflow, c’est-à-dire du code sur
+   l’hébergeur, d’où il peut lire le secret de l’application OAuth et la configuration du formulaire.
+   Recommandations, dans l’ordre :
+   1. le dépôt appartient au technicien ou à une organisation ; Stéphanie y a le rôle « Write », jamais
+      « Admin » ;
+   2. l’éditrice se connecte à `/admin` avec un compte GitHub DÉDIÉ au site (aucun autre dépôt, double
+      authentification) ;
+   3. amélioration à évaluer plus tard : remplacer l’application OAuth par une GitHub App installée sur ce seul
+      dépôt (Contents en lecture-écriture, Metadata en lecture ; jetons d’utilisateur valables 8 heures) —
+      non testé avec Sveltia CMS, à essayer à la mise en ligne ;
+   4. limite connue : l’accès en écriture à `main` suffit à changer les fichiers exécutés sur le serveur. Une
+      liste d’empreintes des fichiers autorisés dans le workflow ne protégerait pas les scripts que ce même
+      workflow exécute ; elle n’est donc pas mise en place. Seules des éditrices de confiance ont l’accès.
 
 ## 7. Valeurs définitives dans le projet
 
@@ -207,7 +259,7 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
    - `siret` : le vrai SIRET de Stéphanie si elle en a un, sinon `null` (la ligne disparaît et le statut affiché
      change, voir l’étape 11). L’exemple `123 456 789 00012` **bloque la mise en ligne** ;
    - `ville` : facultative (`null` = non affichée).
-2. `public/admin/config.yml` : `repo` = `propriétaire/dépôt` (étape 5). `base_url` (`https://fan2harmonie.fr`)
+2. `public/admin/config.yml` : `repo` (`faresinside/fan2harmonie`), `base_url` (`https://fan2harmonie.fr`)
    et `auth_endpoint` (`oauth/auth.php`) sont déjà définitifs.
 3. Lancer le garde-fou jusqu’à ce qu’il réussisse (le déploiement le relance et s’arrête tant qu’il échoue) :
 
@@ -221,7 +273,9 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 ## 8. Premier déploiement, suivi pas à pas
 
 Avant : la racine web ne contient que ce que l’hébergeur y a mis (page d’accueil par défaut, `cgi-bin/`…) et le
-fichier `.fan2harmonie-site`. Retirer à la main la page par défaut si elle gêne.
+fichier `.fan2harmonie-site`. Retirer à la main la page par défaut si elle gêne. Les configurations
+`fan2harmonie-contact/config.php` et `fan2harmonie-contact/oauth-config.php` existent déjà et sont complètes
+(étapes 4 et 6) : le formulaire et la connexion à `/admin` fonctionnent dès cette première mise en ligne.
 
 Le déploiement part à chaque modification de `main` (Actions > « Déploiement ») :
 
@@ -260,9 +314,12 @@ Remplacer `$S` par `https://fan2harmonie.fr` (ou utiliser `--resolve`, étape 1)
 | Trop gros (70 Ko) | `head -c 70000 /dev/zero \| tr '\0' x > gros.txt` puis `curl -s -o /dev/null -w '%{http_code}\n' -H "Origin: $S" --data-urlencode "x@gros.txt" $S/api/contact.php` | 413 |
 | Origine étrangère | `curl -s -o /dev/null -w '%{http_code}\n' -H 'Origin: https://exemple.org' -d 'nom=a' $S/api/contact.php` | 403 |
 | Vrai message | formulaire du site, depuis un téléphone | message reçu dans `contact@fan2harmonie.fr` (regarder aussi les indésirables) |
-| Relais OAuth | `curl -sI "$S/oauth/auth.php?provider=github"` | 302 vers `https://github.com/login/oauth/authorize?client_id=…`, cookie `fan2h_oauth_state` (HttpOnly, Secure, SameSite=Lax) |
+| Relais OAuth | `curl -sI "$S/oauth/auth.php?provider=github"` | 302 vers `https://github.com/login/oauth/authorize?client_id=…`, cookie `__Host-fan2h_oauth_state` (Path=/, HttpOnly, Secure, SameSite=Lax) |
+| Relais : page de retour | `curl -sI https://fan2harmonie.fr/oauth/callback.php` | 405 (méthode HEAD) ; `Cache-Control: no-store`, `Referrer-Policy: no-referrer` et `Content-Security-Policy` à nonce, chacun UNE seule fois. Même chose avec `curl -s -D - -o /dev/null https://fan2harmonie.fr/oauth/callback.php` (GET sans cookie : 403) |
+| Erreurs PHP jamais affichées | panneau de l’hébergeur (`php.ini`) ou une page qui provoque une erreur | `display_errors` à Off pour le compte (sinon vérifier que `api/.user.ini` et `oauth/.user.ini` sont bien pris en compte) |
 | Relais : fichiers privés | `$S/oauth/lib/oauth.php`, `$S/oauth/config.php`, `$S/oauth/auth.php/x` | 403 ou 404 |
-| Administration | `$S/admin`, « Se connecter avec GitHub » | connexion ; ajouter un rendez-vous de test, l’annuler (case « Séance annulée »), le supprimer : chaque changement est en ligne en 2 minutes environ |
+| Administration | `$S/admin`, « Se connecter avec GitHub » | connexion ; ajouter un rendez-vous de test, l’annuler (« Séance annulée »), le supprimer : chaque changement est en ligne en quelques minutes (mesurer le délai réel à ce premier essai et le noter dans le guide de Stéphanie) |
+| Portée réelle du jeton | après la première vraie connexion : GitHub > Settings > Applications > Authorized OAuth Apps | l’application n’a que la portée prévue (`public_repo`, ou `repo` si le dépôt est privé) et Sveltia fonctionne avec elle seule |
 | Actualité | publier une actualité de test avec une photo, puis la supprimer | visible puis retirée |
 | Texte d’une page | corriger une virgule dans « Le Qi Gong » | correction en ligne |
 | Mentions légales | `$S/mentions-legales/` | complètes : aucun `À_COMPLÉTER`, pas le SIRET d’exemple |
@@ -347,12 +404,14 @@ Stéphanie :
   de contact, qu’ils peuvent utiliser directement.
 - **Empreinte d’adresse IP** : pseudonymisée (HMAC avec un secret), pas anonyme ; elle est supprimée à la
   première utilisation du formulaire qui suit l’heure écoulée.
-- **Accès en écriture au dépôt = pouvoir de modifier le site** (et, en pratique, le déploiement) : seulement des
-  personnes de confiance, toutes en double authentification.
-- **Jeton de connexion GitHub** : une application OAuth GitHub ne peut pas être limitée à un seul dépôt ; le jeton
-  obtenu à la connexion à `/admin` (gardé dans le navigateur de l’éditrice) donne accès à tous les dépôts de son
-  compte selon la portée choisie. Se déconnecter de `/admin` sur un ordinateur partagé ; en cas de doute,
-  révoquer l’accès dans GitHub (Settings > Applications > Authorized OAuth Apps).
+- **Accès en écriture au dépôt = pouvoir d’exécuter du code sur l’hébergeur** : pousser sur `main` publie
+  `.htaccess`, scripts PHP et workflow ; depuis le serveur, on lit le secret de l’application OAuth et la
+  configuration du formulaire. Seulement des personnes de confiance, en double authentification, avec le rôle
+  « Write » (jamais « Admin ») ; voir l’étape 6, point 6.
+- **Jeton de connexion GitHub volé** : il n’expire jamais avec une application OAuth et ne peut pas être limité à
+  un seul dépôt (il vaut pour tous les dépôts du compte, d’où le compte GitHub DÉDIÉ conseillé à l’étape 6).
+  Se déconnecter de `/admin` ne le révoque pas. En cas de doute : « Revoke all user tokens » (étape 6), et
+  Settings > Applications > Authorized OAuth Apps sur le compte de l’éditrice.
 - **Dépôt public** : GitHub désactive la reconstruction de la nuit après 60 jours sans activité ; la réactiver
   dans Actions (un dépôt privé n’a pas cette limite).
 - **Limiteur et sauvegardes** : si le formulaire répond « Service momentanément indisponible » et que le journal
@@ -363,9 +422,10 @@ Stéphanie :
 - **GitHub est un service américain**, mais ne reçoit aucune donnée de visiteur.
 - **`/admin`** charge depuis le navigateur de l’éditrice des textes et polices sur unpkg.com et cdn.jsdelivr.net
   et l’état de GitHub sur githubstatus.com ; les visiteurs du site ne sont pas concernés.
-- **Cookie du relais** : un sous-domaine compromis de `fan2harmonie.fr` pourrait poser un cookie `fan2h_oauth_state`
-  (risque faible : il permettrait seulement de connecter l’éditrice au compte GitHub de l’attaquant). N’ouvrir de
-  sous-domaine que chez l’hébergeur.
+- **Cookie du relais** : il s’appelle `__Host-fan2h_oauth_state` (Path=/, Secure, sans Domain). Sans ce
+  préfixe, un sous-domaine compromis de `fan2harmonie.fr`, ou une réponse en http avant que HSTS soit connu du
+  navigateur (première visite), pourrait imposer un cookie et connecter l’éditrice au compte GitHub d’un
+  attaquant ; avec `__Host-`, le navigateur refuse de tels cookies.
 
 ## 14. Pour plus tard
 

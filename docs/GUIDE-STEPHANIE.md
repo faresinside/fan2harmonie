@@ -3,8 +3,9 @@
 Bonjour Stéphanie,
 
 Ce petit guide vous accompagne pour faire vivre votre site : ajouter vos séances, publier une nouvelle,
-corriger un texte. Tout se fait depuis votre navigateur, sans rien installer. Prenez votre temps : rien de ce que
-vous faites ici n’est définitif, tout peut être corrigé.
+corriger un texte. Tout se fait depuis votre navigateur, sans rien installer. Prenez votre temps : une erreur se
+corrige simplement en modifiant de nouveau la fiche, et votre technicien peut toujours remettre une version
+précédente du site.
 
 ## a) Se connecter
 
@@ -12,8 +13,12 @@ vous faites ici n’est définitif, tout peut être corrigé.
 2. Cliquez sur **« Se connecter avec GitHub »**. Une petite fenêtre s’ouvre.
 3. Entrez votre identifiant et votre mot de passe GitHub, puis le code de la **double authentification**
    (l’application de votre téléphone). GitHub est le service gratuit qui garde les textes du site en lieu sûr.
-4. La toute première fois, GitHub vous demande d’autoriser « Fan 2 Harmonie — administration » : cliquez sur le
-   bouton vert (« Authorize »). La fenêtre se ferme toute seule et vous arrivez sur l’administration.
+4. La toute première fois, GitHub vous demande d’autoriser « Fan 2 Harmonie — administration ». Dans la fenêtre
+   GitHub, vérifiez que l’adresse commence par https://github.com/ et que l’application s’appelle bien
+   « Fan 2 Harmonie — administration » avant de cliquer sur « Authorize » (le bouton vert). La fenêtre se ferme
+   toute seule et vous arrivez sur l’administration.
+5. Se déconnecter ne retire pas l’accès à votre compte : si vous perdez votre ordinateur ou votre téléphone,
+   prévenez votre technicien sans attendre, il coupera l’accès.
 
 ## b) Ajouter un rendez-vous
 
@@ -48,6 +53,7 @@ puis cliquez sur **Supprimer** et confirmez. (Inutile pour les séances passées
 3. **Date** : les actualités les plus récentes s’affichent en premier.
 4. **Photo** (facultative) : cliquez sur **Parcourir**, puis choisissez une photo de votre ordinateur ou de votre
    téléphone (format JPEG, PNG ou WebP). Elle est réduite automatiquement : pas besoin de la retoucher.
+   Ne publiez pas la photo d’une personne reconnaissable sans son accord.
 5. **Texte** : écrivez votre nouvelle. Les boutons au-dessus permettent de mettre un mot en **gras** ou en
    *italique*, ou d’ajouter un lien.
 6. **Enregistrer**.
@@ -64,7 +70,8 @@ puis cliquez sur **Supprimer** et confirmez. (Inutile pour les séances passées
 
 ## g) Quand le site se met-il à jour ?
 
-Après chaque enregistrement, **le site se met à jour en deux minutes environ**. Rechargez alors la page du site
+Après chaque enregistrement, **le site se met à jour en quelques minutes** (votre technicien vous dira le délai
+habituel, mesuré à la mise en ligne). Rechargez alors la page du site
 pour voir le changement.
 
 Si rien n’a changé au bout de cinq minutes : rechargez la page en appuyant sur **Ctrl + F5** (ou, sur téléphone,
@@ -73,8 +80,8 @@ votre modification est bien gardée, écrivez simplement au technicien (rubrique
 
 ## h) En cas de doute
 
-Vous ne pouvez rien casser : chaque modification est gardée, et la version précédente peut toujours être
-remise. Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez à votre technicien,
+Chaque modification est gardée : en cas d’erreur, votre technicien peut toujours remettre une version précédente
+(vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez à votre technicien,
 **[adresse e-mail du technicien — à remplacer]**, en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
@@ -82,6 +89,9 @@ capture d’écran aide beaucoup).
 
 - **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible, le site les distingue tout seul.
 - **Les rendez-vous passés disparaissent tout seuls** du site, chaque nuit.
+- **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont publics sur GitHub, et une photo
+  ou un texte supprimé du site reste visible dans l’historique des modifications. Réfléchissez donc avant de
+  publier une information personnelle.
 - **Quelques mots de l’outil restent en anglais**, par exemple « Show Errors » ou « Restore Default » : c’est
   normal, vous pouvez les ignorer.
 - **Le champ Photo** affiche, une fois la photo choisie, un chemin un peu technique

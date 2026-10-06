@@ -4,7 +4,7 @@
 
 **Goal:** Construire le site vitrine premium de Fan 2 Harmonie, dont Stéphanie (non technique) gère rendez-vous, actualités et textes depuis un espace d'administration à formulaires.
 
-**Architecture:** Site statique Astro 5 (TypeScript strict). Les contenus (rendez-vous, actualités, textes de pages) sont des fichiers Markdown validés par des schémas Zod ; Sveltia CMS (`/admin`) les édite via GitHub. Cloudflare Pages construit et héberge ; une reconstruction quotidienne retire automatiquement les rendez-vous passés.
+**Architecture:** Site statique Astro 5 (TypeScript strict). Les contenus (rendez-vous, actualités, textes de pages) sont des fichiers Markdown validés par des schémas Zod ; Sveltia CMS (`/admin`) les édite via GitHub. Cloudflare Pages construit et héberge (remplacé : hébergement français, voir la note de mise à jour) ; une reconstruction quotidienne retire automatiquement les rendez-vous passés.
 
 **Tech Stack:** Astro 5, TypeScript, Zod (content collections), Vitest, Playwright + @axe-core/playwright, @lhci/cli, sharp, Sveltia CMS, Cloudflare Pages + Workers (remplacés : voir la mise à jour ci-dessous), GitHub, polices @fontsource.
 
