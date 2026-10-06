@@ -65,7 +65,8 @@ const PORTEES = ['repo', 'public_repo'];
 /** Valeurs par défaut des clés facultatives de la configuration. */
 const DEFAUTS = [
     'origines_autorisees' => ['https://fan2harmonie.fr'],
-    'scope' => 'repo',
+    // Le dépôt du site est public : public_repo (droits plus étroits) ; « repo » seulement s'il devient privé.
+    'scope' => 'public_repo',
     'url_callback' => 'https://fan2harmonie.fr/oauth/callback.php',
     // Adresses de GitHub : à ne JAMAIS changer en production (modifiables seulement pour les tests).
     'github_url_autorisation' => 'https://github.com/login/oauth/authorize',

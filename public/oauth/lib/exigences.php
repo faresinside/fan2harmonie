@@ -18,7 +18,7 @@ namespace Fan2Harmonie\OAuth;
 const EXTENSIONS_REQUISES = ['curl', 'json', 'hash'];
 
 /**
- * Exigences non remplies (noms seulement, pour le journal) : PHP ≥ 8.1 et les extensions curl, json, hash.
+ * Exigences non remplies (noms seulement, pour le journal) : PHP ≥ 8.1.11 et les extensions curl, json, hash.
  * Liste vide si tout est là.
  *
  * @param int      $versionPhp       PHP_VERSION_ID.
@@ -28,8 +28,9 @@ const EXTENSIONS_REQUISES = ['curl', 'json', 'hash'];
 function exigencesManquantes($versionPhp, $extensionChargee)
 {
     $manquantes = [];
-    if ($versionPhp < 80100) {
-        $manquantes[] = 'PHP >= 8.1';
+    // 8.1.11 au moins : les versions 8.1.0 à 8.1.10 ont des failles de sécurité connues, corrigées depuis.
+    if ($versionPhp < 80111) {
+        $manquantes[] = 'PHP >= 8.1.11';
     }
     foreach (EXTENSIONS_REQUISES as $extension) {
         if (!$extensionChargee($extension)) {

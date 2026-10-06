@@ -6,7 +6,7 @@ GitHub, secret du limiteur) ne s’écrivent qu’aux endroits indiqués, jamais
 
 Rappel de l’architecture :
 
-- **Hébergeur 100 % français** (PHP ≥ 8.1, Apache ou LiteSpeed lisant les `.htaccess`, SSH, cron, boîtes mail) :
+- **Hébergeur 100 % français** (PHP ≥ 8.1.11, Apache ou LiteSpeed lisant les `.htaccess`, SSH, cron, boîtes mail) :
   il sert les pages (dossier `dist/` construit), le script du formulaire (`/api/contact.php`) et le relais de
   connexion GitHub de l’administration (`/oauth/auth.php` et `/oauth/callback.php`).
 - **GitHub** : le code et le contenu PUBLIC du site (textes, rendez-vous, actualités, photos publiées), la
@@ -20,7 +20,7 @@ Rappel de l’architecture :
 
 - **Nom de domaine** `fan2harmonie.fr` : environ 10 € par an chez un bureau d’enregistrement (souvent l’hébergeur
   lui-même).
-- **Hébergement mutualisé français** avec : PHP ≥ 8.1 choisi par compte, accès SSH (clé), fichiers `.htaccess`,
+- **Hébergement mutualisé français** avec : PHP ≥ 8.1.11 choisi par compte, accès SSH (clé), fichiers `.htaccess`,
   `.user.ini`, tâches cron, au moins une boîte mail sur le domaine, certificat TLS gratuit (Let’s Encrypt).
 - **Un compte GitHub pour Stéphanie** (gratuit, DÉDIÉ au site : voir l’étape 6), protégé par la **double
   authentification (2FA)** ; idem pour
@@ -76,7 +76,8 @@ Ce que voit chaque service extérieur :
 
 ## 3. Réglages de l’hébergement
 
-1. **PHP ≥ 8.1** pour ce site (8.3 conseillé), réglé dans le panneau.
+1. **PHP ≥ 8.1.11, de préférence 8.3 ou plus récent (8.1 n’est plus maintenu en sécurité depuis fin 2025)**,
+   réglé dans le panneau. En dessous, les scripts répondent par une erreur 500 générique (détail dans le journal).
 2. **Extensions PHP** : `mbstring`, `ctype`, `json`, `hash`, `filter`, `curl`, `pcre` (avec UTF-8) ;
    **`posix` recommandée**. Sans une extension exigée, le script concerné répond par une page ou un message
    d’erreur 500 générique et note seulement le nom de ce qui manque dans le journal d’erreurs.
@@ -225,8 +226,8 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 2. Noter le **Client ID**, puis « Generate a new client secret ». Les deux valeurs vont **uniquement** dans
    `/home/compte/fan2harmonie-contact/oauth-config.php` sur le serveur (`client_id`, `client_secret`), saisies
    directement en SSH : jamais dans le dépôt, jamais dans un courriel ou une messagerie.
-3. Portée (`scope` dans `oauth-config.php`) : **`public_repo`** tant que le dépôt est public (cas actuel),
-   **`repo`** s’il devient privé (valeur par défaut du modèle). Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
+3. Portée (`scope` dans `oauth-config.php`) : **`public_repo`** (valeur par défaut du modèle) tant que le dépôt
+   est public (cas actuel), **`repo`** seulement s’il devient privé. Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
    déjà les bonnes valeurs ; les adresses de GitHub ne doivent jamais être changées.
 4. **Qui peut modifier le site** : les collaborateurs du dépôt (Settings > Collaborators), avec le rôle
    « Write », jamais « Admin », et eux seuls. Ce sont les éditrices ; chacune a la double authentification.

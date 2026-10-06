@@ -17,14 +17,17 @@ use function Fan2Harmonie\Contact\reponseExigencesManquantes;
 test('exigences : PHP ≥ 8.1, mbstring, ctype, json, hash, filter, PCRE avec UTF-8', function (): void {
     $toutes = static fn (string $extension): bool => true;
     $pcreOk = static fn (): bool => true;
-    egal([], exigencesManquantes(80100, $toutes, $pcreOk));
+    egal([], exigencesManquantes(80111, $toutes, $pcreOk));
+    // 8.1.0 à 8.1.10 refusées : 8.1.11 au moins (corrections de sécurité).
+    egal(['PHP >= 8.1.11'], exigencesManquantes(80110, $toutes, $pcreOk));
+    egal(['PHP >= 8.1.11'], exigencesManquantes(80100, $toutes, $pcreOk));
     egal([], exigencesManquantes(80312, $toutes, $pcreOk));
-    egal(['PHP >= 8.1'], exigencesManquantes(80030, $toutes, $pcreOk));
+    egal(['PHP >= 8.1.11'], exigencesManquantes(80030, $toutes, $pcreOk));
     $sansMbstringNiJson = static fn (string $extension): bool => !in_array($extension, ['mbstring', 'json'], true);
-    egal(['mbstring', 'json'], exigencesManquantes(80100, $sansMbstringNiJson, $pcreOk));
-    egal(['ctype', 'hash', 'filter'], exigencesManquantes(80100, static fn (string $e): bool => !in_array($e, ['ctype', 'hash', 'filter'], true), $pcreOk));
-    egal(['pcre (UTF-8)'], exigencesManquantes(80100, $toutes, static fn (): bool => false));
-    egal(['PHP >= 8.1', 'mbstring', 'json', 'pcre (UTF-8)'], exigencesManquantes(70400, $sansMbstringNiJson, static fn (): bool => false));
+    egal(['mbstring', 'json'], exigencesManquantes(80111, $sansMbstringNiJson, $pcreOk));
+    egal(['ctype', 'hash', 'filter'], exigencesManquantes(80111, static fn (string $e): bool => !in_array($e, ['ctype', 'hash', 'filter'], true), $pcreOk));
+    egal(['pcre (UTF-8)'], exigencesManquantes(80111, $toutes, static fn (): bool => false));
+    egal(['PHP >= 8.1.11', 'mbstring', 'json', 'pcre (UTF-8)'], exigencesManquantes(70400, $sansMbstringNiJson, static fn (): bool => false));
 });
 
 test('exigences : remplies dans ce conteneur (PHP ' . PHP_VERSION . ')', function (): void {

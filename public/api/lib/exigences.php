@@ -15,7 +15,7 @@ namespace Fan2Harmonie\Contact;
 const EXTENSIONS_REQUISES = ['mbstring', 'ctype', 'json', 'hash', 'filter'];
 
 /**
- * Exigences non remplies (noms seulement, pour le journal) : PHP ≥ 8.1, extensions mbstring, ctype, json, hash,
+ * Exigences non remplies (noms seulement, pour le journal) : PHP ≥ 8.1.11, extensions mbstring, ctype, json, hash,
  * filter, et PCRE capable de lire l'UTF-8. Liste vide si tout est là.
  *
  * @param int      $versionPhp       PHP_VERSION_ID.
@@ -26,8 +26,9 @@ const EXTENSIONS_REQUISES = ['mbstring', 'ctype', 'json', 'hash', 'filter'];
 function exigencesManquantes(int $versionPhp, callable $extensionChargee, callable $pcreUtf8): array
 {
     $manquantes = [];
-    if ($versionPhp < 80100) {
-        $manquantes[] = 'PHP >= 8.1';
+    // 8.1.11 au moins : les versions 8.1.0 à 8.1.10 ont des failles de sécurité connues, corrigées depuis.
+    if ($versionPhp < 80111) {
+        $manquantes[] = 'PHP >= 8.1.11';
     }
     foreach (EXTENSIONS_REQUISES as $extension) {
         if (!$extensionChargee($extension)) {

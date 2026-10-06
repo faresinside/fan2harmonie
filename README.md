@@ -19,7 +19,7 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
   Zod (`src/lib/schemas.ts`) ; les rendez-vous passés sont retirés à chaque construction (chaque nuit) et, le
   jour même, masqués dans le navigateur par un petit script (`src/scripts/rendezvous.ts`, amélioration
   progressive : sans JavaScript, la page reste celle de la construction).
-- **Hébergeur 100 % français** (PHP ≥ 8.1, Apache ou LiteSpeed lisant `.htaccess`, SSH) : il sert `dist/`, le
+- **Hébergeur 100 % français** (PHP ≥ 8.1.11, de préférence 8.3 ou plus récent, Apache ou LiteSpeed lisant `.htaccess`, SSH) : il sert `dist/`, le
   script du formulaire de contact (`public/api/`) et le relais de connexion GitHub de l’administration
   (`public/oauth/`). Ni Cloudflare ni Formspree ni autre service tiers ne sont utilisés : aucune donnée de visiteur ne
   quitte la France.
@@ -86,7 +86,7 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 - Configuration `config.php` créée sur le serveur à partir de `public/api/config.sample.php` (refusé tel quel),
   de préférence dans `<compte>/fan2harmonie-contact/`, hors de la racine web ; sinon la variable
   `FAN2HARMONIE_CONFIG`, ou `api/config.php` en dernier recours. Jamais versionnée.
-- Exigences : PHP ≥ 8.1, extensions mbstring, ctype, filter, json, hash, PCRE (UTF-8), `posix` recommandée,
+- Exigences : PHP ≥ 8.1.11 (de préférence 8.3 ou plus récent), extensions mbstring, ctype, filter, json, hash, PCRE (UTF-8), `posix` recommandée,
   `mail()` acceptant `-f`, dossier privé du limiteur (0700, hors racine web, jamais `/tmp`).
 
 ## Administration

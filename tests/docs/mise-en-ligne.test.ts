@@ -179,3 +179,19 @@ describe('docs/MISE-EN-LIGNE.md : commandes du relais OAuth (revue finale)', () 
     expect(ligne).toContain('Set-Cookie: __Host-fan2h_oauth_state=');
   });
 });
+
+describe('docs : version de PHP et portée par défaut (revue finale)', () => {
+  const readme = readFileSync(path.join(RACINE, 'README.md'), 'utf8');
+  it('PHP ≥ 8.1.11, de préférence 8.3 ou plus récent ; plus jamais « PHP ≥ 8.1 » seul', () => {
+    for (const doc of [texte, readme]) {
+      expect(doc).not.toMatch(/PHP ≥ 8\.1(?!\.11)/);
+      expect(doc).toContain('PHP ≥ 8.1.11');
+    }
+    expect(texte.replace(/\s+/g, ' ')).toContain('PHP ≥ 8.1.11, de préférence 8.3 ou plus récent (8.1 n’est plus maintenu en sécurité depuis fin 2025)');
+  });
+
+  it('portée : public_repo par défaut, repo seulement si le dépôt devient privé', () => {
+    expect(texte).not.toMatch(/privé \(valeur par défaut du modèle\)/);
+    expect(texte.replace(/\s+/g, ' ')).toMatch(/`public_repo`\*\* \(valeur par défaut du modèle\) tant que le dépôt est public/);
+  });
+});

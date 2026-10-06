@@ -31,9 +31,9 @@ return [
     // le jeton. Par défaut : ['https://fan2harmonie.fr'].
     'origines_autorisees' => ['https://fan2harmonie.fr'],
 
-    // Droits demandés à GitHub : « repo » si le dépôt du site est PRIVÉ (par défaut), « public_repo » s'il est
-    // public (droits plus étroits). Aucune autre valeur n'est acceptée.
-    'scope' => 'repo',
+    // Droits demandés à GitHub : « public_repo » tant que le dépôt du site est PUBLIC (cas actuel, par défaut,
+    // droits plus étroits) ; « repo » seulement si le dépôt devient privé. Aucune autre valeur n'est acceptée.
+    'scope' => 'public_repo',
 
     // Adresse de retour, identique à celle déclarée dans l'OAuth App. Par défaut :
     // 'https://fan2harmonie.fr/oauth/callback.php'.

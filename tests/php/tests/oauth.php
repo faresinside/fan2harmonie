@@ -136,8 +136,9 @@ function verifierEchec(array $reponse, int $statut, bool $cookieEfface, string $
 
 test('oauth exigences : PHP ≥ 8.1, curl, json, hash ; remplies ici ; réponse 500 générique sans script', function (): void {
     $toutes = static fn (string $e): bool => true;
-    egal([], exigencesManquantes(80100, $toutes));
-    egal(['PHP >= 8.1', 'curl'], exigencesManquantes(80030, static fn (string $e): bool => $e !== 'curl'));
+    egal([], exigencesManquantes(80111, $toutes));
+    egal(['PHP >= 8.1.11'], exigencesManquantes(80110, $toutes));
+    egal(['PHP >= 8.1.11', 'curl'], exigencesManquantes(80030, static fn (string $e): bool => $e !== 'curl'));
     egal(['json', 'hash'], exigencesManquantes(80300, static fn (string $e): bool => !in_array($e, ['json', 'hash'], true)));
     egal([], exigencesManquantesIci());
     $r = reponseExigencesManquantes();
@@ -181,7 +182,9 @@ test('oauth : state = 32 octets aléatoires en hexadécimal (64 caractères), no
 test('oauth config : valeurs par défaut (origine du site, repo, callback, adresses de GitHub)', function (): void {
     $c = configOauth();
     egal(['https://fan2harmonie.fr'], $c['origines_autorisees']);
-    egal('repo', $c['scope']);
+    // Dépôt public : public_repo par défaut ; repo seulement si le dépôt devient privé.
+    egal('public_repo', $c['scope']);
+    egal('repo', configOauth(['scope' => 'repo'])['scope']);
     egal('https://fan2harmonie.fr/oauth/callback.php', $c['url_callback']);
     egal('https://github.com/login/oauth/authorize', $c['github_url_autorisation']);
     egal('https://github.com/login/oauth/access_token', $c['github_url_jeton']);
@@ -243,6 +246,7 @@ test('oauth config : modèle config.sample.php REFUSÉ tel quel (secret et ident
     vrai(is_array($modele), 'le modèle renvoie un tableau');
     egal(null, normaliserConfig($modele));
     contient('CHANGER-MOI', (string) file_get_contents(RACINE . '/public/oauth/config.sample.php'));
+    egal('public_repo', $modele['scope'] ?? null, 'portée du modèle : public_repo (dépôt public)');
     // Le modèle adapté avec de vraies valeurs devient valide (les autres clés du modèle sont correctes).
     vrai(normaliserConfig(array_replace($modele, configOauthBrute())) !== null, 'modèle complété accepté');
 });
@@ -343,15 +347,15 @@ test('oauth config : configDepuisServeur lit le vrai fichier ; manquante ou inva
 
     // FAN2HARMONIE_OAUTH_CONFIG cherchée en premier.
     $autre = $racine . '/autre.php';
-    file_put_contents($autre, "<?php\nreturn " . var_export(configOauthBrute(['scope' => 'public_repo']), true) . ";\n");
-    egal('public_repo', configDepuisServeur(['FAN2HARMONIE_OAUTH_CONFIG' => $autre], $dossier)['scope'] ?? null);
+    file_put_contents($autre, "<?php\nreturn " . var_export(configOauthBrute(['scope' => 'repo']), true) . ";\n");
+    egal('repo', configDepuisServeur(['FAN2HARMONIE_OAUTH_CONFIG' => $autre], $dossier)['scope'] ?? null);
 });
 
 // ---------- Adresse d'autorisation ----------
 
 test('oauth : adresse d’autorisation = configuration + state, RFC 3986, quatre paramètres exactement', function (): void {
     $url = construireUrlAutorisation(configOauth(), ETAT_TEST);
-    egal('https://github.com/login/oauth/authorize?client_id=Iv1.0123456789abcdef&redirect_uri=https%3A%2F%2Ffan2harmonie.fr%2Foauth%2Fcallback.php&scope=repo&state=' . ETAT_TEST, $url);
+    egal('https://github.com/login/oauth/authorize?client_id=Iv1.0123456789abcdef&redirect_uri=https%3A%2F%2Ffan2harmonie.fr%2Foauth%2Fcallback.php&scope=public_repo&state=' . ETAT_TEST, $url);
     $c = configOauth(['url_callback' => 'https://fan2harmonie.fr/oauth/callback.php', 'scope' => 'public_repo']);
     parse_str((string) parse_url(construireUrlAutorisation($c, ETAT_TEST), PHP_URL_QUERY), $params);
     egal(['client_id' => 'Iv1.0123456789abcdef', 'redirect_uri' => 'https://fan2harmonie.fr/oauth/callback.php', 'scope' => 'public_repo', 'state' => ETAT_TEST], $params);
