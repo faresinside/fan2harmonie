@@ -27,6 +27,10 @@ Site vitrine de Stéphanie (Qi Gong gratuit en plein air, parc de Rambouillet, s
 >   l’hébergeur, limiteur anti-abus ; ni Formspree ni autre service tiers.
 > - **Connexion de Sveltia CMS à GitHub** : relais PHP servi par le site lui-même (`/oauth/auth.php`,
 >   `/oauth/callback.php`), plus de Cloudflare Workers.
+> - **Dépôt GitHub** : il appartient au technicien (ou à une organisation) ; Stéphanie y est collaboratrice
+>   « Write » (jamais « Admin »), avec un compte GitHub dédié au site et la double authentification.
+> - **Image de partage** (`og:image`) : le recadrage de la photo d’accueil ; l’affiche n’est pas utilisée pour
+>   le partage.
 > - GitHub ne garde que le contenu public et construit le site. Détails : `README.md`,
 >   `docs/MISE-EN-LIGNE.md`, `docs/GUIDE-STEPHANIE.md`.
 
