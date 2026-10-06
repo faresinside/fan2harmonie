@@ -113,7 +113,9 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 
 ## En-têtes HTTP : CSP complète (plus tard)
 
-Aujourd’hui : CSP partielle (`base-uri`, `form-action`, `frame-ancestors`, `object-src`) dans `public/.htaccess` ;
+Aujourd’hui : CSP partielle dans `public/.htaccess` (`base-uri`, `form-action`, `frame-ancestors`, `object-src`,
+et images, polices, requêtes et médias limités au site lui-même : `img-src 'self' data:`, `font-src`,
+`connect-src`, `media-src 'self'`, `frame-src 'none'` ; vérifiée sans violation par `tests/e2e/csp.spec.ts`) ;
 les pages du formulaire et du relais OAuth ont leur propre CSP stricte. À faire : empreintes (`'sha256-…'`) des deux
 scripts en ligne des pages (menu de `src/components/Header.astro`, formulaire `src/scripts/contact.ts`) et
 `connect-src 'self'` ; `/admin` demandera sa propre politique (unpkg.com, cdn.jsdelivr.net, api.github.com).

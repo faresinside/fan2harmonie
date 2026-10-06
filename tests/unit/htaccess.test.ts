@@ -68,7 +68,7 @@ describe('public/.htaccess', () => {
       'Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"',
       'Header always set X-Frame-Options "DENY"',
       'Header always set Strict-Transport-Security "max-age=31536000"',
-      `Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" env=!SANS_CSP`,
+      `Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'none'" env=!SANS_CSP`,
     ]) {
       expect(lignes).toContain(attendu);
     }

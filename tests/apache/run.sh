@@ -9,7 +9,7 @@ set -u
 
 SERVEUR=apache
 DOMAINE=fan2harmonie.fr
-CSP="base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'"
+CSP="base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'none'"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 reussis=0

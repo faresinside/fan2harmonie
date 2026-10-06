@@ -69,8 +69,11 @@ RewriteRule ^ - [F]
 #   inconnu par une erreur en console (pénalité Lighthouse « bonnes pratiques »).
 # - Strict-Transport-Security d'un an, SANS includeSubDomains ni preload : un sous-domaine sans HTTPS (boîte
 #   mail, outil de l'hébergeur…) deviendrait inaccessible, et preload est quasi irréversible.
-# - Content-Security-Policy PARTIELLE (base-uri, form-action, frame-ancestors, object-src) : le site a des
-#   scripts et styles en ligne. CSP complète : plus tard, avec hachages (voir README).
+# - Content-Security-Policy PARTIELLE : base-uri, form-action, frame-ancestors, object-src, et images, polices,
+#   requêtes (formulaire), médias limités au site lui-même (img-src 'self' data:, font-src, connect-src,
+#   media-src 'self' ; frame-src 'none') : aucune ressource n'est chargée ailleurs, aucune donnée de visiteur ne
+#   part vers un autre service. Ni script-src ni style-src : le site a des scripts et styles en ligne. CSP
+#   complète : plus tard, avec hachages (voir README). Vérifiée sans violation par tests/e2e/csp.spec.ts.
 #   Pas de CSP du site sur /admin/ et /oauth/ (Sveltia CMS et le relais de connexion GitHub ont leurs propres
 #   besoins), ni sur /api/ (api/contact.php pose sa propre CSP, plus stricte, sur ses pages HTML).
 # - Aucun Cross-Origin-Opener-Policy : il casserait la fenêtre de connexion GitHub de /admin.
@@ -97,7 +100,7 @@ RewriteRule ^ - [F]
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
     Header always set X-Frame-Options "DENY"
     Header always set Strict-Transport-Security "max-age=31536000"
-    Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" env=!SANS_CSP
+    Header always set Content-Security-Policy "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'self'; frame-src 'none'" env=!SANS_CSP
 
     # ---------- 4. Cache ----------
     # Par défaut (pages HTML et le reste) : toujours revalider. /admin/, /oauth/ et /api/ : jamais gardés.
