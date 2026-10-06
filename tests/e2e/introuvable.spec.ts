@@ -27,7 +27,7 @@ test('page 404 : un seul titre, message, lien vers l’accueil, même en-tête e
   const retour = page.getByRole('link', { name: 'Retour à l’accueil' });
   await expect(retour).toHaveAttribute('href', '/');
   await expect(page.locator('header nav a[href="/#rdv"]')).toHaveCount(1);
-  await expect(page.locator('footer a[href="/mentions-legales"]')).toHaveCount(1);
+  await expect(page.locator('footer a[href="/mentions-legales/"]')).toHaveCount(1);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
   await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
 

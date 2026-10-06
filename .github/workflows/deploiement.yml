@@ -332,6 +332,6 @@ jobs:
             *) echo "::warning::$ADRESSE répond $statut." ;;
           esac
 
-      - name: Effacer la clé SSH
+      - name: Effacer la clé SSH (filet de sécurité en fin de job)
         if: always()
         run: rm -rf "$RUNNER_TEMP/ssh"

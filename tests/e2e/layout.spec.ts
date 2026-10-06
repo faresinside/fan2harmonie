@@ -50,7 +50,7 @@ test.describe('structure de la page', () => {
     await page.goto('/');
     await expect(page.locator('footer a', { hasText: 'Mentions légales' })).toHaveAttribute(
       'href',
-      '/mentions-legales',
+      '/mentions-legales/',
     );
   });
 });

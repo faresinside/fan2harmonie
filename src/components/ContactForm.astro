@@ -8,7 +8,7 @@
  * Anti-spam : champ piège « _gotcha », hors écran, ignoré au clavier et par les lecteurs d'écran ; un robot qui
  * le remplit reçoit un faux succès et son message n'est pas envoyé. Le sujet de l'e-mail est composé par le
  * script (aucun champ « _subject »).
- * RGPD : consentement obligatoire, finalité unique (répondre), détails dans /mentions-legales.
+ * RGPD : consentement obligatoire, finalité unique (répondre), détails dans /mentions-legales/.
  */
 import { site } from '../config/site';
 import { lienMailto } from '../lib/contact';
@@ -87,7 +87,7 @@ const mailto = lienMailto(site.email);
         <p class="champ__aide" id="contact-consentement-aide">Cochez cette case pour pouvoir envoyer votre message.</p>
         <p class="champ__precision" id="contact-consentement-precision">
           Ces informations ne sont conservées que le temps de répondre à ma demande. En savoir plus :
-          <a href="/mentions-legales#donnees-personnelles">données personnelles</a>.
+          <a href="/mentions-legales/#donnees-personnelles">données personnelles</a>.
         </p>
       </div>
 

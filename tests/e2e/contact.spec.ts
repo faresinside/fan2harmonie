@@ -314,7 +314,7 @@ test.describe('sans JavaScript', () => {
 
 test.describe('mentions légales', () => {
   test('la page répond, un seul h1, contenu légal issu de la configuration', async ({ page }) => {
-    const reponse = await page.goto('/mentions-legales');
+    const reponse = await page.goto('/mentions-legales/');
     expect(reponse?.status()).toBe(200);
     await expect(page).toHaveTitle('Mentions légales — Fan 2 Harmonie');
     expect((await page.locator('meta[name="description"]').getAttribute('content'))?.trim()).toBeTruthy();
@@ -358,7 +358,7 @@ test.describe('mentions légales', () => {
   });
 
   test('données personnelles : formulaire traité chez l’hébergeur, rien de conservé ni transmis, engagements vérifiables', async ({ page }) => {
-    await page.goto('/mentions-legales');
+    await page.goto('/mentions-legales/');
     const donnees = page.locator('#donnees-personnelles');
     await expect(donnees).toContainText('votre nom, votre adresse e-mail et votre message');
     await expect(donnees).toContainText(`qui envoie votre message à l’adresse ${site.email}`);
@@ -410,14 +410,14 @@ test.describe('mentions légales', () => {
   test('section « Données personnelles » ciblée depuis le formulaire', async ({ page }) => {
     await page.goto('/');
     const lien = formulaire(page).getByRole('link', { name: /données personnelles/i });
-    await expect(lien).toHaveAttribute('href', '/mentions-legales#donnees-personnelles');
-    await page.goto('/mentions-legales');
+    await expect(lien).toHaveAttribute('href', '/mentions-legales/#donnees-personnelles');
+    await page.goto('/mentions-legales/');
     await expect(page.locator('[id="donnees-personnelles"]')).toHaveCount(1);
   });
 
   test('navigation de l’en-tête : ancres absolues vers l’accueil', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    await page.goto('/mentions-legales');
+    await page.goto('/mentions-legales/');
     const liens = page.locator('header nav a');
     expect(await liens.count()).toBeGreaterThanOrEqual(5);
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''));
@@ -466,7 +466,7 @@ for (const largeur of [360, 390, 1280]) {
 
     if (largeur !== 360) {
       test('mentions légales : zéro violation axe', async ({ page }) => {
-        expect((await page.goto('/mentions-legales'))?.status()).toBe(200);
+        expect((await page.goto('/mentions-legales/'))?.status()).toBe(200);
         await sansViolationAxe(page);
       });
     }

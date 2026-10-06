@@ -71,7 +71,8 @@ test.describe('espace d’administration /admin/', () => {
     expect((await script).status()).toBe(200);
     await expect(page.locator('script[src="/admin/sveltia-cms.js"]')).toHaveCount(1);
     await expect(page.locator('body')).toContainText(/Sveltia CMS|Administration Fan 2 Harmonie/, { timeout: 30_000 });
-    // Si le dépôt GitHub valait encore À_COMPLÉTER, Sveltia signalerait ce seul défaut.
+    // Vraie configuration (dépôt renseigné) : aucune erreur attendue. Garde-fou : si `repo` redevenait une valeur
+    // provisoire, Sveltia ne signalerait que ce défaut de format.
     const enAttente = (await (await page.request.get('/admin/config.yml')).text()).includes('À_COMPLÉTER');
     const attendues = enAttente ? [/“owner\/repo” format/, /Errors found in configuration/] : [];
     expect(erreurs.filter((e) => !attendues.some((r) => r.test(e)))).toEqual([]);
