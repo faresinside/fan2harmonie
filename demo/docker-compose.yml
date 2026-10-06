@@ -1,0 +1,36 @@
+# Démonstration de fan2harmonie sur le serveur Oracle : projet Docker Compose SÉPARÉ des autres applications
+# (Amana, HalalSense, Traefik) — il n'utilise que le réseau partagé « web » pour être servi par Traefik.
+# Dossier sur le serveur : /opt/docker/fan2harmonie
+name: fan2harmonie
+
+services:
+  web:
+    build: .
+    container_name: fan2harmonie-web
+    restart: unless-stopped
+    environment:
+      # Configuration du formulaire et du relais de connexion : HORS de la racine web (volume « private »).
+      - FAN2HARMONIE_CONFIG=/srv/fan2harmonie-contact/config.php
+      - FAN2HARMONIE_OAUTH_CONFIG=/srv/fan2harmonie-contact/oauth-config.php
+      # DÉMONSTRATION seulement : les messages du formulaire sont écrits dans un dossier au lieu d'être envoyés
+      # par e-mail (voir LISEZ-MOI.md). Jamais en production.
+      - MAIL_TRANSPORT=file
+    volumes:
+      - ./site:/var/www/html:ro
+      - ./private:/srv/fan2harmonie-contact
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fan2harmonie.rule=Host(`fan2harmonie.casticode.com`)"
+      - "traefik.http.routers.fan2harmonie.entrypoints=websecure"
+      - "traefik.http.routers.fan2harmonie.tls=true"
+      # Pas de certresolver : la clé Cloudflare de Traefik ne couvre pas la zone casticode.com (l'obtention d'un
+      # certificat échouerait en boucle). Cloudflare (mode « Full ») accepte le certificat interne de Traefik et
+      # présente son propre certificat aux visiteurs.
+      - "traefik.http.routers.fan2harmonie.tls.options=default"
+      - "traefik.http.services.fan2harmonie.loadbalancer.server.port=80"
+
+networks:
+  web:
+    external: true
