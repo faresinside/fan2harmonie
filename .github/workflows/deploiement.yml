@@ -125,6 +125,7 @@ jobs:
           test -f dist/api/.htaccess
           test -f dist/api/contact.php
           test -f dist/oauth/.htaccess
+          test -f dist/oauth/.user.ini
           test -f dist/oauth/auth.php
           test -f dist/oauth/callback.php
           test -f dist/oauth/lib/oauth.php
