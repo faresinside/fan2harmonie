@@ -7,6 +7,10 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
 
 - Première fois, et après toute modification de `package.json` : `docker compose run --rm app npm install`
 - Développement : `docker compose up`, puis http://localhost:4321
+- Aperçu sous un sous-chemin (par exemple GitHub Pages, `https://<compte>.github.io/<dépôt>/`) :
+  `docker compose run --rm -e ASTRO_BASE=/<dépôt>/ app npm run build`. `ASTRO_BASE` ne sert qu’à cet aperçu,
+  jamais en production : le site de production est servi à la racine du domaine (`.htaccess`, `/api/`, `/oauth/`
+  et `/admin/` supposent la racine) et le déploiement ne la pose jamais (`tests/unit/astro-base.test.ts`).
 
 ## Architecture
 

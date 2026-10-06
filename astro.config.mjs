@@ -12,6 +12,7 @@ const audit = Boolean(process.env['AUDIT_SITE_URL']);
 export default defineConfig({
   output: 'static',
   site: site.url,
+  ...(process.env['ASTRO_BASE'] && { base: process.env['ASTRO_BASE'] }),
   ...(jeu && { outDir: `./dist-fixture-${jeu}`, cacheDir: `./node_modules/.astro-fixture-${jeu}` }),
   ...(audit && { outDir: './dist-audit' }),
   // Feuilles de style en ligne (le CSS du site est petit) : aucune requête ne bloque le premier affichage.
