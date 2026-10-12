@@ -107,7 +107,8 @@ const feuillets = items.map((r, i) => ({
   /* ---------- Feuillet : date | trait dessiné | informations ---------- */
   .rdv {
     display: grid;
-    grid-template-columns: 4.75rem auto minmax(0, 1fr);
+    /* Colonne de la date : assez large pour « septembre » (le plus long mois) à 1.625rem, sans le couper. */
+    grid-template-columns: 5.25rem auto minmax(0, 1fr);
     align-items: center;
     column-gap: var(--s-2);
     padding: var(--s-3) var(--s-2);
@@ -164,6 +165,9 @@ const feuillets = items.map((r, i) => ({
 
   /* Accent manuscrit ≥ 24 px : texte « grand » au sens WCAG (rose contrasté ≥ 3:1 sur les deux crèmes). */
   .rdv__mois {
+    /* Jamais coupé en deux (« novembr / e ») : le nom du mois reste sur une seule ligne. */
+    white-space: nowrap;
+    overflow-wrap: normal;
     font-family: var(--police-script);
     font-size: 1.625rem;
     line-height: 1;
@@ -239,7 +243,7 @@ const feuillets = items.map((r, i) => ({
 
   /* ---------- Le prochain : feuillet mis en avant, halo rose très doux ---------- */
   .rdv--prochain {
-    grid-template-columns: 5.75rem auto minmax(0, 1fr);
+    grid-template-columns: 6.75rem auto minmax(0, 1fr);
     padding: var(--s-4) var(--s-3);
     border: 1px solid color-mix(in srgb, var(--rose) 22%, transparent);
     border-radius: var(--r-3);
