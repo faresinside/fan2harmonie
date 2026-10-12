@@ -36,7 +36,9 @@ const scripts = etapes.map((e) => e.run ?? '');
 const texteJob = (job: Job) => JSON.stringify(job);
 /** Rang de la première étape du job dont le script contient `fragment` (-1 si aucune). */
 const rang = (job: Job, fragment: string) => job.steps.findIndex((e) => (e.run ?? '').includes(fragment));
-const rsync = deployer.steps.find((e) => (e.run ?? '').includes('rsync -r'));
+const copie = deployer.steps.find((e) => (e.run ?? '').includes('scripts/deployer.sh'));
+/** Le script de déploiement lui-même (scripts/deployer.sh), testé contre de vrais serveurs par `npm run test:ftp`. */
+const script = readFileSync(path.join(RACINE, 'scripts/deployer.sh'), 'utf8');
 
 /**
  * Filtre de chemins de GitHub Actions, pour les deux seuls motifs employés : « ** » couvre tout (« / »
@@ -120,7 +122,7 @@ describe('déploiement : deux jobs', () => {
     expect(construire.outputs?.['adresse']).toBe('${{ steps.adresse.outputs.adresse }}');
   });
 
-  it('« deployer » : ni Node ni npm ; dist/ récupéré ; contrôles → clé → rsync → effacement de la clé', () => {
+  it('« deployer » : ni Node ni npm ; dist/ récupéré ; lftp installé → empreinte SFTP → scripts/deployer.sh → effacement', () => {
     const texteDeployer = texteJob(deployer);
     expect(texteDeployer).not.toMatch(/\bnpm\b|\bnode\b|setup-node/);
     const s = deployer.steps;
@@ -128,9 +130,9 @@ describe('déploiement : deux jobs', () => {
     expect(telechargement?.with).toEqual({ name: 'site', path: 'dist' });
     const ordre = [
       s.findIndex((e) => e.uses?.startsWith('actions/download-artifact@')),
-      rang(deployer, 'scripts/valider-remote-path.sh'),
-      rang(deployer, 'SSH_PRIVATE_KEY'),
-      rang(deployer, 'rsync -r'),
+      rang(deployer, 'apt-get install'),
+      rang(deployer, 'known_hosts'),
+      rang(deployer, 'scripts/deployer.sh'),
     ];
     expect(ordre.every((r) => r >= 0)).toBe(true);
     expect([...ordre].sort((a, b) => a - b)).toEqual(ordre);
@@ -139,9 +141,9 @@ describe('déploiement : deux jobs', () => {
     expect(derniere?.run).toMatch(/rm -rf "\$RUNNER_TEMP\/ssh"/);
   });
 
-  it('clé SSH et known_hosts effacés AUSSITÔT après rsync (always), avant la vérification du site', () => {
+  it('known_hosts effacé AUSSITÔT après la copie (always), avant la vérification du site', () => {
     const s = deployer.steps;
-    const copie = rang(deployer, 'rsync -r');
+    const copie = rang(deployer, 'scripts/deployer.sh');
     const effacement = s[copie + 1];
     expect(effacement?.if).toBe('always()');
     expect(effacement?.run).toMatch(/rm -rf "\$RUNNER_TEMP\/ssh"/);
@@ -193,7 +195,6 @@ describe('déploiement : contenu et documentation jamais bloquants ; variables d
 
 describe('déploiement : derniers garde-fous (N3 à N6)', () => {
   const verification = deployer.steps.find((e) => (e.run ?? '').includes('curl '));
-  const run = rsync?.run ?? '';
 
   it('N3 : adresse issue du job 1 validée (https://hôte/) AVANT tout curl, et « -- » avant l’adresse', () => {
     const script = verification?.run ?? '';
@@ -216,26 +217,29 @@ describe('déploiement : derniers garde-fous (N3 à N6)', () => {
     expect(script).toMatch(/000\)[^;]*::warning::/);
   });
 
-  it('N4 : passage à blanc (-n --itemize-changes, mêmes filtres) avant la vraie copie ; trop de suppressions → arrêt', () => {
-    const essai = run.search(/rsync [^\n]*--dry-run|rsync [^\n]*-n /);
-    const vraie = run.lastIndexOf('rsync -rlpt');
-    expect(essai).toBeGreaterThan(run.indexOf('.fan2harmonie-site absent'));
+  it('N4 : passage à blanc (--dry-run, mêmes exclusions) avant la vraie copie ; trop de suppressions → arrêt', () => {
+    const essai = script.indexOf('mirror -R --dry-run');
+    const vraie = script.lastIndexOf('mirror -R --delete');
+    expect(script.indexOf('.fan2harmonie-site absent')).toBeGreaterThan(-1);
+    expect(essai).toBeGreaterThan(script.indexOf('.fan2harmonie-site absent'));
     expect(vraie).toBeGreaterThan(essai);
-    // Mêmes filtres pour les deux passages : une seule liste, réutilisée.
-    expect(run).toMatch(/filtres=\(/);
-    expect(run.match(/"\$\{filtres\[@\]\}"/g)).toHaveLength(2);
-    expect(run).toContain("grep -c '^\\*deleting'");
-    expect(run).toMatch(/SEUIL_SUPPRESSIONS=100\b/);
-    expect(run).toMatch(/-gt "\$SEUIL_SUPPRESSIONS"[^\n]*\n[^\n]*::error::/);
-    expect(run).toMatch(/grep '\^\\\*deleting' [^\n]*\| head -n \d+/);
-    // Toute erreur de rsync (passage à blanc ou vrai) : les 50 dernières lignes du journal, puis arrêt.
-    expect(run.match(/tail -n 50 /g)?.length ?? 0).toBeGreaterThanOrEqual(2);
-    expect(run.match(/--max-delete=200/g)).toHaveLength(2);
+    // Mêmes exclusions pour les deux passages : une seule liste, réutilisée.
+    expect(script).toMatch(/exclusions=\(/);
+    expect(script.match(/\$\{exclusions\[@\]\}/g)).toHaveLength(2);
+    expect(script).toMatch(/SEUIL_SUPPRESSIONS=\$\{SEUIL_SUPPRESSIONS:-100\}/);
+    expect(script).toMatch(/-gt "\$SEUIL_SUPPRESSIONS"/);
+    expect(script).toMatch(/head -n \d+/);
+    // Toute erreur de lftp (passage à blanc ou vrai) : les 50 dernières lignes du journal, puis arrêt.
+    expect(script.match(/tail -n 50 /g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    // La vraie copie ne se lance qu'après le contrôle du seuil.
+    expect(vraie).toBeGreaterThan(script.indexOf('trop de suppressions'));
   });
 
-  it('A5 : SSH_HOST, SSH_USER et SSH_PORT validés par scripts/valider-ssh.sh', () => {
-    expect(texteJob(deployer)).toContain('sh scripts/valider-ssh.sh \\"$SSH_HOST\\" \\"$SSH_USER\\" \\"$SSH_PORT\\"');
-    expect(rang(deployer, 'scripts/valider-ssh.sh')).toBeLessThan(rang(deployer, 'rsync -r'));
+  it('A5 : protocole, serveur, compte et port validés par scripts/valider-connexion.sh, REMOTE_PATH par scripts/valider-remote-path.sh', () => {
+    expect(script).toContain('sh scripts/valider-connexion.sh "$PROTOCOLE" "$HOTE" "$UTILISATEUR" "$PORT"');
+    expect(script).toContain('sh scripts/valider-remote-path.sh "$DISTANT"');
+    expect(script.indexOf('scripts/valider-connexion.sh')).toBeLessThan(script.indexOf('lftp -f'));
+    expect(script.indexOf('scripts/valider-remote-path.sh')).toBeLessThan(script.indexOf('lftp -f'));
   });
 
 });
@@ -251,57 +255,71 @@ describe('déploiement : sécurité', () => {
     expect(checkout?.with).toEqual({ 'fetch-depth': 0, 'persist-credentials': false });
   });
 
-  it('REMOTE_PATH : trois couches — forme du chemin, fichier témoin sur le serveur, --max-delete', () => {
-    expect(texteJob(deployer)).toContain('sh scripts/valider-remote-path.sh \\"$REMOTE_PATH\\"');
-    const run = rsync?.run ?? '';
-    const temoin = run.indexOf('rsync --list-only -e "$ssh_cmd" "$distant/.fan2harmonie-site"');
+  it('REMOTE_PATH : trois couches — forme du chemin, fichier témoin sur le serveur, seuil de suppressions', () => {
+    expect(script).toContain('sh scripts/valider-remote-path.sh "$DISTANT"');
+    const temoin = script.indexOf("cls -1 .fan2harmonie-site");
     expect(temoin).toBeGreaterThan(-1);
-    expect(run.indexOf('rsync -rlpt')).toBeGreaterThan(temoin);
-    expect(run).toMatch(/\.fan2harmonie-site absent[^\n]*\n\s*exit 1/);
-    expect(run).toContain('--max-delete=200');
-    expect(run).toContain(`--filter='- /.fan2harmonie-site' --filter='P /.fan2harmonie-site'`);
+    expect(script.indexOf('mirror -R --delete')).toBeGreaterThan(temoin);
+    expect(script).toMatch(/\.fan2harmonie-site absent[^\n]*\n\s*fi|erreur "fichier témoin \.fan2harmonie-site absent/);
+    expect(script).toContain("-x '^\\.fan2harmonie-site$'");
+    expect(script).toContain('SEUIL_SUPPRESSIONS');
   });
 
   it('aucune expression ${{ … }} dans les scripts (injection) : tout passe par env', () => {
-    for (const script of scripts) expect(script).not.toContain('${{');
+    for (const s of scripts) expect(s).not.toContain('${{');
     expect(texte).not.toMatch(/github\.event\./);
   });
 
-  it('secrets lus seulement par secrets.* dans env du job « deployer », et seulement les six secrets documentés', () => {
+  it('secrets lus seulement par secrets.* dans env du job « deployer », et seulement les sept secrets documentés', () => {
     const references = [...texte.matchAll(/\$\{\{\s*secrets\.([A-Z_]+)\s*\}\}/g)].map((m) => m[1]);
-    expect([...new Set(references)].sort()).toEqual(['REMOTE_PATH', 'SSH_HOST', 'SSH_KNOWN_HOSTS', 'SSH_PORT', 'SSH_PRIVATE_KEY', 'SSH_USER']);
+    expect([...new Set(references)].sort()).toEqual([
+      'DEPLOY_HOST',
+      'DEPLOY_KNOWN_HOSTS',
+      'DEPLOY_PASSWORD',
+      'DEPLOY_PORT',
+      'DEPLOY_PROTOCOL',
+      'DEPLOY_USER',
+      'REMOTE_PATH',
+    ]);
     const enEnv = deployer.steps.flatMap((e) => Object.values(e.env ?? {})).filter((v) => v.includes('secrets.')).length;
     expect(enEnv).toBe(references.length);
-    for (const script of scripts) {
-      expect(script).not.toMatch(/set -x|echo[^\n]*\$(SSH_PRIVATE_KEY|SSH_KNOWN_HOSTS)/);
+    for (const s of [...scripts, script]) {
+      expect(s).not.toMatch(/set -x|echo[^\n]*\$(DEPLOY_PASSWORD|DEPLOY_KNOWN_HOSTS|mdp_lftp)/);
     }
   });
 
-  it('vérification stricte de l’hôte SSH (known_hosts du secret), jamais « no » ni « accept-new »', () => {
-    const run = rsync?.run ?? '';
-    expect(run).toContain('-o StrictHostKeyChecking=yes');
-    expect(run).toContain('-o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts');
+  it('le mot de passe n’est ni dans un argument, ni dans un fichier, ni dans le journal : entrée standard de lftp seulement', () => {
+    expect(script).not.toMatch(/(^|\|)\s*lftp \S[^\n]*(-u |DEPLOY_PASSWORD|mdp_lftp)/m);
+    expect(script).toContain("printf 'open -u \"%s,%s\" \"%s\"\\n' \"$UTILISATEUR\" \"$mdp_lftp\" \"$url\"");
+    expect(script).toContain('} | lftp -f /dev/stdin');
+    expect(script).not.toMatch(/>\s*[^\n]*mdp_lftp|echo[^\n]*\$DEPLOY_PASSWORD/);
+  });
+
+  it('vérification stricte du serveur : certificat FTPS vérifié (nom compris), empreinte SFTP du secret ; jamais d’option pour désactiver', () => {
+    expect(script).toContain('set ssl:verify-certificate yes');
+    expect(script).toContain('set ssl:check-hostname yes');
+    expect(script).toContain('set ftp:ssl-force yes');
+    expect(script).toContain('set ftp:ssl-protect-data yes');
+    expect(script).toContain('-o StrictHostKeyChecking=yes');
+    expect(script).toContain('-o UserKnownHostsFile=$DEPLOY_KNOWN_HOSTS');
+    expect(script).not.toMatch(/verify-certificate\s+(no|false|off)|check-hostname\s+(no|false|off)|StrictHostKeyChecking=(no|accept-new)|ftp:ssl-allow\s+no|ftp:ssl-force\s+no/i);
+    expect(script).not.toMatch(/ftp:\/\/[^$]/);
     expect(texte).not.toMatch(/StrictHostKeyChecking=(no|accept-new)/i);
-    expect(scripts.join('\n')).toMatch(/chmod 0600 "\$RUNNER_TEMP\/ssh\/cle"/);
+    expect(scripts.join('\n')).toMatch(/chmod 0600 "\$RUNNER_TEMP\/ssh\/known_hosts"/);
   });
 
-  it('rsync : dist/ vers le dossier du secret, --delete-after --delay-updates, D755/F644, fichiers du serveur protégés', () => {
-    const run = rsync?.run ?? '';
-    expect(run).toContain('rsync -rlpt --delete-after --delay-updates');
-    expect(run).not.toContain('--delete-excluded');
-    expect(run).toContain('--chmod=D755,F644');
-    expect(run).toContain('distant="$SSH_USER@$SSH_HOST:${REMOTE_PATH%/}"');
-    expect(run).toContain('dist/ "$distant/"');
-    for (const chemin of ['/api/config.php', 'error_log', '/.well-known/acme-challenge/', '/cgi-bin/', '/oauth/config.php', '/.htpasswd', '/.user.ini']) {
-      expect(run, chemin).toContain(`--filter='P ${chemin}'`);
-      expect(run, chemin).toContain(`--filter='- ${chemin}'`);
+  it('lftp : dist/ vers le dossier du secret, suppression en fin de copie, fichiers du serveur exclus, secrets passés par env', () => {
+    expect(script).toContain('mirror -R --delete --no-perms');
+    expect(script).not.toMatch(/delete-first/);
+    for (const motif of ["'^api/config\\.php$'", "'^oauth/config\\.php$'", "'(^|/)error_log$'", "'^\\.well-known/'", "'^cgi-bin/'", "'^\\.htpasswd$'", "'^\\.user\\.ini$'", "'^\\.fan2harmonie-site$'"]) {
+      expect(script, motif).toContain(`-x ${motif}`);
     }
-    // .well-known/ lui-même peut être déployé (ex. security.txt) : seul acme-challenge/ est réservé.
-    expect(run).not.toContain(`'- /.well-known/'`);
-    expect(rsync?.env).toMatchObject({
-      SSH_HOST: '${{ secrets.SSH_HOST }}',
-      SSH_USER: '${{ secrets.SSH_USER }}',
-      SSH_PORT: '${{ secrets.SSH_PORT }}',
+    expect(copie?.env).toMatchObject({
+      DEPLOY_PROTOCOL: '${{ secrets.DEPLOY_PROTOCOL }}',
+      DEPLOY_HOST: '${{ secrets.DEPLOY_HOST }}',
+      DEPLOY_USER: '${{ secrets.DEPLOY_USER }}',
+      DEPLOY_PASSWORD: '${{ secrets.DEPLOY_PASSWORD }}',
+      DEPLOY_PORT: '${{ secrets.DEPLOY_PORT }}',
       REMOTE_PATH: '${{ secrets.REMOTE_PATH }}',
     });
   });

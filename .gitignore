@@ -18,3 +18,7 @@ public/api/config.php
 # Configuration réelle du relais de connexion GitHub de /admin : créée sur le serveur, jamais versionnée.
 public/oauth/config.php
 oauth-config.php
+# Dossier de travail du technicien pour préparer les fichiers de configuration privés avant leur envoi par FTP.
+/prive/
+# Original personnel de la propriétaire (photo d'accueil retouchée pour le web) : reste sur le poste du technicien.
+/source/ImageAnimation.jpeg

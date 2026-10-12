@@ -59,7 +59,7 @@ const VARIABLE_CONFIG = 'FAN2HARMONIE_OAUTH_CONFIG';
 const DOSSIER_CONFIG_HORS_WEB = 'fan2harmonie-contact';
 const FICHIER_CONFIG_HORS_WEB = 'oauth-config.php';
 
-/** Portées acceptées : « repo » (dépôt privé) ou « public_repo » (dépôt public). */
+/** Portées acceptées : « repo » (dépôt privé) ou « public_repo » (dépôt public, cas du site). */
 const PORTEES = ['repo', 'public_repo'];
 
 /** Valeurs par défaut des clés facultatives de la configuration. */

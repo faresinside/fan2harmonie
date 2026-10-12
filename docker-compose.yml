@@ -113,6 +113,18 @@ services:
       - ./tests/apache:/tests:ro
     networks: [apache-test]
 
+  # Déploiement (scripts/deployer.sh) contre un vrai serveur FTPS (vsftpd) et un vrai SFTP (OpenSSH) de test, dans
+  # un conteneur sans réseau : `npm run test:ftp`. Profil « ftp » : jamais lancé par un simple `docker compose up`.
+  ftp-tests:
+    profiles: [ftp]
+    build: tests/ftp
+    image: fan2harmonie-ftp-test:local
+    network_mode: none
+    command: ["bash", "/tests/run.sh"]
+    volumes:
+      - .:/app:ro
+      - ./tests/ftp:/tests:ro
+
 networks:
   apache-test:
     internal: true

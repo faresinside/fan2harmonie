@@ -19,13 +19,13 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
   Zod (`src/lib/schemas.ts`) ; les rendez-vous passés sont retirés à chaque construction (chaque nuit) et, le
   jour même, masqués dans le navigateur par un petit script (`src/scripts/rendezvous.ts`, amélioration
   progressive : sans JavaScript, la page reste celle de la construction).
-- **Hébergeur 100 % français** (PHP ≥ 8.1.11, de préférence 8.3 ou plus récent, Apache ou LiteSpeed lisant `.htaccess`, SSH) : il sert `dist/`, le
+- **Hébergeur 100 % français** (PHP ≥ 8.1.11, de préférence 8.3 ou plus récent, Apache ou LiteSpeed lisant `.htaccess`, accès FTPS ou SFTP ; en production, OVHcloud offre Starter) : il sert `dist/`, le
   script du formulaire de contact (`public/api/`) et le relais de connexion GitHub de l’administration
   (`public/oauth/`). Ni Cloudflare ni Formspree ni autre service tiers ne sont utilisés : aucune donnée de visiteur ne
   quitte la France.
 - **GitHub** : code et contenu public, construction et mise en ligne par GitHub Actions
-  (`.github/workflows/deploiement.yml` : construction sans secret, puis copie rsync sur SSH depuis l’environnement
-  `production`, à chaque modification de `main` et chaque nuit).
+  (`.github/workflows/deploiement.yml` : construction sans secret, puis copie FTPS ou SFTP avec `lftp` (`scripts/deployer.sh`) depuis
+  l’environnement `production`, à chaque modification de `main` et chaque nuit). Le dépôt appartient à Stéphanie.
 - **Administration** : Sveltia CMS sous `/admin` (`public/admin/config.yml`), qui enregistre dans le dépôt
   GitHub ; le site est reconstruit et republié en quelques minutes (délai à mesurer à la première mise en ligne).
 - **Règles du serveur** : `public/.htaccess` (HTTPS, domaine canonique, en-têtes de sécurité, cache, refus des
@@ -45,6 +45,7 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 | PHP 8.3 (formulaire et relais OAuth, `tests/php/`) | `docker compose run --rm php php tests/php/run.php` (`npm run test:php`) |
 | PHP 8.1 | `docker compose run --rm php81 php tests/php/run.php` (`npm run test:php81`) |
 | Vrai Apache (quatre serveurs : normal, sans mod_rewrite, sans mod_headers, sans les refus mod_rewrite), après `npm run build` | commande Docker complète du script `test:apache` de `package.json` (`npm run test:apache`) |
+| Déploiement FTPS et SFTP (`scripts/deployer.sh` contre de vrais serveurs de test, `tests/ftp/`) | `docker compose --profile ftp run --rm --build ftp-tests` (`npm run test:ftp`) |
 | Lighthouse (mobile, 3 passages, seuils 0,95) | `docker compose run --rm app npm run lighthouse` |
 | Types Astro | `docker compose run --rm app npm run check` |
 | Garde-fou de mise en ligne (échoue tant qu’une valeur provisoire subsiste) | `docker compose run --rm app npm run verifier:mise-en-ligne` |
@@ -107,10 +108,10 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
     `postMessage`, vers l’origine autorisée exacte, selon le protocole de Sveltia ;
   - logique et tests : `public/oauth/lib/oauth.php`, `tests/php/tests/oauth*.php` ; le jeton n’apparaît jamais dans
     une adresse, un journal, un cookie ni un fichier ;
-  - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `repo` ou `public_repo`) :
+  - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `public_repo`, ou `repo` si le dépôt devient privé) :
     `oauth-config.php` créé sur le serveur à partir de `public/oauth/config.sample.php` (refusé tel quel), de
     préférence dans `<compte>/fan2harmonie-contact/` ; sinon `FAN2HARMONIE_OAUTH_CONFIG` ou `oauth/config.php`.
-- `repo` : dépôt GitHub du site, `faresinside/fan2harmonie` (public). Portée de l’application OAuth :
+- `repo` : dépôt GitHub du site, `fangabalda/fan2harmonie` (public). Portée de l’application OAuth :
   `public_repo` tant que le dépôt est public (voir `docs/MISE-EN-LIGNE.md`).
 - Le script du CMS est copié dans `public/admin/` par `npm install`/`npm ci` (postinstall), `npm run dev` et
   `npm run build` : la construction doit toujours passer par `npm run build`.

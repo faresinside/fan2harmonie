@@ -1,4 +1,4 @@
-# Construction et mise en ligne du site chez l'hébergeur français (SSH + rsync).
+# Construction et mise en ligne du site chez l'hébergeur français (FTPS ou SFTP, avec lftp).
 #
 # En clair : à chaque modification de la branche main (y compris un rendez-vous, une actualité ou un texte
 # enregistré dans /admin, qui sont des fichiers .md de src/content/), chaque nuit, ou à la demande, GitHub
@@ -12,8 +12,8 @@
 #   1. « construire », SANS aucun secret : tests unitaires → garde-fou de mise en ligne (bloque tant qu'une
 #      valeur provisoire subsiste) → construction → contrôle de dist/ → dist/ mis de côté (artefact).
 #   2. « deployer », seulement depuis main, dans l'environnement GitHub « production » (qui détient les
-#      secrets), sans Node ni npm : garde-fous (paramètres SSH, REMOTE_PATH, fichier témoin sur le serveur,
-#      passage à blanc qui compte les suppressions) → rsync → clé effacée → le site répond-il ?
+#      secrets), sans Node ni npm : scripts/deployer.sh (paramètres de connexion, REMOTE_PATH, fichier témoin sur
+#      le serveur, passage à blanc qui compte les suppressions, copie) → le site répond-il ?
 # Si une étape échoue, rien n'est copié et le site en ligne reste tel quel.
 #
 # Revenir à une version précédente :
@@ -24,12 +24,14 @@
 #
 # Secrets à créer dans l'environnement « production » (Settings > Environments > production, limité à la
 # branche main), jamais écrits dans le dépôt :
-#   SSH_HOST         nom du serveur SSH de l'hébergeur
-#   SSH_PORT         port SSH (22 si vide)
-#   SSH_USER         compte SSH
-#   REMOTE_PATH      chemin ABSOLU de la racine web sur le serveur (ex. /home/compte/www)
-#   SSH_PRIVATE_KEY  clé privée SSH dédiée au déploiement (sa clé publique est autorisée sur le compte)
-#   SSH_KNOWN_HOSTS  empreinte(s) du serveur, une ligne de known_hosts (vérifiée : jamais d'acceptation aveugle)
+#   DEPLOY_PROTOCOL     ftps ou sftp (jamais « ftp » seul : le mot de passe passerait en clair)
+#   DEPLOY_HOST         nom du serveur FTP / SFTP de l'hébergeur
+#   DEPLOY_USER         compte FTP / SFTP
+#   DEPLOY_PASSWORD     mot de passe de ce compte
+#   DEPLOY_PORT         port (vide = 21 en FTPS, 22 en SFTP)
+#   REMOTE_PATH         dossier de la racine web, RELATIF à la racine du compte (chez OVH : www)
+#   DEPLOY_KNOWN_HOSTS  SFTP seulement : empreinte du serveur, une ligne de known_hosts (vérifiée : jamais d'acceptation
+#                       aveugle) ; vide en FTPS (le certificat du serveur est alors vérifié avec les autorités du système)
 # Et, une fois pour toutes, À LA MAIN sur le serveur : un fichier vide « .fan2harmonie-site » dans REMOTE_PATH
 # (fichier témoin : sans lui, rien n'est copié ni supprimé).
 name: Déploiement
@@ -199,7 +201,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Récupérer les scripts de contrôle (main)
+      - name: Récupérer les scripts de déploiement (main)
         uses: actions/checkout@v4
         with:
           sparse-checkout: scripts
@@ -211,108 +213,52 @@ jobs:
           name: site
           path: dist
 
-      - name: Vérifier les paramètres de connexion
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+      - name: Installer lftp
         run: |
           set -euo pipefail
-          # Nom d'hôte et compte : lettres, chiffres, . _ - (jamais « - » en premier) ; port : chiffres (1 à
-          # 65535) ou vide (= 22).
-          if ! sh scripts/valider-ssh.sh "$SSH_HOST" "$SSH_USER" "$SSH_PORT"; then
-            echo "::error::Secrets SSH_HOST, SSH_USER ou SSH_PORT invalides (voir scripts/valider-ssh.sh)."
-            exit 1
-          fi
-          # Couche 1 : forme du chemin (absolu, au moins trois éléments, ni « . », « .. », « ~ »…).
-          if ! sh scripts/valider-remote-path.sh "$REMOTE_PATH"; then
-            echo "::error::REMOTE_PATH invalide (voir scripts/valider-remote-path.sh)."
-            exit 1
-          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
 
-      - name: Préparer la connexion SSH
+      - name: Préparer la vérification du serveur (SFTP)
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          DEPLOY_PROTOCOL: ${{ secrets.DEPLOY_PROTOCOL }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
-          if [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_KNOWN_HOSTS" ]; then
-            echo "::error::Secrets SSH_PRIVATE_KEY et SSH_KNOWN_HOSTS requis."
-            exit 1
+          # En SFTP, l'empreinte du serveur vient du secret : jamais d'acceptation aveugle.
+          if [ "$DEPLOY_PROTOCOL" = sftp ]; then
+            if [ -z "$DEPLOY_KNOWN_HOSTS" ]; then
+              echo "::error::Secret DEPLOY_KNOWN_HOSTS requis en SFTP."
+              exit 1
+            fi
+            umask 077
+            mkdir -p "$RUNNER_TEMP/ssh"
+            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/ssh/known_hosts"
+            chmod 0600 "$RUNNER_TEMP/ssh/known_hosts"
           fi
-          umask 077
-          mkdir -p "$RUNNER_TEMP/ssh"
-          printf '%s\n' "$SSH_PRIVATE_KEY" > "$RUNNER_TEMP/ssh/cle"
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$RUNNER_TEMP/ssh/known_hosts"
-          chmod 0600 "$RUNNER_TEMP/ssh/cle" "$RUNNER_TEMP/ssh/known_hosts"
 
-      - name: Copier dist/ sur l'hébergement (rsync)
+      - name: Copier dist/ sur l'hébergement (lftp)
         env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PROTOCOL: ${{ secrets.DEPLOY_PROTOCOL }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
           VERSION: ${{ needs.construire.outputs.version }}
         run: |
           set -euo pipefail
-          port="${SSH_PORT:-22}"
-          distant="$SSH_USER@$SSH_HOST:${REMOTE_PATH%/}"
-          ssh_cmd="ssh -p $port -i $RUNNER_TEMP/ssh/cle -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts"
-          # Couche 2 : le fichier témoin, créé à la main sur le serveur, prouve que REMOTE_PATH est bien la
-          # racine du site. Absent : AUCUNE copie, aucune suppression (pas de repli).
-          if ! rsync --list-only -e "$ssh_cmd" "$distant/.fan2harmonie-site" > /dev/null; then
-            echo "::error::fichier témoin .fan2harmonie-site absent : REMOTE_PATH n'est pas la racine du site"
-            exit 1
+          # Contrôle des paramètres, fichier témoin, passage à blanc, copie : tout est dans scripts/deployer.sh
+          # (testé contre un vrai serveur FTPS et un vrai serveur SFTP : dossier tests/ftp).
+          if [ "$DEPLOY_PROTOCOL" = sftp ]; then
+            export DEPLOY_KNOWN_HOSTS="$RUNNER_TEMP/ssh/known_hosts"
+          else
+            unset DEPLOY_KNOWN_HOSTS
           fi
-          # Fichiers propres au serveur, JAMAIS envoyés ni supprimés : exclus (« - ») ET protégés (« P »).
-          # Une seule liste, pour le passage à blanc et pour la vraie copie.
-          filtres=(
-            --filter='- /.fan2harmonie-site' --filter='P /.fan2harmonie-site'
-            --filter='- /api/config.php' --filter='P /api/config.php'
-            --filter='- /oauth/config.php' --filter='P /oauth/config.php'
-            --filter='- error_log' --filter='P error_log'
-            --filter='- /.well-known/acme-challenge/' --filter='P /.well-known/acme-challenge/'
-            --filter='- /cgi-bin/' --filter='P /cgi-bin/'
-            --filter='- /.htpasswd' --filter='P /.htpasswd'
-            --filter='- /.user.ini' --filter='P /.user.ini'
-          )
-          # Couche 4 : passage à blanc (rien n'est modifié) ; au-delà de SEUIL_SUPPRESSIONS fichiers à
-          # supprimer, arrêt AVANT toute copie (REMOTE_PATH valide mais mauvais dossier, dist/ incomplet…).
-          SEUIL_SUPPRESSIONS=100
-          if ! rsync -rlpt --dry-run --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
-            --itemize-changes "${filtres[@]}" -e "$ssh_cmd" \
-            dist/ "$distant/" > "$RUNNER_TEMP/rsync-essai.log" 2>&1; then
-            echo "::error::échec du passage à blanc de rsync (fin du journal ci-dessous)."
-            tail -n 50 "$RUNNER_TEMP/rsync-essai.log"
-            exit 1
-          fi
-          suppressions=$(grep -c '^\*deleting' "$RUNNER_TEMP/rsync-essai.log" || true)
-          if [ "$suppressions" -gt "$SEUIL_SUPPRESSIONS" ]; then
-            echo "::error::$suppressions fichiers seraient supprimés sur le serveur (seuil : $SEUIL_SUPPRESSIONS). Rien n'a été copié. Vérifier REMOTE_PATH et dist/ ; premiers fichiers concernés :"
-            grep '^\*deleting' "$RUNNER_TEMP/rsync-essai.log" | head -n 20
-            exit 1
-          fi
-          # -p : droits D755/F644 (--chmod) appliqués aussi aux fichiers déjà présents. Couche 3 : au-delà de
-          # 200 suppressions, rsync s'arrête (--max-delete). --delay-updates : fichiers mis en place à la fin.
-          if ! rsync -rlpt --delete-after --delay-updates --max-delete=200 --safe-links --chmod=D755,F644 \
-            --itemize-changes --stats "${filtres[@]}" -e "$ssh_cmd" \
-            dist/ "$distant/" > "$RUNNER_TEMP/rsync.log" 2>&1; then
-            echo "::error::échec de rsync (fin du journal ci-dessous)."
-            tail -n 50 "$RUNNER_TEMP/rsync.log"
-            exit 1
-          fi
-          modifies=$(grep -c '^[<>ch*]' "$RUNNER_TEMP/rsync.log" || true)
-          {
-            echo "## Mise en ligne"
-            echo ""
-            echo "- Version : \`$VERSION\` (déclencheur : $GITHUB_EVENT_NAME)"
-            echo "- Éléments envoyés ou supprimés : $modifies"
-          } >> "$GITHUB_STEP_SUMMARY"
-          tail -n 15 "$RUNNER_TEMP/rsync.log"
+          bash scripts/deployer.sh
 
-      # Aussitôt la copie terminée (réussie ou non) : la clé ne sert plus.
-      - name: Effacer la clé SSH (après la copie)
+      # Aussitôt la copie terminée (réussie ou non) : l'empreinte du serveur ne sert plus.
+      - name: Effacer les fichiers temporaires (après la copie)
         if: always()
         run: rm -rf "$RUNNER_TEMP/ssh"
 
@@ -332,6 +278,6 @@ jobs:
             *) echo "::warning::$ADRESSE répond $statut." ;;
           esac
 
-      - name: Effacer la clé SSH (filet de sécurité en fin de job)
+      - name: Effacer les fichiers temporaires (filet de sécurité en fin de job)
         if: always()
         run: rm -rf "$RUNNER_TEMP/ssh"

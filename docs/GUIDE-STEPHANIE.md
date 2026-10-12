@@ -81,8 +81,7 @@ votre modification est bien gardée, écrivez simplement au technicien (rubrique
 ## h) En cas de doute
 
 Chaque modification est gardée : en cas d’erreur, votre technicien peut toujours remettre une version précédente
-(vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez à votre technicien,
-**[adresse e-mail du technicien — à remplacer]**, en décrivant ce que vous avez fait et ce que vous voyez (une
+(vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez à votre technicien, en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
 ## i) Bon à savoir

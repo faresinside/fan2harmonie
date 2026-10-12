@@ -32,13 +32,13 @@ export const site: {
   email: 'contact@fan2harmonie.fr',
   formEndpoint: '/api/contact.php',
   gps: { lat: 48.64703, lon: 1.811268 },
-  // EXEMPLE — à remplacer par le vrai SIRET de Stéphanie
-  siret: '123 456 789 00012',
+  // Stéphanie exerce à titre gratuit, sans entreprise : pas de SIRET.
+  siret: null,
   ville: null,
   editeur: 'Stéphanie Gabalda',
   hebergeur: {
-    nom: 'À_COMPLÉTER',
-    adresse: 'À_COMPLÉTER',
-    siteWeb: 'À_COMPLÉTER',
+    nom: 'OVH SAS',
+    adresse: '2 rue Kellermann, 59100 Roubaix, France',
+    siteWeb: 'https://www.ovhcloud.com',
   },
 };

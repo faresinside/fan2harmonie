@@ -20,10 +20,10 @@ describe('docs/MISE-EN-LIGNE.md', () => {
     for (let n = 0; n <= 14; n++) expect(texte, `étape ${n}`).toMatch(new RegExp(`^## ${n}\\. `, 'm'));
   });
 
-  it('nomme chacun des six secrets du déploiement, exactement ceux du workflow', () => {
+  it('nomme chacun des sept secrets du déploiement, exactement ceux du workflow', () => {
     const workflow = readFileSync(path.join(RACINE, '.github/workflows/deploiement.yml'), 'utf8');
     const secrets = [...new Set([...workflow.matchAll(/secrets\.([A-Z_]+)/g)].map((m) => m[1] ?? ''))].sort();
-    expect(secrets).toEqual(['REMOTE_PATH', 'SSH_HOST', 'SSH_KNOWN_HOSTS', 'SSH_PORT', 'SSH_PRIVATE_KEY', 'SSH_USER']);
+    expect(secrets).toEqual(['DEPLOY_HOST', 'DEPLOY_KNOWN_HOSTS', 'DEPLOY_PASSWORD', 'DEPLOY_PORT', 'DEPLOY_PROTOCOL', 'DEPLOY_USER', 'REMOTE_PATH']);
     for (const secret of secrets) expect(texte, secret).toContain(`\`${secret}\``);
   });
 
@@ -32,7 +32,7 @@ describe('docs/MISE-EN-LIGNE.md', () => {
     expect(texte).toMatch(/fichier VIDE/);
     expect(texte).toContain('`https://fan2harmonie.fr/oauth/callback.php`');
     // Phrase d'ordre : l'environnement d'abord (limité à main), PUIS les secrets, au niveau de l'environnement.
-    expect(plat).toMatch(/Créer D’ABORD l’environnement `production`.{0,300}?`main`.{0,100}?PUIS seulement.{0,60}?six secrets/);
+    expect(plat).toMatch(/Créer D’ABORD l’environnement `production`.{0,300}?`main`.{0,100}?PUIS seulement.{0,60}?sept secrets/);
     expect(texte).toMatch(/secrets? (de|au niveau du) dépôt/i);
   });
 
@@ -43,7 +43,7 @@ describe('docs/MISE-EN-LIGNE.md', () => {
       'fan2harmonie-contact/config.php',
       'fan2harmonie-contact/oauth-config.php',
       'php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"',
-      '--max-delete=200',
+      'SEUIL_SUPPRESSIONS',
       'docker compose run --rm app npm run verifier:mise-en-ligne',
       'curl --resolve fan2harmonie.fr:443:',
       'git revert',
@@ -90,27 +90,31 @@ describe('docs/MISE-EN-LIGNE.md : points de la revue (round 1)', () => {
     return i;
   };
 
-  it('dossier privé ET dossier du limiteur créés en 0700 (les deux mkdir -m 700)', () => {
-    expect(texte).toContain('mkdir -m 700 /home/compte/fan2harmonie-contact\n');
-    expect(texte).toContain('mkdir -m 700 /home/compte/fan2harmonie-contact/limiteur');
+  it('dossier privé ET dossier du limiteur en 0700, fichiers de configuration en 0600 (client FTP)', () => {
+    const quatre = texte.slice(position('## 4. '), position('## 5. '));
+    expect(quatre).toContain('`fan2harmonie-contact/`');
+    expect(quatre).toContain('`fan2harmonie-contact/limiteur`');
+    expect(quatre).toMatch(/`700` sur les deux dossiers/);
+    expect(quatre).toMatch(/`600` sur les deux fichiers/);
+    expect(quatre).toContain('drwx------');
     expect(texte).not.toMatch(/mkdir -m 700 -p/);
   });
 
   it('environnement `production` (titre) AVANT l’ajout des secrets (titre suivant)', () => {
     const environnement = position('### 5.3 Créer l’environnement `production`');
-    const secrets = position('### 5.4 Ajouter les six secrets à l’environnement');
+    const secrets = position('### 5.4 Ajouter les sept secrets à l’environnement');
     expect(environnement).toBeLessThan(secrets);
     const liste = texte.slice(secrets, position('### 5.5 '));
-    for (const s of ['SSH_HOST', 'SSH_USER', 'SSH_PORT', 'REMOTE_PATH', 'SSH_PRIVATE_KEY', 'SSH_KNOWN_HOSTS']) {
+    for (const s of ['DEPLOY_PROTOCOL', 'DEPLOY_HOST', 'DEPLOY_USER', 'DEPLOY_PASSWORD', 'DEPLOY_PORT', 'REMOTE_PATH', 'DEPLOY_KNOWN_HOSTS']) {
       expect(liste, s).toContain(`- \`${s}\` :`);
     }
   });
 
-  it('configurations créées AVANT le premier déploiement, depuis les modèles du projet (scp), puis déploiement, puis vérifications', () => {
+  it('configurations créées AVANT le premier déploiement, depuis les modèles du projet (envoyés par FTP), puis déploiement, puis vérifications', () => {
     const quatre = position('## 4. ');
     // Dans l'étape 4 elle-même (l'étape 3 emploie aussi l'expression, pour les lignes ajoutées à .htaccess).
     const flux = texte.indexOf('**AVANT le premier déploiement**', quatre);
-    const copie = position('scp public/oauth/config.sample.php');
+    const copie = position('public/oauth/config.sample.php');
     const huit = position('## 8. ');
     const neuf = position('## 9. ');
     expect(quatre).toBeLessThan(flux);
@@ -198,17 +202,17 @@ describe('docs : version de PHP et portée par défaut (revue finale)', () => {
 
 describe('docs : procédure en cas de compromission et suites (revue finale, N1)', () => {
   const plat = texte.replace(/\s+/g, ' ');
-  it('procédure complète : jetons, collaborateur, secret OAuth, clé SSH, secret du limiteur, mot de passe de la boîte, vérifications', () => {
+  it('procédure complète : jetons, collaborateur, secret OAuth, mot de passe FTP, secret du limiteur, mot de passe de la boîte, vérifications', () => {
     for (const fragment of [
       '« Revoke all user tokens »',
       'retirer le collaborateur',
       'nouveau `client_secret`',
-      'nouvelle paire de clés',
-      '`SSH_PRIVATE_KEY`',
+      'changer le mot de passe FTP',
+      '`DEPLOY_PASSWORD`',
       'nouveau `secret_limiteur`',
       'mot de passe de la boîte',
-      '`~/.ssh/authorized_keys`',
-      'crontab',
+      'comptes FTP',
+      'tâches automatisées (cron',
       '`fan2harmonie-contact/`',
       '`scripts/`, `package.json`, `public/**/*.php` et les `.htaccess`',
     ]) {
@@ -221,19 +225,49 @@ describe('docs : procédure en cas de compromission et suites (revue finale, N1)
     expect(plat).not.toMatch(/y compris `\.htaccess`, les scripts PHP et le workflow/);
   });
 
-  it('suites : règles de poussée GitHub limitées aux contenus, application GitHub ; restriction rrsync facultative', () => {
+  it('suites : règles de poussée GitHub limitées aux contenus, application GitHub ; compte FTP limité à www', () => {
     expect(plat).toContain('règles de poussée GitHub');
     expect(plat).toContain('`src/content/**` et `src/assets/actualites/**`');
     expect(plat).toMatch(/application GitHub à la place de l’OAuth App/i);
-    expect(plat).toMatch(/rrsync/);
+    expect(plat).toMatch(/Compte FTP secondaire limité au seul dossier `www\/`/);
+  });
+});
+
+describe('docs : OVH Starter, FTPS / SFTP, dépôt chez Stéphanie', () => {
+  it('plus aucune trace de SSH comme moyen de déploiement (clé de déploiement, rsync, scp, authorized_keys)', () => {
+    for (const motif of [/rsync/, /scp /, /authorized_keys/, /SSH_PRIVATE_KEY/, /SSH_HOST/, /ssh-keygen -t/, /rrsync/]) {
+      expect(texte, String(motif)).not.toMatch(motif);
+    }
+  });
+
+  it('protocoles : FTPS à préférer, jamais « ftp » seul ; certificat vérifié sans option pour le désactiver', () => {
+    expect(plat).toContain('jamais `ftp` seul');
+    expect(plat).toContain('vérifie le certificat du serveur');
+    expect(plat).toMatch(/aucune option pour désactiver cette vérification/);
+  });
+
+  it('dépôt transféré à Stéphanie, propriétaire ; technicien collaborateur « Write » ; application OAuth sur son compte', () => {
+    expect(plat).toContain('Transfer ownership');
+    expect(plat).toContain('appartiennent à Stéphanie');
+    expect(plat).toMatch(/Sur le compte GitHub de Stéphanie, propriétaire du dépôt/);
+    expect(plat).toContain('rôle **« Write »**');
+  });
+
+  it('statut sans entreprise : SIRET null, personne physique à titre non professionnel et gratuit', () => {
+    expect(plat).toContain('`siret` : `null` pour Stéphanie');
+    expect(plat).toContain('Personne physique, activité exercée à titre non professionnel et gratuit');
+  });
+
+  it('point d’attention OVH : fonction mail() de PHP vérifiée en premier', () => {
+    expect(plat).toMatch(/fonction `mail\(\)` de PHP doit être autorisée/);
   });
 });
 
 describe('docs : points bloquants du garde-fou (revue finale)', () => {
-  it('l’étape 7 demande de remplacer l’adresse du technicien dans le guide, vérifiée par le garde-fou', () => {
+  it('l’étape 7 : le guide ne contient aucune adresse de technicien, vérifié par le garde-fou', () => {
     const sept = texte.slice(texte.indexOf('## 7. '), texte.indexOf('## 8. '));
     expect(sept).toContain('`docs/GUIDE-STEPHANIE.md`');
-    expect(sept).toContain('[adresse e-mail du technicien — à remplacer]');
+    expect(sept).not.toContain('[adresse e-mail du technicien — à remplacer]');
     expect(sept).toMatch(/garde-fou refuse/);
   });
 });

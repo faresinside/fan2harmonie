@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 /**
- * Garde-fous shell du déploiement (scripts/valider-remote-path.sh, scripts/valider-ref.sh), exécutés pour de
+ * Garde-fous shell du déploiement (scripts/valider-remote-path.sh, scripts/valider-connexion.sh, scripts/valider-ref.sh), exécutés pour de
  * vrai (sh / bash du conteneur `app`) contre une table d'entrées bonnes et mauvaises.
  */
 
@@ -15,18 +15,19 @@ const lancer = (interprete: string, script: string, ...args: string[]) => {
   return { code: r.status, sortie: r.stdout, erreurs: r.stderr };
 };
 
-describe('scripts/valider-remote-path.sh (REMOTE_PATH)', () => {
-  const bons = ['/home/u/www', '/home/u/www/', '/home/user/www/fan2harmonie.fr', '/var/www/html', '/home/u-1/w_w.w/site~old'];
+describe('scripts/valider-remote-path.sh (REMOTE_PATH, relatif à la racine du compte FTP/SFTP)', () => {
+  const bons = ['www', 'www/', 'www/fan2harmonie.fr', 'public_html', 'web/www', 'w_w.w-1/site'];
   const mauvais = [
-    '', ' ', '.', './', '~', '~/', 'www/.', 'www', 'home/u/www', '/', '//', '/home', '/a', '/home/u', '/home/u/',
-    '/home/u/../x', '/home/u/www/..', '/home/./u/www', '/home/~u/www', '/home/u/~', '/home//u/www',
-    '/home/u/w ww', '/home/u/www\n/etc', '/home/u/www\nx', '/home/u/$(id)', '/home/u/`id`', '/home/u/www;rm',
-    '/home/u/ww"w', "/home/u/ww'w", '-/home/u/www', '/home/u/www\t',
+    '', ' ', '.', './', '..', '../', '~', 'www/.', 'www/..', './www', '../www', 'www/../x', 'www/./x', 'a/../../etc',
+    '/', '//', '/www', '/home/u/www', 'www//x', 'www//', 'w ww', 'www\n/etc', 'www\nx', '$(id)', '`id`', 'www;rm',
+    'ww"w', "ww'w", '-www', '-oProxyCommand=id', 'www\t', 'www|x', 'www&x', 'www>x', 'é',
   ];
 
   for (const chemin of bons) {
     it(`accepte ${JSON.stringify(chemin)}`, () => {
-      expect(lancer('sh', 'valider-remote-path.sh', chemin).code).toBe(0);
+      const r = lancer('sh', 'valider-remote-path.sh', chemin);
+      expect(r.erreurs).toBe('');
+      expect(r.code).toBe(0);
     });
   }
   for (const chemin of mauvais) {
@@ -41,54 +42,62 @@ describe('scripts/valider-remote-path.sh (REMOTE_PATH)', () => {
   });
 });
 
-describe('scripts/valider-ssh.sh (SSH_HOST, SSH_USER, SSH_PORT)', () => {
-  const bons: [string, string, string][] = [
-    ['ssh.hebergeur.fr', 'compte', '22'],
-    ['ssh.hebergeur.fr', 'compte', ''],
-    ['ssh-1.cluster_2.hebergeur.fr', 'u.ser-1_x', '2222'],
-    ['192.0.2.10', 'compte', '65535'],
-    ['serveur', 'c', '1'],
+describe('scripts/valider-connexion.sh (DEPLOY_PROTOCOL, DEPLOY_HOST, DEPLOY_USER, DEPLOY_PORT)', () => {
+  const bons: [string, string, string, string][] = [
+    ['ftps', 'ftp.cluster000.hosting.ovh.net', 'compte', '21'],
+    ['ftps', 'ftp.hebergeur.fr', 'compte', ''],
+    ['sftp', 'ssh.hebergeur.fr', 'compte', ''],
+    ['sftp', 'ssh-1.cluster_2.hebergeur.fr', 'u.ser-1_x', '2222'],
+    ['ftps', '192.0.2.10', 'compte', '65535'],
+    ['sftp', 'serveur', 'c', '1'],
   ];
-  const mauvais: [string, string, string][] = [
-    ['', 'compte', '22'],
-    ['ssh.hebergeur.fr', '', '22'],
-    ['-oProxyCommand=id', 'compte', '22'],
-    ['ssh.hebergeur.fr', '-lroot', '22'],
-    ['ssh.hebergeur.fr', 'compte', '-1'],
-    ['ssh hebergeur.fr', 'compte', '22'],
-    ['ssh.hebergeur.fr\nx', 'compte', '22'],
-    ['ssh.hebergeur.fr', 'com\npte', '22'],
-    ['ssh.hebergeur.fr', 'compte@x', '22'],
-    ['user@ssh.hebergeur.fr', 'compte', '22'],
-    ['ssh.hebergeur.fr:22', 'compte', '22'],
-    ['ssh.hebergeur.fr', 'compte', '22a'],
-    ['ssh.hebergeur.fr', 'compte', '0'],
-    ['ssh.hebergeur.fr', 'compte', '65536'],
-    ['ssh.hebergeur.fr', 'compte', '123456'],
-    ['ssh.hebergeur.fr', 'compte', ' 22'],
-    ['ssh.hebergeur.fr', 'compte', '22\n'],
-    ['$(id)', 'compte', '22'],
-    ['ssh.hebergeur.fr', '`id`', '22'],
-    ['[::1]', 'compte', '22'],
-    ['ssh.hebergeur.fr', 'compte;id', '22'],
+  const mauvais: [string, string, string, string][] = [
+    ['', 'h.fr', 'compte', ''],
+    ['ftp', 'h.fr', 'compte', ''], // jamais de FTP en clair
+    ['FTPS', 'h.fr', 'compte', ''],
+    ['ftps ', 'h.fr', 'compte', ''],
+    ['ssh', 'h.fr', 'compte', ''],
+    ['ftps', '', 'compte', ''],
+    ['ftps', 'h.fr', '', ''],
+    ['ftps', '-oProxyCommand=id', 'compte', ''],
+    ['sftp', 'h.fr', '-lroot', ''],
+    ['ftps', 'h.fr', 'compte', '-1'],
+    ['ftps', 'h .fr', 'compte', ''],
+    ['ftps', 'h.fr\nx', 'compte', ''],
+    ['ftps', 'h.fr', 'com\npte', ''],
+    ['ftps', 'h.fr', 'compte@x', ''],
+    ['ftps', 'user@h.fr', 'compte', ''],
+    ['ftps', 'ftp://h.fr', 'compte', ''],
+    ['ftps', 'h.fr:21', 'compte', ''],
+    ['ftps', 'h.fr', 'compte', '21a'],
+    ['ftps', 'h.fr', 'compte', '0'],
+    ['ftps', 'h.fr', 'compte', '65536'],
+    ['ftps', 'h.fr', 'compte', '123456'],
+    ['ftps', 'h.fr', 'compte', ' 21'],
+    ['ftps', 'h.fr', 'compte', '21\n'],
+    ['ftps', '$(id)', 'compte', ''],
+    ['ftps', 'h.fr', '`id`', ''],
+    ['ftps', '[::1]', 'compte', ''],
+    ['ftps', 'h.fr', 'compte;id', ''],
+    ['ftps', 'h.fr', 'compte"x', ''],
   ];
-  for (const [hote, compte, port] of bons) {
-    it(`accepte ${JSON.stringify([hote, compte, port])}`, () => {
-      const r = lancer('sh', 'valider-ssh.sh', hote, compte, port);
+  for (const [proto, hote, compte, port] of bons) {
+    it(`accepte ${JSON.stringify([proto, hote, compte, port])}`, () => {
+      const r = lancer('sh', 'valider-connexion.sh', proto, hote, compte, port);
       expect(r.erreurs).toBe('');
       expect(r.code).toBe(0);
     });
   }
-  for (const [hote, compte, port] of mauvais) {
-    it(`refuse ${JSON.stringify([hote, compte, port])}`, () => {
-      const r = lancer('sh', 'valider-ssh.sh', hote, compte, port);
+  for (const [proto, hote, compte, port] of mauvais) {
+    it(`refuse ${JSON.stringify([proto, hote, compte, port])}`, () => {
+      const r = lancer('sh', 'valider-connexion.sh', proto, hote, compte, port);
       expect(r.code).not.toBe(0);
-      expect(r.erreurs).toMatch(/SSH_(HOST|USER|PORT)/);
+      expect(r.erreurs).toMatch(/DEPLOY_(PROTOCOL|HOST|USER|PORT)/);
     });
   }
-  it('refuse un nombre d’arguments autre que trois', () => {
-    expect(lancer('sh', 'valider-ssh.sh', 'a', 'b').code).not.toBe(0);
-    expect(lancer('sh', 'valider-ssh.sh', 'a', 'b', '22', 'x').code).not.toBe(0);
+  it('refuse un nombre d’arguments autre que quatre', () => {
+    expect(lancer('sh', 'valider-connexion.sh', 'ftps', 'a', 'b').code).not.toBe(0);
+    expect(lancer('sh', 'valider-connexion.sh', 'ftps', 'a', 'b', '21', 'x').code).not.toBe(0);
   });
 });
 

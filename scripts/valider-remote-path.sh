@@ -1,12 +1,12 @@
 #!/bin/sh
-# Garde-fou du déploiement (.github/workflows/deploiement.yml) : REMOTE_PATH, dossier distant où rsync
-# --delete-after copie dist/ et SUPPRIME tout le reste. Usage : sh scripts/valider-remote-path.sh "$REMOTE_PATH"
+# Garde-fou du déploiement (scripts/deployer.sh) : REMOTE_PATH, dossier distant où `lftp mirror --delete` copie
+# dist/ et SUPPRIME tout le reste. Usage : sh scripts/valider-remote-path.sh "$REMOTE_PATH"
 # Code 0 si le chemin est acceptable ; sinon un message sur la sortie d'erreur et le code 1.
 #
-# Exigé : chemin absolu ; seulement lettres, chiffres et . _ ~ / - (ni espace, ni retour à la ligne, ni
-# caractère du shell) ; aucun élément « . », « .. » ou « ~… » ; pas de « // » ; au moins trois éléments
-# (/home/compte/www), jamais « / » seul ni le dossier du compte. Ce n'est qu'une première couche : le
-# workflow exige aussi le fichier témoin .fan2harmonie-site dans ce dossier, sur le serveur.
+# Chemin RELATIF à la racine du compte FTP/SFTP (chez OVH : `www`). Exigé : non vide ; seulement lettres,
+# chiffres et . _ - / (ni espace, ni retour à la ligne, ni caractère du shell) ; pas de « / » en première
+# position ; aucun élément « . » ou « .. » ; pas de « // ». Ce n'est qu'une première couche : le script exige
+# aussi le fichier témoin .fan2harmonie-site dans ce dossier, sur le serveur.
 set -u
 
 refuser() {
@@ -20,25 +20,16 @@ chemin=$1
 case $chemin in
     '') refuser "vide" ;;
     -*) refuser "commence par « - »" ;;
-    *[!A-Za-z0-9._~/-]*) refuser "caractère non permis (seuls lettres, chiffres et . _ ~ / -)" ;;
-    /*) ;;
-    *) refuser "chemin absolu exigé (commence par /)" ;;
+    /*) refuser "chemin relatif à la racine du compte exigé (sans « / » au début, ex. www)" ;;
+    *[!A-Za-z0-9._/-]*) refuser "caractère non permis (seuls lettres, chiffres et . _ - /)" ;;
 esac
 
 case $chemin in
     *//*) refuser "« // » interdit" ;;
 esac
 
-if printf '%s\n' "$chemin" | grep -Eq '(^|/)(\.\.?|~[^/]*)(/|$)'; then
-    refuser "élément « . », « .. » ou « ~… » interdit"
+if printf '%s\n' "$chemin" | grep -Eq '(^|/)\.\.?(/|$)'; then
+    refuser "élément « . » ou « .. » interdit"
 fi
-
-# Nombre d'éléments, barres finales ignorées.
-sans_fin=$chemin
-while [ "${sans_fin%/}" != "$sans_fin" ]; do
-    sans_fin=${sans_fin%/}
-done
-elements=$(printf '%s' "$sans_fin" | tr -cd '/' | wc -c)
-[ "$elements" -ge 3 ] || refuser "au moins trois éléments exigés (ex. /home/compte/www)"
 
 exit 0
