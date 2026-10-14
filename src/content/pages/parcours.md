@@ -18,7 +18,7 @@ Au fil de la pratique, j’ai découvert une autre manière de mobiliser mon én
 
 Aujourd’hui, forte de cette expérience personnelle, j’ai à cœur de partager à mon tour les bienfaits que le Qi Gong m’apporte, dans une démarche simple, accessible et bienveillante.
 
-C’est pourquoi je vous propose d’essayer, pendant l’année scolaire 2026, cette pratique, afin d’offrir à chacun un moment pour soi, pour se reconnecter à son corps, apaiser son esprit et retrouver plus de sérénité au quotidien.
+C’est pourquoi, pendant l’année scolaire 2026, j’ai envie de vous inviter à venir essayer le Qi Gong avec moi, simplement et gratuitement, afin d’offrir à chacun un moment pour soi, pour se reconnecter à son corps, apaiser son esprit et retrouver plus de sérénité au quotidien.
 
 Parce qu’après avoir passé tant d’années à dépenser mon énergie, j’ai découvert le plaisir de l’habiter pleinement.
 
