@@ -51,7 +51,7 @@ Ce que voit chaque service extérieur :
 | Bureau d’enregistrement (OVHcloud) | Le nom de domaine et les coordonnées de la titulaire. |
 | GitHub (entreprise américaine) | Le code, les textes, rendez-vous, actualités et photos publiés (déjà publics sur le site), l’historique des modifications, les comptes des éditrices et leurs adresses IP quand elles utilisent `/admin`, les secrets de déploiement (chiffrés, dont le mot de passe FTP). **Aucune donnée de visiteur.** |
 | unpkg.com, cdn.jsdelivr.net, githubstatus.com | Seulement depuis le navigateur de l’éditrice, quand elle ouvre `/admin` : l’outil Sveltia CMS y charge ses textes français, ses polices et l’état de GitHub. Les visiteurs du site ne chargent rien chez eux. |
-| OpenStreetMap | Rien, sauf si un visiteur clique lui-même sur le lien « carte ». |
+| Google (Google Maps) | Rien, sauf si un visiteur clique lui-même sur le lien « Ouvrir dans Google Maps » : c’est un simple lien, aucune carte ni script de Google n’est intégré au site. |
 
 ## 1. Nom de domaine et DNS
 

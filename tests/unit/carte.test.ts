@@ -4,10 +4,8 @@ import { coordonneesFr, lienCarte } from '../../src/lib/carte';
 const gps = { lat: 48.64703, lon: 1.811268 };
 
 describe('lienCarte', () => {
-  it('construit le lien OpenStreetMap avec marqueur et zoom 17', () => {
-    expect(lienCarte(gps)).toBe(
-      'https://www.openstreetmap.org/?mlat=48.64703&mlon=1.811268#map=17/48.64703/1.811268',
-    );
+  it('construit le lien Google Maps avec un marqueur aux coordonnées du lieu', () => {
+    expect(lienCarte(gps)).toBe('https://www.google.com/maps/search/?api=1&query=48.64703,1.811268');
   });
 });
 

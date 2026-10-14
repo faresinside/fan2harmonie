@@ -1,5 +1,5 @@
 ---
-/** Lieu de la pratique : coordonnées GPS en texte et lien OpenStreetMap, construits depuis `site.gps`. */
+/** Lieu de la pratique : coordonnées GPS en texte et lien Google Maps, construits depuis `site.gps`. */
 import { site } from '../config/site';
 import { coordonneesFr, lienCarte } from '../lib/carte';
 ---
@@ -9,8 +9,8 @@ import { coordonneesFr, lienCarte } from '../lib/carte';
   <p class="lieu__gps">
     Coordonnées GPS : <span class="lieu__coordonnees">{coordonneesFr(site.gps)}</span>
   </p>
-  <a class="lieu__lien" href={lienCarte(site.gps)} target="_blank" rel="noopener">
-    Voir la carte <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
+  <a class="lieu__lien" href={lienCarte(site.gps)} target="_blank" rel="noopener noreferrer">
+    Ouvrir dans Google Maps <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
   </a>
 </div>
 

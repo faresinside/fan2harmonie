@@ -4,9 +4,12 @@ export interface Gps {
   lon: number;
 }
 
-/** Lien OpenStreetMap : marqueur sur le lieu, zoom 17 (allées du parc lisibles). */
+/**
+ * Lien Google Maps : marqueur sur le lieu. Simple lien, jamais une carte intégrée : rien n'est envoyé à Google tant que le
+ * visiteur ne clique pas. Sur téléphone, il ouvre directement l'application de cartes.
+ */
 export function lienCarte({ lat, lon }: Gps): string {
-  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
 }
 
 const decimalFr = (n: number) => String(Math.abs(n)).replace('.', ',');

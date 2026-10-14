@@ -33,16 +33,17 @@ test.describe('structure de la page', () => {
     await expect(cta).toHaveAttribute('href', '#rdv');
   });
 
-  test('lien « Voir la carte » vers OpenStreetMap aux coordonnées du site', async ({ page }) => {
+  test('lien « Ouvrir dans Google Maps » (simple lien, pas de carte intégrée) aux coordonnées du site', async ({ page }) => {
     await page.goto('/');
-    const lien = page.locator('a', { hasText: 'Voir la carte' });
+    const lien = page.locator('a', { hasText: 'Ouvrir dans Google Maps' });
     await expect(lien).toHaveCount(1);
     const href = (await lien.getAttribute('href')) ?? '';
-    expect(href).toContain('openstreetmap.org');
-    expect(href).toContain('mlat=48.64703');
-    expect(href).toContain('mlon=1.811268');
+    expect(href).toBe('https://www.google.com/maps/search/?api=1&query=48.64703,1.811268');
+    // Rien d'intégré : aucune image, iframe ni script de Google dans la page.
+    await expect(page.locator('iframe, script[src*="google"], img[src*="google"]')).toHaveCount(0);
     await expect(lien).toHaveAttribute('target', '_blank');
     await expect(lien).toHaveAttribute('rel', /noopener/);
+    await expect(lien).toHaveAttribute('rel', /noreferrer/);
     await expect(lien).toContainText('nouvel onglet');
   });
 
