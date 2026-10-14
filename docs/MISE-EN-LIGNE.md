@@ -180,10 +180,11 @@ Stéphanie (compte GitHub `fangabalda`, double authentification activée) y est 
 
 1. Settings > Collaborators > « Add people » : `fangabalda`, rôle **« Write »**. Stéphanie accepte l’invitation
    (courriel de GitHub, ou page github.com/notifications).
-2. Le dépôt reste privé : portée `repo` pour l’application OAuth (étape 6). Les environnements (`production`, secrets
-   limités à `main`) fonctionnent sur ce dépôt privé grâce à l’offre GitHub du technicien ; sur l’offre gratuite ils
-   ne sont disponibles que pour un dépôt public (alors : rendre le dépôt public et passer la portée à `public_repo`,
-   rien de sensible n’y est : textes, rendez-vous et photos publiés sont déjà sur le site, les secrets n’y sont jamais).
+2. Le dépôt reste privé : portée `repo` pour l’application OAuth (étape 6). L’environnement `production` (secrets limités à
+   `main`) a été constaté FONCTIONNEL sur ce dépôt privé : créé, règle de branche enregistrée, secrets lus par les déploiements.
+   La documentation de GitHub réserve pourtant les environnements aux dépôts publics sur l’offre gratuite : si GitHub refuse de créer
+   l’environnement ou ses règles sur un autre compte, rendre le dépôt public et passer la portée à `public_repo` (rien de sensible n’y
+   est : textes, rendez-vous et photos publiés sont déjà sur le site, les secrets n’y sont jamais).
 3. Les originaux des images (photo personnelle d’origine) ne sont JAMAIS ajoutés au dépôt : seules les versions
    réduites pour le web (`src/assets/`) y sont.
 
@@ -568,15 +569,17 @@ Si le technicien doit agir dans son dépôt, elle l’invite temporairement comm
    Le script ne modifie pas le dépôt d’origine et vérifie qu’aucune trace ne reste.
 2. Dans cette copie : mettre `repo` de `public/admin/config.yml` à `<compte de Stéphanie>/fan2harmonie`, mettre à jour le README et la
    documentation qui citent l’ancien nom, puis `npm ci` et `npm test` (le garde-fou `npm run verifier:mise-en-ligne` doit passer), et commiter.
-3. Le dépôt de Stéphanie sera **PUBLIC** : sur l’offre gratuite de GitHub, les environnements (secrets limités à `main`) ne fonctionnent que
-   pour un dépôt public (voir 5.1). Rien de sensible n’y est (l’historique est nettoyé, les secrets n’y sont jamais). La portée de
-   l’application OAuth sera donc **`public_repo`** : à écrire dans `oauth-config.php` (`'scope' => 'public_repo'`).
+3. **Dépôt privé par défaut** (comme chez le technicien, où les environnements fonctionnent). À la création de l’environnement
+   `production` (séance, étape 3), GitHub peut refuser sur un compte gratuit (message « Upgrade to GitHub Pro or make this repository
+   public ») : dans ce cas seulement, rendre le dépôt PUBLIC (Settings > General > Danger Zone > Change visibility). Rien de sensible n’y est
+   (l’historique est nettoyé, les secrets n’y sont jamais). La portée de l’application OAuth dépend du choix, à écrire dans `oauth-config.php` :
+   **`repo`** (dépôt privé, valeur par défaut du modèle) ou **`public_repo`** (dépôt public).
 4. Préparer un `oauth-config.php` neuf (modèle `public/oauth/config.sample.php`), sans secret. L’ancienne application OAuth du technicien
    n’est pas réutilisée.
 
 ### Pendant la séance (Stéphanie aux commandes, partage d’écran)
 
-1. **GitHub** : la double authentification est active. Créer le dépôt `fan2harmonie`, **public, VIDE** (ni README, ni licence).
+1. **GitHub** : la double authentification est active. Créer le dépôt `fan2harmonie`, **privé, VIDE** (ni README, ni licence).
 2. Elle invite le technicien (Settings > Collaborators, « Write »), qui pousse la copie propre :
 
    ```sh
@@ -585,12 +588,13 @@ Si le technicien doit agir dans son dépôt, elle l’invite temporairement comm
    git push -u origin main
    ```
 
-3. **Environnement** : Settings > Environments > New environment `production`, « Deployment branches » limité à `main`, PUIS les sept secrets
+3. **Environnement** : Settings > Environments > New environment `production`, « Deployment branches » limité à `main` (si GitHub
+   refuse : rendre le dépôt public, voir « Avant la séance », point 3), PUIS les sept secrets
    (étape 5.4). Les valeurs sont les mêmes, sauf `DEPLOY_PASSWORD` : **Stéphanie change d’abord le mot de passe SFTP** dans son espace client OVH
    (Hébergement > FTP - SSH), car l’ancien est connu du technicien, et colle elle-même le nouveau dans le secret. `DEPLOY_KNOWN_HOSTS` : le contenu du
    fichier `known_hosts` du serveur (information publique, que le technicien lui envoie).
 4. **Application OAuth** sur SON compte (étape 6, avec « le technicien » lu comme « Stéphanie »). Elle écrit le Client ID et le nouveau secret
-   dans `oauth-config.php` (avec `'scope' => 'public_repo'`) et l’envoie elle-même par SFTP, en droits 600, dans `fan2harmonie-contact/`
+   dans `oauth-config.php` (avec `'scope' => 'repo'`, ou `'public_repo'` si le dépôt est public) et l’envoie elle-même par SFTP, en droits 600, dans `fan2harmonie-contact/`
    (elle remplace l’ancien fichier). Le technicien ne voit jamais ce secret.
 5. **Premier déploiement depuis son dépôt** : onglet Actions du dépôt (les activer s’il le propose), puis Run workflow. Vérifier le site, le
    formulaire de contact, puis `/admin` avec son compte GitHub (modifier et supprimer un rendez-vous de test).
@@ -609,6 +613,6 @@ Si le technicien doit agir dans son dépôt, elle l’invite temporairement comm
 
 ### Variante non retenue : transférer le dépôt existant (fonction de transfert de propriété de GitHub)
 
-Plus rapide, mais l’historique contient encore la photo personnelle d’origine, le dossier `demo/` et des adresses personnelles, et un dépôt
-PRIVÉ sur un compte gratuit n’a pas d’environnements (le déploiement échouerait faute de secrets). À éviter, sauf à nettoyer l’historique puis à
-rendre le dépôt public.
+Plus rapide, mais l’historique contient encore le dossier `demo/` (installation personnelle du technicien) et des adresses personnelles : à
+éviter, sauf à nettoyer l’historique d’abord (`scripts/historique-propre.sh`). Le transfert ne garantit pas non plus que les secrets et
+l’environnement `production` suivent : tout est à recréer sur le compte de Stéphanie.
