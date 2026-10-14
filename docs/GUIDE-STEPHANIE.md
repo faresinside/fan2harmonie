@@ -9,6 +9,13 @@ précédente du site.
 
 ## a) Se connecter
 
+**La toute première fois, acceptez l’invitation.** Votre technicien vous a invitée à rejoindre le site sur GitHub :
+ouvrez le courriel de GitHub reçu sur votre adresse (regardez aussi dans les indésirables), cliquez sur
+**« View invitation »**, puis sur **« Accept invitation »**. Vérifiez au passage que la **double authentification**
+est activée sur votre compte GitHub (Settings, puis Password and authentication). L’invitation est valable 7 jours.
+
+Ensuite, à chaque fois :
+
 1. Ouvrez l’adresse **https://fan2harmonie.fr/admin** (gardez-la dans vos favoris).
 2. Cliquez sur **« Se connecter avec GitHub »**. Une petite fenêtre s’ouvre.
 3. Entrez votre identifiant et votre mot de passe GitHub, puis le code de la **double authentification**
@@ -70,9 +77,8 @@ puis cliquez sur **Supprimer** et confirmez. (Inutile pour les séances passées
 
 ## g) Quand le site se met-il à jour ?
 
-Après chaque enregistrement, **le site se met à jour en quelques minutes** (votre technicien vous dira le délai
-habituel, mesuré à la mise en ligne). Rechargez alors la page du site
-pour voir le changement.
+Après chaque enregistrement, **le site se met à jour en quelques minutes** (en pratique, environ 2 minutes).
+Rechargez alors la page du site pour voir le changement.
 
 Si rien n’a changé au bout de cinq minutes : rechargez la page en appuyant sur **Ctrl + F5** (ou, sur téléphone,
 fermez et rouvrez la page). Si le changement n’apparaît toujours pas après un quart d’heure, ce n’est pas grave :
@@ -89,9 +95,14 @@ capture d’écran aide beaucoup).
 - **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible, le site les distingue tout seul.
 - **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain dans la page affichée, puis
   du site lui-même lors de la mise à jour de la nuit. Inutile de les supprimer.
-- **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont publics sur GitHub, et une photo
-  ou un texte supprimé du site reste visible dans l’historique des modifications. Réfléchissez donc avant de
-  publier une information personnelle.
+- **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont gardés sur GitHub avec leur
+  historique, que vous seule et votre technicien pouvez consulter. Une photo ou un texte supprimé du site reste
+  visible dans l’historique des modifications. Réfléchissez donc avant de publier une information personnelle.
+- **Les messages du formulaire de contact** arrivent dans votre boîte **contact@fan2harmonie.fr**, que vous lisez
+  sur **https://mail.ovh.net**. Supprimez les messages une fois traités : ils ne doivent pas être gardés plus de
+  12 mois après le dernier échange (c’est promis aux visiteurs dans les mentions légales).
+- **Les photos sont recadrées** sur le site : placez ce qui compte au centre. Une photo en largeur donne le
+  meilleur résultat.
 - **Quelques mots de l’outil restent en anglais**, par exemple « Show Errors » ou « Restore Default » : c’est
   normal, vous pouvez les ignorer.
 - **Le champ Photo** affiche, une fois la photo choisie, un chemin un peu technique

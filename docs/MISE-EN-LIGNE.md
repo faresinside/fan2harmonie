@@ -517,3 +517,24 @@ Stéphanie :
   l’offre/le type de dépôt à vérifier.
 - Compte FTP secondaire limité au seul dossier `www/` (si l’hébergeur le permet) pour le déploiement, afin que le mot
   de passe de GitHub ne donne pas accès à `fan2harmonie-contact/`.
+
+## 15. Retour d’expérience : mise en ligne du 14 octobre 2026
+
+Ce qui a été constaté sur l’hébergement réel (OVH Starter, cluster `cluster129`), pour la prochaine fois :
+
+- **Accès** : SFTP seulement (le serveur FTP refuse le chiffrement FTPS : « server does not support or allow SSL »). Compte unique, racine
+  du compte `/home/<compte>`, racine web `www/`. PHP 8.4 en PHP-FPM, toutes les extensions exigées présentes. `.htaccess` accepté en entier.
+  Envoi de courriel par `mail()` autorisé (onglet « Scripts e-mail » : actif, « Usurpations détectées » à 0 tant que l’expéditeur est une boîte du domaine).
+- **Courrier** : offre MX Plan 2 boîtes (`contact@` et `site@`), MX et SPF créés automatiquement par OVH ; DKIM à activer dans « Diagnostique ».
+- **Premier déploiement** : de l’ordre de 2 min (construction, passage à blanc, envoi SFTP). Un changement fait dans `/admin` est en ligne
+  en 1 min 50 s en moyenne (mesuré : enregistrement à 19:46:07, site à jour à 19:47:56).
+- **Deux pièges rencontrés dans le dossier privé** (tous deux produisent la page « Configuration invalide » du formulaire) :
+  1. `fan2harmonie-contact/` créé DANS `www/` au lieu d’à côté (le déploiement l’aurait supprimé) : toujours le créer à la racine du compte ;
+  2. sous-dossier nommé `␣limiteur` (une espace au début) : PHP ne le trouve pas. Vérifier le nom exact et les droits (700).
+- **Diagnostic quand le formulaire répond « Configuration invalide »** : envoyer TEMPORAIREMENT, à la place de `www/api/contact.php`, un petit
+  script qui affiche ce que PHP voit (version, extensions, propriétaire, liste du dossier privé avec les noms en hexadécimal), le lire
+  avec `curl`, puis relancer un déploiement (Actions > Déploiement > Run workflow) qui remet le vrai script. Ce script ne se versionne jamais.
+- **Dernier rendez-vous supprimé** : git efface alors le dossier `src/content/rendezvous/` ; un fichier `.gitkeep` le conserve, et le site
+  affiche « Prochaines dates bientôt ».
+- **Le PDF de Stéphanie** (`docs/Fan2Harmonie-presentation-Stephanie.pdf`) se régénère avec
+  `node scripts/pdf-presentation.mjs` à partir de `docs/presentation-stephanie.html` (à relire quand le site ou l’administration change).

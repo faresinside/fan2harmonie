@@ -87,12 +87,17 @@ describe('docs/GUIDE-STEPHANIE.md : points de la revue (round 1)', () => {
   it('pas de fausse promesse : c’est le technicien qui remet une version précédente', () => {
     expect(texte).not.toMatch(/rien de ce que vous faites ici n’est définitif|Vous ne pouvez rien casser/i);
     expect(texte).toContain('votre technicien peut toujours remettre une version précédente');
+    // Délai mesuré à la mise en ligne (1 min 50 s) : « environ 2 minutes », jamais « deux minutes » promis sans mesure.
     expect(texte).not.toMatch(/deux minutes/);
+    expect(texte).toContain('environ 2 minutes');
   });
 
-  it('photos : accord des personnes ; site public : l’historique garde ce qui est supprimé', () => {
+  it('photos : accord des personnes ; l’historique garde ce qui est supprimé ; messages de contact : durée maximale de 12 mois', () => {
     expect(texte).toMatch(/sans son accord/);
-    expect(texte).toMatch(/reste visible dans l’historique/);
+    expect(texte).toMatch(/reste\s+visible dans l’historique/);
+    expect(texte).toContain('contact@fan2harmonie.fr');
+    expect(texte).toContain('12 mois après le dernier échange');
+    expect(texte).toContain('invitation');
   });
 
   it('fenêtre GitHub : adresse et nom de l’application vérifiés ; se déconnecter ne retire pas l’accès', () => {

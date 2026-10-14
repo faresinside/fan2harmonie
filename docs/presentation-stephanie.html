@@ -1,0 +1,192 @@
+<!doctype html>
+<!-- Source du PDF « Fan2Harmonie-presentation-Stephanie.pdf » (docs/). Régénéré par : node scripts/pdf-presentation.mjs
+     (Chrome via Playwright). Polices : celles du site (node_modules/@fontsource…). À relire quand le site ou l'administration change. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Fan 2 Harmonie – Votre site et son espace d’administration</title>
+<style>
+  @font-face { font-family: 'Cormorant'; src: url('../node_modules/@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2') format('woff2'); font-weight: 300 700; font-style: normal; }
+  @font-face { font-family: 'Cormorant'; src: url('../node_modules/@fontsource-variable/cormorant/files/cormorant-latin-wght-italic.woff2') format('woff2'); font-weight: 300 700; font-style: italic; }
+  @font-face { font-family: 'Source Sans'; src: url('../node_modules/@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2') format('woff2'); font-weight: 200 900; }
+  @font-face { font-family: 'Allura'; src: url('../node_modules/@fontsource/allura/files/allura-latin-400-normal.woff2') format('woff2'); }
+  :root { --foret: #2c4a2e; --foret-profond: #1d3220; --dore: #c9a24a; --dore-pale: #e6d4a5; --rose: #ae4c66; --rose-doux: #f1d9dc; --creme: #faf5e8; --creme-fonce: #f2e9d6; --encre: #26331f; --encre-doux: #4b5844; }
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 10.5pt/1.55 'Source Sans', sans-serif; color: var(--encre); }
+  h1, h2, h3 { font-family: 'Cormorant', serif; color: var(--foret); margin: 0; line-height: 1.15; }
+  h2 { font-size: 20pt; margin: 22pt 0 8pt; padding-bottom: 4pt; border-bottom: 1.2pt solid var(--dore); break-after: avoid; }
+  h3 { font-size: 13.5pt; margin: 12pt 0 4pt; break-after: avoid; }
+  p { margin: 0 0 7pt; }
+  a { color: var(--rose); text-decoration: none; font-weight: 600; }
+  ol, ul { margin: 0 0 8pt; padding-left: 17pt; } li { margin-bottom: 3pt; }
+  .script { font-family: 'Allura', cursive; color: var(--rose); font-size: 26pt; line-height: 1; }
+  .couverture { break-after: page; text-align: center; padding-top: 22mm; }
+  .couverture h1 { font-size: 40pt; margin: 6pt 0 4pt; }
+  .couverture .sous { font-family: 'Cormorant', serif; font-style: italic; font-size: 16pt; color: var(--encre-doux); margin-bottom: 18pt; }
+  .filet { width: 70mm; height: 1.2pt; background: var(--dore); margin: 12pt auto; }
+  .adresses { background: var(--creme-fonce); border-radius: 8pt; padding: 12pt 16pt; margin: 14pt auto; max-width: 125mm; text-align: left; }
+  .adresses p { margin: 3pt 0; } .adresses strong { color: var(--foret); }
+  .etapes3 { display: flex; gap: 10pt; margin: 14pt 0 10pt; text-align: left; }
+  .etape3 { flex: 1; background: #fff; border: 1pt solid var(--dore-pale); border-radius: 8pt; padding: 10pt 11pt; }
+  .etape3 b { display: inline-block; width: 18pt; height: 18pt; line-height: 18pt; text-align: center; border-radius: 50%; background: var(--foret); color: #fff; margin-bottom: 4pt; }
+  .sommaire { text-align: left; max-width: 125mm; margin: 12pt auto 0; columns: 2; column-gap: 14pt; font-size: 10pt; }
+  .sommaire li { margin-bottom: 2pt; break-inside: avoid; }
+  .chemin { display: flex; align-items: stretch; gap: 5pt; margin: 8pt 0 10pt; }
+  .chemin div { flex: 1; background: var(--creme-fonce); border-radius: 7pt; padding: 8pt; text-align: center; font-size: 9.5pt; }
+  .chemin b { display: block; color: var(--foret); font-size: 10.5pt; margin-bottom: 2pt; }
+  .chemin .fl { flex: 0 0 auto; align-self: center; background: none; padding: 0; color: var(--dore); font-size: 16pt; }
+  .encart { border-left: 3pt solid var(--rose); background: var(--rose-doux); padding: 8pt 11pt; margin: 8pt 0 10pt; border-radius: 0 6pt 6pt 0; break-inside: avoid; }
+  .info { border-left-color: var(--dore); background: var(--creme-fonce); }
+  .vert { border-left-color: var(--foret); background: #e5eedf; }
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 10pt; break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: 5pt 8pt; border-bottom: 0.6pt solid var(--dore-pale); }
+  th { background: var(--creme-fonce); color: var(--foret); width: 34%; }
+  figure { margin: 6pt 0 10pt; text-align: center; break-inside: avoid; }
+  figure img { max-width: 100%; max-height: 82mm; border: 0.8pt solid var(--dore-pale); border-radius: 6pt; }
+  figcaption { font-size: 9pt; color: var(--encre-doux); margin-top: 3pt; font-style: italic; }
+  .deux { display: flex; gap: 10pt; } .deux figure { flex: 1; } .deux figure img { max-height: 70mm; }
+  .pied { margin-top: 18pt; padding-top: 6pt; border-top: 0.8pt solid var(--dore-pale); font-size: 8.5pt; color: var(--encre-doux); text-align: center; }
+  .saut { break-before: page; }
+</style>
+</head>
+<body>
+
+<section class="couverture">
+  <div class="script">Fan 2 Harmonie</div>
+  <h1>Votre site est en ligne</h1>
+  <div class="sous">Mode d’emploi de votre espace d’administration</div>
+  <div class="filet"></div>
+  <p>Bonjour Stéphanie, votre site est maintenant publié. Ce document vous montre comment le faire vivre vous-même :
+     vos séances, vos actualités, vos textes, sans rien installer.</p>
+  <div class="adresses">
+    <p><strong>Votre site :</strong> <a href="https://fan2harmonie.fr">https://fan2harmonie.fr</a></p>
+    <p><strong>Votre administration :</strong> <a href="https://fan2harmonie.fr/admin">https://fan2harmonie.fr/admin</a> (gardez-la dans vos favoris)</p>
+    <p><strong>Votre boîte e-mail :</strong> contact@fan2harmonie.fr, à lire sur <a href="https://mail.ovh.net">https://mail.ovh.net</a></p>
+  </div>
+  <h3 style="margin-top:14pt">Pour commencer : trois gestes, une seule fois</h3>
+  <div class="etapes3">
+    <div class="etape3"><b>1</b><br><strong>Acceptez l’invitation.</strong> GitHub vous a envoyé un courriel : cliquez sur « View invitation », puis « Accept invitation ». Pensez aux indésirables.</div>
+    <div class="etape3"><b>2</b><br><strong>Activez la double authentification</strong> sur votre compte GitHub (un code sur votre téléphone), si ce n’est pas déjà fait.</div>
+    <div class="etape3"><b>3</b><br><strong>Connectez-vous</strong> à l’administration avec « Se connecter avec GitHub ». C’est tout : vous pouvez publier.</div>
+  </div>
+  <ol class="sommaire">
+    <li>Comment fonctionne votre site</li><li>GitHub : à quoi ça sert</li><li>Se connecter, pas à pas</li>
+    <li>Les rendez-vous</li><li>Une actualité avec photo</li><li>Corriger les textes</li>
+    <li>Quand le site change-t-il ?</li><li>Messages reçus et vie privée</li><li>Bons réflexes</li>
+  </ol>
+</section>
+
+<h2>1. Comment fonctionne votre site</h2>
+<p>Votre site est un site « vitrine » : il présente Fan 2 Harmonie, vos prochaines séances, vos actualités, et permet à vos
+visiteurs de vous écrire par un formulaire. Il est rapide, léger, sans publicité et sans cookie. Vous le modifiez vous-même depuis
+un navigateur (ordinateur, tablette ou téléphone), dans une page privée : « l’administration ».</p>
+<div class="chemin">
+  <div><b>1. Vous</b>écrivez dans l’administration et cliquez sur « Enregistrer »</div><div class="fl">➜</div>
+  <div><b>2. GitHub</b>garde votre modification en lieu sûr, avec son historique</div><div class="fl">➜</div>
+  <div><b>3. Le serveur</b>voit le changement et reconstruit le site tout seul</div><div class="fl">➜</div>
+  <div><b>4. Le site</b>affiche la nouveauté, en environ 2 minutes</div>
+</div>
+<p>Vous n’avez rien d’autre à faire que l’étape 1 : les étapes 2 à 4 sont automatiques.</p>
+
+<h2>2. GitHub : à quoi ça sert ?</h2>
+<p>GitHub est un service en ligne gratuit, utilisé dans le monde entier, qui conserve des fichiers avec tout leur historique : un grand
+classeur numérique qui se souvient de chaque version, de qui a modifié quoi et quand. Pour votre site, il contient vos textes, vos
+rendez-vous, vos actualités et vos photos publiées. L’administration s’appuie sur votre compte GitHub plutôt que de vous demander un mot
+de passe de plus : identification fiable (mot de passe et double authentification), sauvegarde automatique de chaque enregistrement,
+et possibilité pour votre technicien de revenir à une version précédente en cas d’erreur.</p>
+<table>
+  <tr><th>Ce que GitHub fait</th><td>Vérifie que c’est bien vous. Garde les textes et photos du site et leur historique.</td></tr>
+  <tr><th>Ce que GitHub ne fait pas</th><td>Il ne reçoit aucune donnée de vos visiteurs (ni les messages du formulaire, ni leurs adresses IP). Il ne publie rien de lui-même : seul votre site, après votre « Enregistrer », met à jour ses pages.</td></tr>
+</table>
+<div class="encart info">Votre technicien est propriétaire du site sur GitHub et vous y a invitée comme éditrice : vous pouvez modifier le contenu (rendez-vous,
+actualités, textes), mais pas la mécanique interne du site. C’est voulu, pour votre tranquillité.</div>
+
+<h2>3. Se connecter, pas à pas</h2>
+<p><strong>La première fois seulement</strong> : acceptez l’invitation GitHub reçue par courriel (« View invitation », puis « Accept invitation »).
+Elle est valable 7 jours.</p>
+<ol>
+  <li>Ouvrez <a href="https://fan2harmonie.fr/admin">https://fan2harmonie.fr/admin</a> et ajoutez-la à vos favoris.</li>
+  <li>Cliquez sur <strong>« Se connecter avec GitHub »</strong>. Une petite fenêtre s’ouvre.</li>
+  <li>Entrez votre identifiant, votre mot de passe GitHub, puis le code de la double authentification (application de votre téléphone).</li>
+  <li>La toute première fois, GitHub vous demande d’autoriser « Fan 2 Harmonie — administration ». Vérifiez que l’adresse de la fenêtre commence par
+      https://github.com/ et que l’application porte bien ce nom, puis cliquez sur « Authorize » (bouton vert).</li>
+  <li>La fenêtre se ferme toute seule : vous êtes dans l’administration.</li>
+</ol>
+<div class="encart">Ne donnez jamais votre mot de passe GitHub ni votre code de double authentification, à personne, pas même au technicien : personne n’en a besoin pour
+vous aider. Sur un ordinateur partagé, déconnectez-vous (petit bonhomme en haut à droite, puis « Se déconnecter »). Se déconnecter ne retire pas l’accès à votre compte :
+si vous perdez votre ordinateur ou votre téléphone, prévenez votre technicien aussitôt, il coupera l’accès.</div>
+<p>Le menu de gauche propose trois rubriques : <strong>Rendez-vous</strong> (vos séances), <strong>Actualités</strong> (vos nouvelles, avec ou sans photo) et
+<strong>Textes des pages</strong> (les textes du site).</p>
+<figure><img src="images/guide/rendez-vous.png" alt=""><figcaption>L’administration : la liste des rendez-vous.</figcaption></figure>
+
+<h2 class="saut">4. Les rendez-vous</h2>
+<h3>Ajouter un rendez-vous</h3>
+<ol>
+  <li>À gauche, cliquez sur <strong>Rendez-vous</strong>, puis sur le bouton bleu <strong>Nouveau</strong>.</li>
+  <li><strong>Date</strong> : choisissez le jour dans le calendrier.</li>
+  <li><strong>Heure</strong> : écrivez-la sous la forme <strong>16:00</strong>.</li>
+  <li><strong>Lieu</strong> : laissez le lieu habituel, sauf si la séance a lieu ailleurs.</li>
+  <li><strong>Remarque</strong> (facultatif) : par exemple « annulé en cas de pluie ».</li>
+  <li>Cliquez sur <strong>Enregistrer</strong> en haut à droite. Le message « Entrée enregistrée. » confirme.</li>
+</ol>
+<figure><img src="images/guide/nouveau-rendez-vous.png" alt=""><figcaption>Le formulaire d’un nouveau rendez-vous.</figcaption></figure>
+<h3>Annuler une séance</h3>
+<p>Ouvrez le rendez-vous, activez l’interrupteur <strong>« Séance annulée »</strong>, puis Enregistrer. La séance reste visible sur le site, barrée, avec la mention
+« Annulé » : vos élèves savent qu’elle n’a pas lieu.</p>
+<h3>Supprimer un rendez-vous</h3>
+<p>Dans la liste, cochez la case devant la séance, cliquez sur <strong>Supprimer</strong> et confirmez. C’est inutile pour les séances passées : elles disparaissent toutes seules
+(dès le lendemain, puis lors de la mise à jour de la nuit). Deux séances le même jour sont possibles : le site les distingue tout seul.</p>
+
+<h2>5. Une actualité avec photo</h2>
+<ol>
+  <li>À gauche, cliquez sur <strong>Actualités</strong>, puis sur <strong>Nouveau</strong>.</li>
+  <li><strong>Titre</strong> : court, 90 caractères au maximum. <strong>Date</strong> : les plus récentes s’affichent en premier.</li>
+  <li><strong>Photo</strong> (facultative) : cliquez sur <strong>Parcourir</strong> et choisissez une photo (JPEG, PNG ou WebP). Elle est réduite automatiquement : inutile de la retoucher.</li>
+  <li><strong>Texte</strong> : écrivez votre nouvelle. Les boutons au-dessus servent à mettre en gras, en italique ou à ajouter un lien.</li>
+  <li><strong>Enregistrer</strong>.</li>
+</ol>
+<figure><img src="images/guide/nouvelle-actualite.png" alt=""><figcaption>Le formulaire d’une nouvelle actualité.</figcaption></figure>
+<div class="encart info"><strong>Astuce photo :</strong> sur le site, la photo est recadrée au centre. Placez ce qui compte au milieu de l’image ; une photo en largeur donne le meilleur résultat.</div>
+<div class="encart">Ne publiez pas la photo d’une personne reconnaissable sans son accord écrit, et jamais celle d’un enfant sans l’accord de ses parents.</div>
+
+<h2>6. Corriger les textes des pages</h2>
+<p>À gauche, cliquez sur <strong>Textes des pages</strong>, puis sur la section voulue : <strong>La pratique</strong>, <strong>Le Qi Gong</strong> ou <strong>Mon parcours</strong>. Modifiez le texte comme dans
+un traitement de texte, puis <strong>Enregistrer</strong>. Pour changer de paragraphe, laissez une ligne vide (deux fois « Entrée »). Écrivez simplement : les boutons suffisent pour le gras et l’italique.</p>
+<figure><img src="images/guide/textes-des-pages.png" alt=""><figcaption>La rubrique « Textes des pages ».</figcaption></figure>
+
+<h2>7. Quand le site change-t-il ?</h2>
+<p>Après chaque « Enregistrer », le site se reconstruit tout seul et affiche votre modification <strong>en quelques minutes : environ 2 minutes en pratique</strong>.
+Rechargez ensuite la page du site pour voir le changement.</p>
+<ul>
+  <li>Si rien n’a bougé au bout de 5 minutes : <strong>Ctrl + F5</strong> sur ordinateur, ou fermez et rouvrez la page sur téléphone.</li>
+  <li>Si rien n’apparaît au bout d’un quart d’heure, ce n’est pas grave : votre modification est bien gardée. Écrivez à votre technicien.</li>
+</ul>
+
+<h2 class="saut">8. Messages reçus et vie privée</h2>
+<p>Les messages écrits par vos visiteurs dans le formulaire de contact arrivent dans votre boîte <strong>contact@fan2harmonie.fr</strong>. Vous les lisez sur
+<a href="https://mail.ovh.net">https://mail.ovh.net</a> (votre technicien vous donne le mot de passe de cette boîte en main propre, jamais par message). Pour répondre, cliquez simplement sur « Répondre » :
+l’adresse du visiteur est déjà enregistrée. Le site, les messages et la boîte sont chez OVH, hébergeur français ; GitHub ne les voit jamais.</p>
+<div class="encart vert"><strong>Votre engagement, affiché sur le site (mentions légales) :</strong> supprimez les messages une fois traités, et au plus tard <strong>12 mois après le dernier échange</strong>.
+Pensez-y par exemple une fois par trimestre. Ne communiquez jamais l’adresse ou le message d’un visiteur à quelqu’un d’autre sans son accord.</div>
+<table>
+  <tr><th>Le site et les cookies</th><td>Le site ne dépose aucun cookie et n’utilise aucun suivi : vos visiteurs n’ont aucune bannière à accepter. Si un jour vous voulez ajouter des statistiques, une newsletter, des dons ou de la publicité, parlez-en d’abord à votre technicien : il y a des règles à respecter.</td></tr>
+  <tr><th>Les photos de personnes</th><td>Accord écrit de chaque personne reconnaissable avant publication (parents pour un enfant).</td></tr>
+  <tr><th>Ce qui est supprimé</th><td>Les fichiers du site sont gardés sur GitHub avec leur historique, que vous seule et votre technicien pouvez consulter. Une photo ou un texte supprimé du site reste visible dans l’historique : réfléchissez avant de publier une information personnelle.</td></tr>
+  <tr><th>Vos droits et ceux de vos visiteurs</th><td>Un visiteur peut vous demander l’accès à son message, sa suppression ou retirer son consentement : répondez dans un mois. Il peut aussi saisir la CNIL (cnil.fr).</td></tr>
+</table>
+
+<h2>9. Bons réflexes</h2>
+<table>
+  <tr><th>Erreur de manipulation</th><td>Pas de panique : modifiez de nouveau la fiche. Votre technicien peut aussi remettre une version précédente du site (vous n’en avez pas besoin vous-même).</td></tr>
+  <tr><th>Accès à votre compte</th><td>Double authentification obligatoire. Mot de passe jamais communiqué. En cas de perte d’appareil : prévenez votre technicien aussitôt.</td></tr>
+  <tr><th>Interface en anglais</th><td>Quelques mots de l’outil restent en anglais (« Show Errors », « Restore Default ») : normal, ignorez-les.</td></tr>
+  <tr><th>Chemin de la photo</th><td>Après avoir choisi une photo, un chemin technique s’affiche (« ../../assets/actualites/… ») : n’y touchez pas.</td></tr>
+  <tr><th>Formulaire en erreur</th><td>Si un visiteur rencontre une erreur en vous écrivant, le site lui affiche votre adresse e-mail pour qu’il vous écrive directement.</td></tr>
+</table>
+<div class="encart vert"><strong>Un premier essai conseillé :</strong> connectez-vous à l’administration, ajoutez un rendez-vous, regardez-le apparaître sur le site (environ 2 minutes), puis supprimez-le.
+Une question, un doute, quelque chose d’étrange ? Ne cherchez pas à réparer seule : écrivez à votre technicien en décrivant ce que vous avez fait et ce que vous voyez (une capture d’écran aide beaucoup).</div>
+
+<div class="pied">Fan 2 Harmonie – Mode d’emploi de l’éditrice – Octobre 2026 – <a href="https://fan2harmonie.fr">fan2harmonie.fr</a></div>
+</body>
+</html>
