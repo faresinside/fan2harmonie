@@ -47,6 +47,13 @@ const actualites = await Promise.all(
 <Base
   titre="Fan 2 Harmonie — Qi Gong au parc de Rambouillet"
   description="Qi Gong gratuit en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Accessible à tous, à tout âge et à tous niveaux."
+  seances={rendezvous.map((r) => ({
+    date: r.date.toISOString().slice(0, 10),
+    heure: r.heure,
+    lieu: r.lieu,
+    remarque: r.remarque,
+    annule: r.annule,
+  }))}
 >
   <Header actualites={actualites.length > 0} />
 

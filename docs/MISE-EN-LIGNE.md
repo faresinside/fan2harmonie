@@ -439,9 +439,14 @@ Stéphanie :
   effacer les messages de sa boîte une fois traités ; ou fixer une durée précise.
 - **Crédits** : « sauf éléments de tiers mentionnés » ; à revoir quand les photos définitives seront choisies
   (étape 12).
-- **Texte de Stéphanie** (page « Mon parcours ») : la phrase « j’ai créé ma petite entreprise » n’a pas été
-  modifiée ; elle est inexacte puisque Stéphanie n’a pas d’entreprise déclarée (voir le statut ci-dessus). À
-  corriger avec elle avant la mise en ligne.
+- **Texte de Stéphanie** (page « Mon parcours ») : la phrase « j’ai créé ma petite entreprise » a été remplacée par « je
+  vous propose d’essayer… cette pratique » (Stéphanie n’a pas d’entreprise : activité gratuite, à titre non
+  professionnel). À lui faire relire.
+- **Dons ou « pourboires »** (Buy Me a Coffee, Ko-fi, Tipeee…) : à NE PAS ajouter sans avoir vérifié la situation fiscale
+  et sociale de Stéphanie. Des dons réguliers liés à une activité peuvent être considérés comme un revenu à déclarer
+  (voire une activité professionnelle), ce qui contredirait « à titre gratuit ». À valider auprès de l’Urssaf ou des
+  impôts. Techniquement : un simple lien, jamais un widget ni un script externe (la CSP du site les bloque et aucune
+  donnée de visiteur ne doit partir ailleurs) ; mentionner le service dans les mentions légales.
 
 ## 12. Photos
 

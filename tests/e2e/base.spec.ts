@@ -19,20 +19,23 @@ test.describe('mise en page de base', () => {
     expect(description?.trim().length ?? 0).toBeGreaterThan(0);
   });
 
-  test('JSON-LD parsable de type LocalBusiness avec coordonnées GPS', async ({ page }) => {
+  test('JSON-LD parsable : site (WebSite) et séances à venir (Event) gratuites, sans entreprise ni commerce', async ({ page }) => {
     await page.goto('/');
     const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
-    expect(scripts.length).toBeGreaterThan(0);
-    const donnees = scripts.map((s) => JSON.parse(s) as Record<string, unknown>);
-    const local = donnees.find((d) => d['@type'] === 'LocalBusiness');
-    expect(local).toBeDefined();
-    expect(local?.['name']).toBe('Fan 2 Harmonie');
-    expect(local?.['geo']).toMatchObject({ '@type': 'GeoCoordinates', latitude: 48.64703, longitude: 1.811268 });
-    // Faits établis seulement : gratuité, ville et pays ; ni code postal, ni prix, ni zone desservie.
-    expect(local?.['isAccessibleForFree']).toBe(true);
-    expect(local?.['address']).toEqual({ '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' });
-    expect(local).not.toHaveProperty('priceRange');
-    expect(local).not.toHaveProperty('areaServed');
+    expect(scripts.length).toBe(1);
+    const donnees = JSON.parse(scripts[0] ?? '') as { '@context': string; '@graph': Record<string, unknown>[] };
+    expect(donnees['@context']).toBe('https://schema.org');
+    const [site, ...evenements] = donnees['@graph'];
+    expect(site).toMatchObject({ '@type': 'WebSite', name: 'Fan 2 Harmonie', inLanguage: 'fr-FR' });
+    expect(JSON.stringify(donnees)).not.toMatch(/LocalBusiness|priceRange|areaServed|postalCode|streetAddress/);
+    // Chaque séance à venir : évènement gratuit, daté à l'heure de Paris, avec un lieu.
+    for (const e of evenements) {
+      expect(e).toMatchObject({ '@type': 'Event', isAccessibleForFree: true, eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode' });
+      expect(e['startDate']).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:00\+0[12]:00$/);
+      expect(e['location']).toMatchObject({ '@type': 'Place' });
+    }
+    // Un évènement par feuillet de la liste des rendez-vous.
+    await expect(page.locator('#rdv li[data-date]')).toHaveCount(evenements.length);
   });
 
   test('lien canonique présent et absolu', async ({ page }) => {

@@ -1,6 +1,6 @@
 ---
 /**
- * Mise en page de base : métadonnées SEO, Open Graph, JSON-LD LocalBusiness, polices, styles globaux.
+ * Mise en page de base : métadonnées SEO, Open Graph, JSON-LD (site et séances à venir), polices, styles globaux.
  * Chaque page fournit son propre <main id="contenu" tabindex="-1"> (cible du lien d'évitement, qui y place le focus).
  */
 import '../styles/fonts.css';
@@ -8,7 +8,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import { getImage } from 'astro:assets';
 import { site } from '../config/site';
-import { donneesLocalBusiness, serialiserJsonLd } from '../lib/jsonld';
+import { donneesSite, serialiserJsonLd, type Seance } from '../lib/jsonld';
 import { jeton } from '../lib/jetons';
 import tokens from '../styles/tokens.css?raw';
 import hero from '../assets/photos/hero.jpg';
@@ -20,9 +20,11 @@ interface Props {
   description: string;
   /** Page à ne pas indexer (page 404) : balise robots « noindex » et aucune adresse canonique. */
   noindex?: boolean;
+  /** Séances à venir (accueil) : décrites à Google comme des évènements gratuits. */
+  seances?: Seance[];
 }
 
-const { titre, description, noindex = false } = Astro.props;
+const { titre, description, noindex = false, seances = [] } = Astro.props;
 
 const absolue = (chemin: string) => new URL(chemin, site.url).href;
 /** Couleur de la barre du navigateur mobile : le fond crème de la page, lu dans tokens.css. */
@@ -32,13 +34,17 @@ const canonique = absolue(Astro.url.pathname);
 // Image de partage (Open Graph) : la photo d'accueil recadrée (l'affiche n'est pas utilisée pour le partage).
 const imageOg = await getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 });
 
-const jsonLd = donneesLocalBusiness({
-  nom: site.nom,
-  description,
-  url: absolue('/'),
-  image: absolue(imageOg.src),
-  gps: site.gps,
-});
+const jsonLd = donneesSite(
+  {
+    nom: site.nom,
+    description,
+    url: absolue('/'),
+    image: absolue(imageOg.src),
+    organisateur: site.editeur,
+    gps: site.gps,
+  },
+  seances,
+);
 ---
 
 <!doctype html>
