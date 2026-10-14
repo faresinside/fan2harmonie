@@ -607,7 +607,7 @@ Si le technicien doit agir dans son dépôt, elle l’invite temporairement comm
   copies de sauvegarde ; vérifier que ses outils (gestionnaire de mots de passe, `gh`) n’ont plus de secret du site.
 - Confirmer à Stéphanie la liste de ce qui a été supprimé.
 
-### Variante non retenue : transférer le dépôt existant (« Transfer ownership »)
+### Variante non retenue : transférer le dépôt existant (fonction de transfert de propriété de GitHub)
 
 Plus rapide, mais l’historique contient encore la photo personnelle d’origine, le dossier `demo/` et des adresses personnelles, et un dépôt
 PRIVÉ sur un compte gratuit n’a pas d’environnements (le déploiement échouerait faute de secrets). À éviter, sauf à nettoyer l’historique puis à
