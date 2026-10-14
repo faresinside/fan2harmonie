@@ -181,7 +181,7 @@ describe('verifierSite et verifierBackendCms', () => {
     siret: '123 456 789 01237',
     ville: 'Rambouillet',
     editeur: 'Prénom Nom',
-    hebergeur: { nom: 'Hébergeur SAS', adresse: '1 rue de l’Exemple, 75000 Paris', siteWeb: 'https://www.hebergeur.example.fr' },
+    hebergeur: { nom: 'Hébergeur SAS', adresse: '1 rue de l’Exemple, 75000 Paris', telephone: '+33 1 23 45 67 89', siteWeb: 'https://www.hebergeur.example.fr' },
   };
 
   /** Contexte de la vérification de config.yml : adresse du site et fichiers présents dans public/. */
@@ -229,9 +229,9 @@ describe('verifierSite et verifierBackendCms', () => {
       siret: '12345678901236',
       ville: 'À_COMPLÉTER',
       editeur: '  ',
-      hebergeur: { nom: 'À_COMPLÉTER', adresse: '', siteWeb: 'http://hebergeur.fr' },
+      hebergeur: { nom: 'À_COMPLÉTER', adresse: '', telephone: '', siteWeb: 'http://hebergeur.fr' },
     });
-    const champs = ['url', 'email', 'formEndpoint', 'siret', 'ville', 'editeur', 'hebergeur.nom', 'hebergeur.adresse', 'hebergeur.siteWeb'];
+    const champs = ['url', 'email', 'formEndpoint', 'siret', 'ville', 'editeur', 'hebergeur.nom', 'hebergeur.adresse', 'hebergeur.telephone', 'hebergeur.siteWeb'];
     expect(problemes).toHaveLength(champs.length);
     for (const champ of champs) {
       expect(problemes.some((p) => p.startsWith(`site.${champ} `)), champ).toBe(true);

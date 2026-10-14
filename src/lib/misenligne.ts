@@ -125,7 +125,7 @@ export interface SiteAVerifier {
   /** Facultative : null ou vide = ville masquée. */
   ville: string | null;
   editeur: string;
-  hebergeur: { nom: string; adresse: string; siteWeb: string };
+  hebergeur: { nom: string; adresse: string; telephone: string; siteWeb: string };
 }
 
 const decrire = (v: unknown) => `« ${String(v)} »`;
@@ -161,6 +161,7 @@ export function verifierSite(s: SiteAVerifier): string[] {
   for (const [champ, valeur, attendu] of [
     ['nom', s.hebergeur.nom, "la raison sociale de l'hébergeur"],
     ['adresse', s.hebergeur.adresse, "l'adresse postale de l'hébergeur"],
+    ['telephone', s.hebergeur.telephone, "le numéro de téléphone de l'hébergeur"],
   ] as const) {
     if (provisoire(valeur)) problemes.push(`site.hebergeur.${champ} : ${decrire(valeur)} est vide ou provisoire (attendu : ${attendu}).`);
   }

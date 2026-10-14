@@ -2,6 +2,7 @@
 /** Pied de page sur vert forêt profond : logo clair, signature, mentions légales. */
 import { Image } from 'astro:assets';
 import logoBlanc from '../assets/logo/logo-blanc.png';
+import { site } from '../config/site';
 ---
 
 <footer class="pied sur-fonce">
@@ -11,7 +12,7 @@ import logoBlanc from '../assets/logo/logo-blanc.png';
     <p class="pied__legal">
       <a href="/mentions-legales/">Mentions légales</a>
       <span aria-hidden="true">·</span>
-      <span>© 2026 Fan 2 Harmonie</span>
+      <span>© 2026 {site.editeur} — Fan 2 Harmonie</span>
     </p>
   </div>
 </footer>

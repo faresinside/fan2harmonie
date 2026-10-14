@@ -349,6 +349,7 @@ test.describe('mentions légales', () => {
       hebergement.locator('dt', { hasText: terme }).locator('xpath=following-sibling::dd[1]');
     await expect(valeurHebergeur('Hébergeur')).toHaveText(site.hebergeur.nom);
     await expect(valeurHebergeur('Adresse')).toHaveText(site.hebergeur.adresse);
+    await expect(valeurHebergeur('Téléphone')).toHaveText(site.hebergeur.telephone);
     await expect(valeurHebergeur('Site web')).toHaveText(site.hebergeur.siteWeb);
     await expect(main).toContainText('consentement');
     await expect(main).toContainText('SIL Open Font License');
@@ -379,7 +380,13 @@ test.describe('mentions légales', () => {
       await expect(page.locator('main'), ancien).not.toContainText(ancien);
     }
     const main = page.locator('main');
-    await expect(main).toContainText('Les logos, textes et visuels de ce site sont © 2026 Fan 2 Harmonie, sauf éléments de tiers mentionnés.');
+    await expect(main).toContainText(`Les logos, textes et visuels de ce site sont © 2026 ${site.editeur} — Fan 2 Harmonie, sauf éléments de tiers mentionnés.`);
+    // Avertissement : pratique douce, pas un avis médical, chacun sous sa responsabilité.
+    const responsabilite = page.locator('section[aria-labelledby="responsabilite"]');
+    await expect(responsabilite.getByRole('heading', { name: 'Pratique et responsabilité' })).toBeVisible();
+    await expect(responsabilite).toContainText('ne remplace ni un avis médical ni un traitement');
+    await expect(responsabilite).toContainText('sous sa propre responsabilité');
+    await expect(page.locator('footer')).toContainText(`© 2026 ${site.editeur} — Fan 2 Harmonie`);
     for (const affirmation of ['aucune conservation', 'ne dépose aucun cookie et', 'licence libre', 'clauses contractuelles']) {
       await expect(main, affirmation).not.toContainText(affirmation);
     }

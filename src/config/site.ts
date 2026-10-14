@@ -3,6 +3,8 @@ export interface Hebergeur {
   nom: string;
   /** Adresse postale de l'hébergeur. */
   adresse: string;
+  /** Téléphone de l'hébergeur (obligatoire dans les mentions légales, loi pour la confiance dans l'économie numérique). */
+  telephone: string;
   /** Adresse de son site web (https://…). */
   siteWeb: string;
 }
@@ -39,6 +41,7 @@ export const site: {
   hebergeur: {
     nom: 'OVH SAS',
     adresse: '2 rue Kellermann, 59100 Roubaix, France',
+    telephone: '+33 9 72 10 10 07 (ou 1007 depuis la France)',
     siteWeb: 'https://www.ovhcloud.com',
   },
 };

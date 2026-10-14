@@ -92,16 +92,33 @@ const siteHebergeurEnLien = /^https:\/\/[^\s]+$/.test(hebergeur.siteWeb);
               <dd>{hebergeur.adresse}</dd>
             </div>
             <div>
+              <dt>Téléphone</dt>
+              <dd>{hebergeur.telephone}</dd>
+            </div>
+            <div>
               <dt>Site web</dt>
               <dd>{siteHebergeurEnLien ? <a href={hebergeur.siteWeb}>{hebergeur.siteWeb}</a> : hebergeur.siteWeb}</dd>
             </div>
           </dl>
         </section>
 
+        <section aria-labelledby="responsabilite">
+          <h2 id="responsabilite">Pratique et responsabilité</h2>
+          <p>
+            Le Qi Gong proposé par Fan&nbsp;2&nbsp;Harmonie est une pratique douce de bien-être, accessible à tous. Elle
+            ne remplace ni un avis médical ni un traitement.
+          </p>
+          <p>
+            En cas de doute sur votre état de santé (grossesse, douleur, maladie, convalescence…), demandez conseil à
+            votre médecin avant de participer. Chacun pratique à son rythme et sous sa propre responsabilité.
+          </p>
+        </section>
+
         <section aria-labelledby="propriete">
           <h2 id="propriete">Propriété intellectuelle</h2>
           <p>
-            Les logos, textes et visuels de ce site sont © 2026 Fan 2 Harmonie, sauf éléments de tiers mentionnés.
+            Les logos, textes et visuels de ce site sont © 2026 {site.editeur} — Fan 2 Harmonie, sauf éléments de tiers
+            mentionnés.
             Toute reproduction sans accord préalable est interdite.
           </p>
         </section>
