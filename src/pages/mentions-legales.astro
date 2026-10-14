@@ -129,15 +129,24 @@ const siteHebergeurEnLien = /^https:\/\/[^\s]+$/.test(hebergeur.siteWeb);
             Le formulaire de contact sert uniquement à vous permettre d’envoyer un message et à vous répondre.
           </p>
           <ul>
+            <li>
+              <strong>Responsable du traitement :</strong> {site.editeur}, éditrice du site, joignable à l’adresse
+              <a href={mailto}>{site.email}</a>.
+            </li>
             <li><strong>Données recueillies :</strong> votre nom, votre adresse e-mail et votre message.</li>
             <li><strong>Finalité unique :</strong> répondre au message envoyé depuis le formulaire.</li>
             <li>
-              <strong>Base légale :</strong> votre consentement, donné en cochant la case prévue avant l’envoi.
+              <strong>Base légale :</strong> votre consentement, donné en cochant la case prévue avant l’envoi. Vous pouvez
+              le retirer à tout moment en écrivant à <a href={mailto}>{site.email}</a>.
             </li>
             <li>
               <strong>Destinataire :</strong> l’éditrice du site uniquement. Le formulaire est traité sur le serveur
               de l’hébergeur du site, qui envoie votre message à l’adresse <a href={mailto}>{site.email}</a> ; vos
               données ne sont pas enregistrées sur le site et ne sont pas transmises à des tiers.
+            </li>
+            <li>
+              <strong>Hébergement des messages :</strong> les messages sont reçus dans une boîte e-mail hébergée chez le
+              même prestataire que le site ({hebergeur.nom}), qui agit comme sous-traitant de l’éditrice.
             </li>
             <li>
               <strong>Durée de conservation :</strong> Vos données sont conservées uniquement le temps nécessaire pour
@@ -155,10 +164,16 @@ const siteHebergeurEnLien = /^https:\/\/[^\s]+$/.test(hebergeur.siteWeb);
             <li>
               <strong>Cookies :</strong> Ce site ne dépose aucun cookie de mesure d’audience ni de publicité.
             </li>
+            <li>
+              <strong>Liens externes :</strong> la page d’accueil contient un lien vers Google Maps (itinéraire). Rien
+              n’est envoyé à Google tant que vous ne cliquez pas ; après le clic, vous quittez ce site et les règles de
+              Google s’appliquent.
+            </li>
           </ul>
           <p>
             Vous disposez d’un droit d’accès, de rectification, d’effacement, d’opposition, de limitation et de
-            portabilité de vos données. Pour l’exercer, écrivez à <a href={mailto}>{site.email}</a>.
+            portabilité de vos données. Pour l’exercer, écrivez à <a href={mailto}>{site.email}</a>. Vous pouvez
+            aussi définir des directives relatives au sort de vos données après votre décès.
           </p>
           <p>
             Vous pouvez aussi adresser une réclamation à la Commission nationale de l’informatique et des libertés
