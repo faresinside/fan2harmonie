@@ -4,12 +4,12 @@ Bonjour Stéphanie,
 
 Ce petit guide vous accompagne pour faire vivre votre site : ajouter vos séances, publier une nouvelle,
 corriger un texte. Tout se fait depuis votre navigateur, sans rien installer. Prenez votre temps : une erreur se
-corrige simplement en modifiant de nouveau la fiche, et votre technicien peut toujours remettre une version
+corrige simplement en modifiant de nouveau la fiche, et je peux toujours remettre une version
 précédente du site.
 
 ## a) Se connecter
 
-**La toute première fois, acceptez l’invitation.** Votre technicien vous a invitée à rejoindre le site sur GitHub :
+**La toute première fois, acceptez l’invitation.** Je vous ai invitée à rejoindre le site sur GitHub :
 ouvrez le courriel de GitHub reçu sur votre adresse (regardez aussi dans les indésirables), cliquez sur
 **« View invitation »**, puis sur **« Accept invitation »**. Vérifiez au passage que la **double authentification**
 est activée sur votre compte GitHub (Settings, puis Password and authentication). L’invitation est valable 7 jours.
@@ -25,7 +25,7 @@ Ensuite, à chaque fois :
    « Fan 2 Harmonie — administration » avant de cliquer sur « Authorize » (le bouton vert). La fenêtre se ferme
    toute seule et vous arrivez sur l’administration.
 5. Se déconnecter ne retire pas l’accès à votre compte : si vous perdez votre ordinateur ou votre téléphone,
-   prévenez votre technicien sans attendre, il coupera l’accès.
+   prévenez-moi sans attendre, je couperai l’accès.
 
 ## b) Ajouter un rendez-vous
 
@@ -82,12 +82,12 @@ Rechargez alors la page du site pour voir le changement.
 
 Si rien n’a changé au bout de cinq minutes : rechargez la page en appuyant sur **Ctrl + F5** (ou, sur téléphone,
 fermez et rouvrez la page). Si le changement n’apparaît toujours pas après un quart d’heure, ce n’est pas grave :
-votre modification est bien gardée, écrivez simplement au technicien (rubrique suivante).
+votre modification est bien gardée, écrivez-moi simplement (rubrique suivante).
 
 ## h) En cas de doute
 
-Chaque modification est gardée : en cas d’erreur, votre technicien peut toujours remettre une version précédente
-(vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez à votre technicien, en décrivant ce que vous avez fait et ce que vous voyez (une
+Chaque modification est gardée : en cas d’erreur, je peux toujours remettre une version précédente
+(vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez-moi, en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
 ## i) Bon à savoir
@@ -96,7 +96,7 @@ capture d’écran aide beaucoup).
 - **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain dans la page affichée, puis
   du site lui-même lors de la mise à jour de la nuit. Inutile de les supprimer.
 - **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont gardés sur GitHub avec leur
-  historique, que vous seule et votre technicien pouvez consulter. Une photo ou un texte supprimé du site reste
+  historique, que vous seule et moi pouvons consulter. Une photo ou un texte supprimé du site reste
   visible dans l’historique des modifications. Réfléchissez donc avant de publier une information personnelle.
 - **Les messages du formulaire de contact** arrivent dans votre boîte **contact@fan2harmonie.fr**, que vous lisez
   sur **https://mail.ovh.net**. Supprimez les messages une fois traités : ils ne doivent pas être gardés plus de
@@ -109,7 +109,7 @@ capture d’écran aide beaucoup).
   (« ../../assets/actualites/… ») : c’est normal, n’y touchez pas.
 - **Formulaire de contact** : si un visiteur rencontre une erreur en envoyant un message, le site lui affiche
   votre adresse e-mail pour qu’il vous écrive directement.
-- **Ne communiquez jamais votre mot de passe GitHub**, à personne (pas même au technicien) ; ni le code de la
+- **Ne communiquez jamais votre mot de passe GitHub**, à personne (pas même à moi) ; ni le code de la
   double authentification. Personne n’en a besoin pour vous aider.
 - Sur un ordinateur partagé, pensez à vous déconnecter : cliquez sur le petit bonhomme en haut à droite, puis
   sur « Se déconnecter ».

@@ -41,8 +41,8 @@ Dernière relecture : octobre 2026.
 
 | Rubrique | Contenu |
 |---|---|
-| Finalité | Permettre à l’éditrice (et au technicien) de modifier le site. |
-| Personnes concernées | Les personnes ayant accès au dépôt GitHub (Stéphanie Gabalda, le technicien). |
+| Finalité | Permettre à l’éditrice (et la personne qui a réalisé le site) de modifier le site. |
+| Personnes concernées | Les personnes ayant accès au dépôt GitHub (Stéphanie Gabalda et la personne qui a réalisé le site). |
 | Données | Identité GitHub, adresse IP lors des connexions (GitHub), jeton de connexion gardé dans le navigateur de l’éditrice, cookie technique de 10 minutes pendant la connexion. |
 | Sous-traitant | GitHub (Microsoft), États-Unis, pour les comptes d’éditeurs seulement, jamais pour les visiteurs. |
 | Cookies / traceurs | Strictement nécessaires à la connexion, aucun consentement requis. |
@@ -58,6 +58,6 @@ Dernière relecture : octobre 2026.
 
 - **Violation de données** (accès non autorisé à la boîte e-mail ou à l’hébergement, vol d’identifiants) : prévenir la CNIL dans
   les 72 heures (notifications.cnil.fr) si les personnes sont exposées à un risque, et prévenir les personnes concernées si le
-  risque est élevé. Le technicien révoque les accès (procédure à l’étape 6 de `MISE-EN-LIGNE.md`).
+  risque est élevé. La personne qui a réalisé le site révoque les accès (procédure à l’étape 6 de `MISE-EN-LIGNE.md`).
 - **Demande d’une personne** (accès, effacement, retrait du consentement…) : répondre dans un mois, sans exiger de pièces
   excessives, après avoir cherché son adresse dans la boîte `contact@`.

@@ -84,9 +84,9 @@ describe('docs/GUIDE-STEPHANIE.md', () => {
 });
 
 describe('docs/GUIDE-STEPHANIE.md : points de la revue (round 1)', () => {
-  it('pas de fausse promesse : c’est le technicien qui remet une version précédente', () => {
+  it('pas de fausse promesse : c’est l’auteur du site (« je ») qui remet une version précédente', () => {
     expect(texte).not.toMatch(/rien de ce que vous faites ici n’est définitif|Vous ne pouvez rien casser/i);
-    expect(texte).toContain('votre technicien peut toujours remettre une version précédente');
+    expect(texte).toContain('je peux toujours remettre une version précédente');
     // Délai mesuré à la mise en ligne (1 min 50 s) : « environ 2 minutes », jamais « deux minutes » promis sans mesure.
     expect(texte).not.toMatch(/deux minutes/);
     expect(texte).toContain('environ 2 minutes');
