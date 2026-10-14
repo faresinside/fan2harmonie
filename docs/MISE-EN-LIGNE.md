@@ -435,8 +435,9 @@ Stéphanie :
   (GitHub ne reçoit aucune donnée de visiteur).
 - **Destinataire** : la page dit que le message est traité par l’hébergeur et envoyé à `contact@` ; cela suppose
   que la boîte mail est chez ce même hébergeur français.
-- **Conservation** : « le temps nécessaire pour répondre à votre demande, puis supprimées » engage Stéphanie à
-  effacer les messages de sa boîte une fois traités ; ou fixer une durée précise.
+- **Conservation** : « le temps nécessaire pour répondre à votre demande, puis supprimées, au plus tard 12 mois après le
+  dernier échange » engage Stéphanie à effacer les messages de sa boîte `contact@` (une fois traités, et au moins une fois
+  par trimestre).
 - **Crédits** : « sauf éléments de tiers mentionnés » ; à revoir quand les photos définitives seront choisies
   (étape 12).
 - **Texte de Stéphanie** (page « Mon parcours ») : la phrase « j’ai créé ma petite entreprise » a été remplacée par « pendant

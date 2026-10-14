@@ -17,7 +17,7 @@ Dernière relecture : octobre 2026.
 | Destinataire | L’éditrice, par courriel (`contact@fan2harmonie.fr`). |
 | Sous-traitant | OVH SAS (hébergement du site, des scripts et de la boîte e-mail), clauses de sous-traitance du contrat d’hébergement. Serveurs du site : Gravelines (France). |
 | Transferts hors UE | Aucun. |
-| Durée de conservation | Le temps nécessaire pour répondre, puis suppression du courriel de la boîte (à préciser : durée maximale, par exemple 12 mois après le dernier échange). |
+| Durée de conservation | Le temps nécessaire pour répondre, puis suppression du courriel de la boîte, **au plus tard 12 mois après le dernier échange** (engagement affiché dans les mentions légales). Suppression à faire par Stéphanie dans le webmail, une fois par trimestre (ou à chaque conversation terminée). |
 | Sécurité | Connexion chiffrée (HTTPS), contrôle de l’origine, limitation des envois, champ piège anti-robot, aucune donnée stockée sur le site, configuration hors de la partie publique. |
 
 ## 2. Limitation des envois (sécurité du formulaire)

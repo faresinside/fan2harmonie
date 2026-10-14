@@ -373,7 +373,7 @@ test.describe('mentions légales', () => {
       'L’hébergeur peut conserver les journaux techniques de connexion (adresse IP, date) conformément à la loi.',
     );
     await expect(donnees).toContainText(
-      'Vos données sont conservées uniquement le temps nécessaire pour répondre à votre demande, puis supprimées.',
+      'Vos données sont conservées uniquement le temps nécessaire pour répondre à votre demande, puis supprimées. En tout état de cause, elles sont supprimées au plus tard 12 mois après le dernier échange.',
     );
     await expect(donnees).toContainText('Ce site ne dépose aucun cookie de mesure d’audience ni de publicité.');
     for (const ancien of ['États-Unis', 'hors de l’Union européenne', 'Formspree', 'Cloudflare']) {
