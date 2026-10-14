@@ -43,6 +43,22 @@ const fichiersEcrits = (page: Page) =>
   });
 
 test.describe('espace d’administration /admin/', () => {
+  // La page /admin/ porte sa propre politique de sécurité (balise meta de public/admin/index.html) : aucun des
+  // scénarios ci-dessous (connexion, édition, photos) ne doit en déclencher de violation.
+  let violations: string[] = [];
+  test.beforeEach(async ({ page }) => {
+    violations = [];
+    await page.exposeFunction('__violationCsp', (v: string) => violations.push(v));
+    await page.addInitScript(() => {
+      document.addEventListener('securitypolicyviolation', (e) => {
+        (window as unknown as { __violationCsp: (v: string) => void }).__violationCsp(`${e.violatedDirective} ${e.blockedURI}`);
+      });
+    });
+  });
+  test.afterEach(() => {
+    expect(violations, 'violations de la politique de sécurité de /admin/').toEqual([]);
+  });
+
   // Sveltia choisit la langue de l'interface d'après le navigateur : celui de Stéphanie est en français.
   test.use({ locale: 'fr-FR' });
 
@@ -53,6 +69,19 @@ test.describe('espace d’administration /admin/', () => {
     const html = (await reponse?.text()) ?? '';
     expect(html).toContain('<html lang="fr">');
     expect(html).toMatch(/<meta name="robots" content="noindex"/);
+    // Politique de sécurité de la page (celle qui protège le jeton GitHub) : code seulement du site et d'unpkg.com,
+    // connexions seulement vers le site, GitHub et les deux CDN de Sveltia ; jamais d'« unsafe-inline » ni
+    // d'« unsafe-eval » pour les scripts, jamais de joker pour les scripts ou les connexions.
+    const csp = /<meta http-equiv="Content-Security-Policy" content="([^"]+)"/.exec(html)?.[1] ?? '';
+    const directive = (nom: string) => csp.split(';').map((d) => d.trim()).find((d) => d.startsWith(`${nom} `)) ?? '';
+    expect(directive('default-src')).toBe("default-src 'none'");
+    expect(directive('script-src')).toBe("script-src 'self' https://unpkg.com");
+    expect(directive('connect-src')).toBe(
+      "connect-src 'self' data: blob: https://api.github.com https://www.githubstatus.com https://unpkg.com https://cdn.jsdelivr.net",
+    );
+    for (const d of ['frame-src', 'object-src']) expect(directive(d)).toBe(`${d} 'none'`);
+    expect(directive('base-uri')).toBe("base-uri 'self'");
+    expect(directive('form-action')).toBe("form-action 'self'");
     expect(html).toContain('<title>Administration — Fan 2 Harmonie</title>');
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
     await expect(page.locator('link[rel="cms-config-url"]')).toHaveAttribute('href', '/admin/config.yml');

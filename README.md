@@ -19,7 +19,7 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
   Zod (`src/lib/schemas.ts`) ; les rendez-vous passés sont retirés à chaque construction (chaque nuit) et, le
   jour même, masqués dans le navigateur par un petit script (`src/scripts/rendezvous.ts`, amélioration
   progressive : sans JavaScript, la page reste celle de la construction).
-- **Hébergeur 100 % français** (PHP ≥ 8.1.11, de préférence 8.3 ou plus récent, Apache ou LiteSpeed lisant `.htaccess`, accès FTPS ou SFTP ; en production, OVHcloud offre Starter) : il sert `dist/`, le
+- **Hébergeur 100 % français** (PHP ≥ 8.1.11, de préférence 8.3 ou plus récent, Apache ou LiteSpeed lisant `.htaccess`, accès SFTP ou FTPS ; en production, OVHcloud offre Starter, SFTP) : il sert `dist/`, le
   script du formulaire de contact (`public/api/`) et le relais de connexion GitHub de l’administration
   (`public/oauth/`). Ni Cloudflare ni Formspree ni autre service tiers ne sont utilisés : aucune donnée de visiteur ne
   quitte la France.
@@ -28,6 +28,9 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
   l’environnement `production`, à chaque modification de `main` et chaque nuit). Le dépôt appartient à Stéphanie.
 - **Administration** : Sveltia CMS sous `/admin` (`public/admin/config.yml`), qui enregistre dans le dépôt
   GitHub ; le site est reconstruit et republié en quelques minutes (délai à mesurer à la première mise en ligne).
+- **Page d’administration** : `public/admin/index.html` porte sa propre politique de sécurité (CSP, balise meta) qui protège le jeton GitHub
+  gardé dans le navigateur : code seulement du site et d’unpkg.com, connexions seulement vers le site, GitHub et les CDN de
+  Sveltia ; tests : `tests/e2e/admin.spec.ts` (aucune violation, valeur exacte).
 - **Règles du serveur** : `public/.htaccess` (HTTPS, domaine canonique, en-têtes de sécurité, cache, refus des
   fichiers sensibles en plusieurs couches, page 404), `public/api/.htaccess`, `public/oauth/.htaccess`
   (`AcceptPathInfo Off` seulement), `public/api/lib/.htaccess` et `public/oauth/lib/.htaccess` (tout refusé),
@@ -108,11 +111,11 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
     `postMessage`, vers l’origine autorisée exacte, selon le protocole de Sveltia ;
   - logique et tests : `public/oauth/lib/oauth.php`, `tests/php/tests/oauth*.php` ; le jeton n’apparaît jamais dans
     une adresse, un journal, un cookie ni un fichier ;
-  - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `public_repo`, ou `repo` si le dépôt devient privé) :
+  - configuration (`client_id`, `client_secret` de l’application OAuth GitHub, portée `repo`, ou `public_repo` si le dépôt devient public) :
     `oauth-config.php` créé sur le serveur à partir de `public/oauth/config.sample.php` (refusé tel quel), de
     préférence dans `<compte>/fan2harmonie-contact/` ; sinon `FAN2HARMONIE_OAUTH_CONFIG` ou `oauth/config.php`.
-- `repo` : dépôt GitHub du site, `fangabalda/fan2harmonie` (public). Portée de l’application OAuth :
-  `public_repo` tant que le dépôt est public (voir `docs/MISE-EN-LIGNE.md`).
+- `repo` : dépôt GitHub du site, `faresinside/fan2harmonie` (privé, chez le technicien ; Stéphanie y est collaboratrice). Portée de l’application OAuth :
+  `repo`, la seule qui donne accès à un dépôt privé (voir `docs/MISE-EN-LIGNE.md`).
 - Le script du CMS est copié dans `public/admin/` par `npm install`/`npm ci` (postinstall), `npm run dev` et
   `npm run build` : la construction doit toujours passer par `npm run build`.
 

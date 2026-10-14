@@ -59,14 +59,14 @@ const VARIABLE_CONFIG = 'FAN2HARMONIE_OAUTH_CONFIG';
 const DOSSIER_CONFIG_HORS_WEB = 'fan2harmonie-contact';
 const FICHIER_CONFIG_HORS_WEB = 'oauth-config.php';
 
-/** Portées acceptées : « repo » (dépôt privé) ou « public_repo » (dépôt public, cas du site). */
+/** Portées acceptées : « repo » (dépôt privé, cas du site) ou « public_repo » (dépôt public seulement). */
 const PORTEES = ['repo', 'public_repo'];
 
 /** Valeurs par défaut des clés facultatives de la configuration. */
 const DEFAUTS = [
     'origines_autorisees' => ['https://fan2harmonie.fr'],
-    // Le dépôt du site est public : public_repo (droits plus étroits) ; « repo » seulement s'il devient privé.
-    'scope' => 'public_repo',
+    // Le dépôt du site est PRIVÉ : « repo » est la seule portée qui lui donne accès ; public_repo ne suffit pas.
+    'scope' => 'repo',
     'url_callback' => 'https://fan2harmonie.fr/oauth/callback.php',
     // Adresses de GitHub : à ne JAMAIS changer en production (modifiables seulement pour les tests).
     'github_url_autorisation' => 'https://github.com/login/oauth/authorize',

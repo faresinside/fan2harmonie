@@ -182,8 +182,8 @@ test('oauth : state = 32 octets aléatoires en hexadécimal (64 caractères), no
 test('oauth config : valeurs par défaut (origine du site, repo, callback, adresses de GitHub)', function (): void {
     $c = configOauth();
     egal(['https://fan2harmonie.fr'], $c['origines_autorisees']);
-    // Dépôt public : public_repo par défaut ; repo seulement si le dépôt devient privé.
-    egal('public_repo', $c['scope']);
+    // Dépôt privé : repo par défaut ; public_repo seulement si le dépôt devient public.
+    egal('repo', $c['scope']);
     egal('repo', configOauth(['scope' => 'repo'])['scope']);
     egal('https://fan2harmonie.fr/oauth/callback.php', $c['url_callback']);
     egal('https://github.com/login/oauth/authorize', $c['github_url_autorisation']);
@@ -246,7 +246,7 @@ test('oauth config : modèle config.sample.php REFUSÉ tel quel (secret et ident
     vrai(is_array($modele), 'le modèle renvoie un tableau');
     egal(null, normaliserConfig($modele));
     contient('CHANGER-MOI', (string) file_get_contents(RACINE . '/public/oauth/config.sample.php'));
-    egal('public_repo', $modele['scope'] ?? null, 'portée du modèle : public_repo (dépôt public)');
+    egal('repo', $modele['scope'] ?? null, 'portée du modèle : repo (dépôt privé)');
     // Le modèle adapté avec de vraies valeurs devient valide (les autres clés du modèle sont correctes).
     vrai(normaliserConfig(array_replace($modele, configOauthBrute())) !== null, 'modèle complété accepté');
 });
@@ -355,7 +355,7 @@ test('oauth config : configDepuisServeur lit le vrai fichier ; manquante ou inva
 
 test('oauth : adresse d’autorisation = configuration + state, RFC 3986, quatre paramètres exactement', function (): void {
     $url = construireUrlAutorisation(configOauth(), ETAT_TEST);
-    egal('https://github.com/login/oauth/authorize?client_id=Iv1.0123456789abcdef&redirect_uri=https%3A%2F%2Ffan2harmonie.fr%2Foauth%2Fcallback.php&scope=public_repo&state=' . ETAT_TEST, $url);
+    egal('https://github.com/login/oauth/authorize?client_id=Iv1.0123456789abcdef&redirect_uri=https%3A%2F%2Ffan2harmonie.fr%2Foauth%2Fcallback.php&scope=repo&state=' . ETAT_TEST, $url);
     $c = configOauth(['url_callback' => 'https://fan2harmonie.fr/oauth/callback.php', 'scope' => 'public_repo']);
     parse_str((string) parse_url(construireUrlAutorisation($c, ETAT_TEST), PHP_URL_QUERY), $params);
     egal(['client_id' => 'Iv1.0123456789abcdef', 'redirect_uri' => 'https://fan2harmonie.fr/oauth/callback.php', 'scope' => 'public_repo', 'state' => ETAT_TEST], $params);

@@ -75,7 +75,8 @@ RewriteRule ^ - [F]
 #   part vers un autre service. Ni script-src ni style-src : le site a des scripts et styles en ligne. CSP
 #   complète : plus tard, avec hachages (voir README). Vérifiée sans violation par tests/e2e/csp.spec.ts.
 #   Pas de CSP du site sur /admin/ et /oauth/ (Sveltia CMS et le relais de connexion GitHub ont leurs propres
-#   besoins), ni sur /api/ (api/contact.php pose sa propre CSP, plus stricte, sur ses pages HTML).
+#   besoins : /admin/ porte la sienne dans la balise meta de public/admin/index.html, testée par
+#   tests/e2e/admin.spec.ts), ni sur /api/ (api/contact.php pose sa propre CSP, plus stricte, sur ses pages HTML).
 # - Aucun Cross-Origin-Opener-Policy : il casserait la fenêtre de connexion GitHub de /admin.
 # - Aucun en-tête CORS (Access-Control-*) : rien sur ce site n'est destiné à d'autres origines.
 <IfModule mod_setenvif.c>

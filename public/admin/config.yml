@@ -5,7 +5,7 @@
 
 backend:
   name: github
-  repo: fangabalda/fan2harmonie
+  repo: faresinside/fan2harmonie
   branch: main
   # Connexion avec GitHub par le relais PHP du site lui-même (public/oauth/, hébergeur français) : Sveltia ouvre
   # une fenêtre sur https://fan2harmonie.fr/oauth/auth.php ; GitHub revient sur oauth/callback.php (adresse de

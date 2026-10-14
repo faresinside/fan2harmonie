@@ -194,9 +194,9 @@ describe('docs : version de PHP et portée par défaut (revue finale)', () => {
     expect(texte.replace(/\s+/g, ' ')).toContain('PHP ≥ 8.1.11, de préférence 8.3 ou plus récent (8.1 n’est plus maintenu en sécurité depuis fin 2025)');
   });
 
-  it('portée : public_repo par défaut, repo seulement si le dépôt devient privé', () => {
-    expect(texte).not.toMatch(/privé \(valeur par défaut du modèle\)/);
-    expect(texte.replace(/\s+/g, ' ')).toMatch(/`public_repo`\*\* \(valeur par défaut du modèle\) tant que le dépôt est public/);
+  it('portée : repo par défaut (dépôt privé), public_repo seulement si le dépôt devient public', () => {
+    expect(texte).not.toMatch(/public \(valeur par défaut du modèle\)/);
+    expect(texte.replace(/\s+/g, ' ')).toMatch(/`repo`\*\* \(valeur par défaut du modèle\) tant que le dépôt est privé/);
   });
 });
 
@@ -233,24 +233,27 @@ describe('docs : procédure en cas de compromission et suites (revue finale, N1)
   });
 });
 
-describe('docs : OVH Starter, FTPS / SFTP, dépôt chez Stéphanie', () => {
+describe('docs : OVH Starter, SFTP, dépôt privé chez le technicien', () => {
   it('plus aucune trace de SSH comme moyen de déploiement (clé de déploiement, rsync, scp, authorized_keys)', () => {
     for (const motif of [/rsync/, /scp /, /authorized_keys/, /SSH_PRIVATE_KEY/, /SSH_HOST/, /ssh-keygen -t/, /rrsync/]) {
       expect(texte, String(motif)).not.toMatch(motif);
     }
   });
 
-  it('protocoles : FTPS à préférer, jamais « ftp » seul ; certificat vérifié sans option pour le désactiver', () => {
+  it('protocoles : SFTP chez OVH Starter (FTPS refusé), jamais « ftp » seul ; certificat vérifié sans option pour le désactiver', () => {
     expect(plat).toContain('jamais `ftp` seul');
+    expect(plat).toContain('REFUSÉ par OVH Starter');
+    expect(plat).toContain('`sftp` chez OVH Starter');
+    expect(plat).toContain('`ftp.cluster129.hosting.ovh.net`');
     expect(plat).toContain('vérifie le certificat du serveur');
     expect(plat).toMatch(/aucune option pour désactiver cette vérification/);
   });
 
-  it('dépôt transféré à Stéphanie, propriétaire ; technicien collaborateur « Write » ; application OAuth sur son compte', () => {
-    expect(plat).toContain('Transfer ownership');
-    expect(plat).toContain('appartiennent à Stéphanie');
-    expect(plat).toMatch(/Sur le compte GitHub de Stéphanie, propriétaire du dépôt/);
+  it('dépôt privé chez le technicien ; Stéphanie collaboratrice « Write » ; application OAuth sur son compte', () => {
+    expect(plat).toContain('reste **chez le technicien**, en **privé**');
+    expect(plat).toMatch(/Sur le compte GitHub du technicien, propriétaire du dépôt/);
     expect(plat).toContain('rôle **« Write »**');
+    expect(plat).not.toContain('Transfer ownership');
   });
 
   it('statut sans entreprise : SIRET null, personne physique à titre non professionnel et gratuit', () => {

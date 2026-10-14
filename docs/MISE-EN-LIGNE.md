@@ -7,23 +7,23 @@ courriel.
 
 Rappel de l’architecture :
 
-- **Hébergeur 100 % français, ici OVHcloud, offre Starter** (PHP ≥ 8.1.11, Apache lisant les `.htaccess`, accès FTP
-  chiffré — FTPS — ou SFTP, boîtes mail) : il sert les pages (dossier `dist/` construit), le script du formulaire
+- **Hébergeur 100 % français, ici OVHcloud, offre Starter** (PHP ≥ 8.1.11, Apache lisant les `.htaccess`, accès SFTP, boîtes mail) : il sert les pages (dossier `dist/` construit), le script du formulaire
   (`/api/contact.php`) et le relais de connexion GitHub de l’administration (`/oauth/auth.php` et
-  `/oauth/callback.php`). Cette offre n’a probablement ni SSH ni accès en ligne de commande : tout se fait par FTP
-  et par l’espace client OVH.
-- **GitHub** : le code et le contenu PUBLIC du site (textes, rendez-vous, actualités, photos publiées), la
-  construction et la mise en ligne automatique (GitHub Actions → FTPS ou SFTP avec `lftp`). **Le dépôt, le compte
-  GitHub, les secrets de déploiement et l’application OAuth appartiennent à Stéphanie.**
+  `/oauth/callback.php`). Cette offre n’a pas d’accès en ligne de commande : tout se fait par SFTP (le serveur FTP
+  d’OVH Starter refuse le FTP chiffré FTPS : vérifié) et par l’espace client OVH.
+- **GitHub** : le code et le contenu du site (textes, rendez-vous, actualités, photos publiées), la
+  construction et la mise en ligne automatique (GitHub Actions → SFTP avec `lftp`). **Le dépôt privé
+  `faresinside/fan2harmonie`, les secrets de déploiement et l’application OAuth sont chez le technicien ;
+  Stéphanie y est invitée comme collaboratrice (rôle « Write ») pour utiliser l’administration.**
 - **Aucune donnée de visiteur ne quitte la France.** Ni Cloudflare ni Formspree ne sont utilisés : ils ne
   figurent plus nulle part dans le site.
 
 ## Jour J : l’essentiel dans l’ordre
 
-1. Stéphanie crée son compte GitHub (dédié au site, double authentification), puis le dépôt lui est transféré
-   (étape 5.1) ; le technicien y reste collaborateur « Write » le temps de la mise en place.
+1. Stéphanie a son compte GitHub (dédié au site, double authentification) ; le technicien l’invite comme
+   collaboratrice « Write » sur son dépôt privé (étape 5.1).
 2. Dans l’espace client OVH : domaine rattaché à l’hébergement, certificat TLS, PHP 8.3, boîtes mail (étapes 1 à 3).
-3. En FTP : fichier témoin, dossier privé `fan2harmonie-contact/` avec ses deux configurations (étape 4).
+3. En SFTP : fichier témoin, dossier privé `fan2harmonie-contact/` avec ses deux configurations (étape 4).
 4. Sur GitHub : application OAuth, environnement `production`, les sept secrets (étapes 5 et 6).
 5. Valeurs définitives du projet, garde-fou, premier déploiement (étapes 7 et 8).
 6. Vérifications (étape 9) — en premier : **un vrai message envoyé par le formulaire** (la fonction d’envoi de
@@ -34,7 +34,7 @@ Rappel de l’architecture :
 ## 0. Prérequis et coûts
 
 - **Nom de domaine** `fan2harmonie.fr` : déjà acheté chez OVH, avec l’hébergement (environ 10 € par an).
-- **Hébergement mutualisé OVH, offre Starter** : PHP ≥ 8.1.11 choisi par hébergement, accès FTP (FTPS) ou SFTP,
+- **Hébergement mutualisé OVH, offre Starter** : PHP ≥ 8.1.11 choisi par hébergement, accès SFTP (le FTP chiffré FTPS est refusé par le serveur),
   fichiers `.htaccess`, `.user.ini`, au moins deux boîtes mail sur le domaine, certificat TLS gratuit
   (Let’s Encrypt). Les caractéristiques exactes de l’offre se vérifient dans l’espace client le jour J.
 - **Un compte GitHub pour Stéphanie** (gratuit, DÉDIÉ au site : voir l’étape 6), protégé par la **double
@@ -159,7 +159,8 @@ la racine du compte contient `www/` (la racine web) ; les autres dossiers du com
    gestionnaire de mots de passe).
 
    **Chemin absolu du dossier privé** (valeur de `dossier_limiteur`, par exemple `/homez.123/compte/fan2harmonie-contact/limiteur`) :
-   la forme exacte dépend du serveur OVH. Pour la connaître, envoyer TEMPORAIREMENT dans `www/` un fichier
+   chez OVH, l’espace client indique le répertoire home du compte (ici `/home/fanharj`) : le dossier privé est alors
+   `/home/fanharj/fan2harmonie-contact/limiteur`. Pour le vérifier, envoyer TEMPORAIREMENT dans `www/` un fichier
    `chemin.php` contenant `<?php echo __DIR__;`, l’ouvrir dans le navigateur (`https://<adresse provisoire>/chemin.php`
    ou `https://fan2harmonie.fr/chemin.php`), noter le résultat (le dossier privé est son voisin : remplacer la fin
    `/www` par `/fan2harmonie-contact/limiteur`), puis **SUPPRIMER `chemin.php` aussitôt**. Préparer les deux
@@ -174,25 +175,17 @@ la racine du compte contient `www/` (la racine web) ; les autres dossiers du com
 
 ### 5.1 Dépôt
 
-Branche par défaut **`main`**. Le dépôt, aujourd’hui `faresinside/fan2harmonie`, **est transféré à Stéphanie** (compte GitHub `fangabalda`, dépôt `fangabalda/fan2harmonie` après le transfert) :
+Branche par défaut **`main`**. Le dépôt `faresinside/fan2harmonie` reste **chez le technicien**, en **privé**.
+Stéphanie (compte GitHub `fangabalda`, double authentification activée) y est invitée :
 
-1. Stéphanie crée son compte GitHub (adresse et mot de passe à elle, **double authentification** activée).
-2. Sur le dépôt actuel : Settings > General > « Danger Zone » > « Transfer ownership » vers son compte, en
-   gardant le nom `fan2harmonie`. Stéphanie accepte le transfert (courriel de GitHub).
-3. Stéphanie ajoute le technicien comme collaborateur avec le rôle **« Write »** (Settings > Collaborators), pour
-   la mise en place et la maintenance ; elle peut le retirer à tout moment.
-4. Dans le projet, remplacer `faresinside/fan2harmonie` par `fangabalda/fan2harmonie` (`repo` dans
-   `public/admin/config.yml`, puis tout ce que les tests signalent : `npm test`), pousser sur `main`.
-
-Le dépôt est **public** : portée `public_repo` (étape 6) ; GitHub désactive les tâches planifiées d’un dépôt
-public après 60 jours sans activité (étape 13). Pourquoi public : sur l’offre gratuite de GitHub, les
-environnements (`production`, avec ses secrets limités à `main`) ne sont disponibles que pour les dépôts publics
-(un dépôt privé demanderait un abonnement GitHub Pro ou Team, et la portée `repo`). Rien de sensible n’est dans
-le dépôt : textes, rendez-vous et photos publiés sont déjà sur le site ; les secrets n’y sont jamais.
-
-**Avant de rendre le dépôt public** : l’historique a été nettoyé (photo personnelle d’origine, dossier de
-démonstration du technicien). Les originaux des images ne sont JAMAIS ajoutés au dépôt : seules les versions
-réduites pour le web (`src/assets/`) y sont.
+1. Settings > Collaborators > « Add people » : `fangabalda`, rôle **« Write »**. Stéphanie accepte l’invitation
+   (courriel de GitHub, ou page github.com/notifications).
+2. Le dépôt reste privé : portée `repo` pour l’application OAuth (étape 6). Les environnements (`production`, secrets
+   limités à `main`) fonctionnent sur ce dépôt privé grâce à l’offre GitHub du technicien ; sur l’offre gratuite ils
+   ne sont disponibles que pour un dépôt public (alors : rendre le dépôt public et passer la portée à `public_repo`,
+   rien de sensible n’y est : textes, rendez-vous et photos publiés sont déjà sur le site, les secrets n’y sont jamais).
+3. Les originaux des images (photo personnelle d’origine) ne sont JAMAIS ajoutés au dépôt : seules les versions
+   réduites pour le web (`src/assets/`) y sont.
 
 ### 5.2 Double authentification
 
@@ -208,13 +201,14 @@ secrets (étape 5.4), comme secrets **de l’environnement** (« Environment sec
 
 Dans Settings > Environments > `production` > « Environment secrets » :
 
-   - `DEPLOY_PROTOCOL` : `ftps` (FTP chiffré, à préférer si l’offre le propose) ou `sftp` ; jamais `ftp` seul ;
-   - `DEPLOY_HOST` : nom du serveur FTP indiqué dans l’espace client OVH (lettres, chiffres, `.`, `_`, `-`) ;
-   - `DEPLOY_USER` : identifiant FTP ;
-   - `DEPLOY_PASSWORD` : mot de passe FTP (celui de l’espace client OVH, étape 4) ;
-   - `DEPLOY_PORT` : port (vide = 21 en FTPS, 22 en SFTP) ;
+   - `DEPLOY_PROTOCOL` : `sftp` chez OVH Starter (le FTP chiffré `ftps` y est refusé) ; jamais `ftp` seul ;
+   - `DEPLOY_HOST` : nom du serveur indiqué dans l’espace client OVH (Hébergement > « FTP - SFTP »), ici
+     `ftp.cluster129.hosting.ovh.net` (lettres, chiffres, `.`, `_`, `-`) ;
+   - `DEPLOY_USER` : identifiant FTP / SFTP du compte, ici `fanharj` ;
+   - `DEPLOY_PASSWORD` : mot de passe de ce compte (celui de l’espace client OVH, étape 4) ;
+   - `DEPLOY_PORT` : `22` (SFTP) ;
    - `REMOTE_PATH` : dossier de la racine web, relatif à la racine du compte : `www` (étape 4) ;
-   - `DEPLOY_KNOWN_HOSTS` : SFTP seulement, empreinte du serveur (ci-dessous) ; laisser VIDE en FTPS.
+   - `DEPLOY_KNOWN_HOSTS` : SFTP, empreinte du serveur (ci-dessous) ; VIDE seulement en FTPS.
 
 ### 5.5 Aucun secret au niveau du dépôt
 
@@ -225,13 +219,13 @@ Dans Settings > Environments > `production` > « Environment secrets » :
 
 ### 5.6 Choix du protocole et vérification du serveur
 
-**FTPS (cas le plus probable sur Starter)** : FTP avec chiffrement explicite. Le script impose le chiffrement de
+**FTPS (autres hébergeurs ; REFUSÉ par OVH Starter : « server does not support or allow SSL », vérifié)** : FTP avec chiffrement explicite. Le script impose le chiffrement de
    la connexion ET des données et **vérifie le certificat du serveur** (autorité reconnue, nom du serveur
    correspondant) : il n’y a aucune option pour désactiver cette vérification. Rien d’autre à préparer.
    Si OVH présente un certificat dont le nom ne correspond pas à `DEPLOY_HOST`, utiliser le nom exact du
    certificat comme `DEPLOY_HOST` (indiqué dans l’espace client), et non l’adresse IP.
 
-**SFTP (si l’offre le propose)** : FTP au-dessus de SSH, mot de passe du compte. Remplir `DEPLOY_KNOWN_HOSTS` avec la
+**SFTP (cas d’OVH Starter, activé dans l’espace client)** : FTP au-dessus de SSH, mot de passe du compte. Remplir `DEPLOY_KNOWN_HOSTS` avec la
    ligne `known_hosts` du serveur, **vérifiée** contre l’empreinte publiée par l’hébergeur (documentation ou
    support) — jamais un `ssh-keyscan` accepté les yeux fermés :
 
@@ -242,7 +236,7 @@ Dans Settings > Environments > `production` > « Environment secrets » :
 
    Pour un port autre que 22, la ligne commence par `[serveur]:port` (forme produite par `ssh-keyscan -p`).
 
-**Essayer d’abord à la main** : se connecter avec le client FTP en mode « FTP explicite sur TLS » (ou SFTP) avec les
+**Essayer d’abord à la main** : se connecter avec le client (FileZilla, WinSCP) en protocole SFTP avec les
    mêmes identifiants, pour vérifier le serveur, le port, le mot de passe et le dossier `www`.
 
 ## 6. GitHub : application OAuth pour la connexion à `/admin`
@@ -251,7 +245,7 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 `https://fan2harmonie.fr/oauth/auth.php` (configuré dans `public/admin/config.yml`, `base_url` et
 `auth_endpoint`).
 
-1. Sur le compte GitHub de Stéphanie, propriétaire du dépôt : Settings > Developer settings > OAuth Apps >
+1. Sur le compte GitHub du technicien, propriétaire du dépôt : Settings > Developer settings > OAuth Apps >
    New OAuth App :
    - Application name : par exemple « Fan 2 Harmonie — administration » ;
    - Homepage URL : `https://fan2harmonie.fr` ;
@@ -260,12 +254,12 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
 2. Noter le **Client ID**, puis « Generate a new client secret ». Les deux valeurs vont **uniquement** dans
    `fan2harmonie-contact/oauth-config.php` sur le serveur (`client_id`, `client_secret`), saisies dans le fichier
    préparé sur le PC avant son envoi par FTP : jamais dans le dépôt, jamais dans un courriel ou une messagerie.
-3. Portée (`scope` dans `oauth-config.php`) : **`public_repo`** (valeur par défaut du modèle) tant que le dépôt
-   est public (cas actuel), **`repo`** seulement s’il devient privé. Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
+3. Portée (`scope` dans `oauth-config.php`) : **`repo`** (valeur par défaut du modèle) tant que le dépôt est
+   privé (cas actuel) ; `public_repo` seulement s’il devient public. Les autres réglages du modèle (`origines_autorisees`, `url_callback`) ont
    déjà les bonnes valeurs ; les adresses de GitHub ne doivent jamais être changées.
-4. **Qui peut modifier le site** : la propriétaire du dépôt et ses collaborateurs (Settings > Collaborators), avec
-   le rôle « Write », et eux seuls. Chacun a la double authentification. Le technicien garde, tant que Stéphanie
-   le souhaite, le rôle « Write », jamais « Admin ».
+4. **Qui peut modifier le site** : le technicien (propriétaire du dépôt) et les collaborateurs invités, dont
+   Stéphanie (Settings > Collaborators), avec le rôle « Write », jamais « Admin », et eux seuls. Chacun a la
+   double authentification.
 5. **Révoquer** : changer le secret (« Generate a new client secret », nouvelle valeur dans `oauth-config.php`,
    ancienne supprimée) ne rend PAS invalides les jetons déjà donnés aux éditrices. Pour les couper, utiliser
    aussi « Revoke all user tokens » dans les réglages de l’application OAuth.
@@ -291,8 +285,8 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
    alors du code sur l’hébergeur, d’où il peut lire le secret de l’application OAuth et la configuration du
    formulaire.
    Recommandations, dans l’ordre :
-   1. Stéphanie est propriétaire du dépôt : c’est elle qui décide qui a accès, et elle seule détient les secrets
-      de déploiement et l’application OAuth ; elle donne le rôle « Write », jamais « Admin », aux autres ;
+   1. le dépôt appartient au technicien : c’est lui qui décide qui a accès et qui détient les secrets de
+      déploiement et l’application OAuth ; les éditrices ont le rôle « Write », jamais « Admin » ;
    2. l’éditrice se connecte à `/admin` avec un compte GitHub DÉDIÉ au site (aucun autre dépôt, double
       authentification) ; c’est le cas de son compte, créé pour l’occasion ;
    3. amélioration à évaluer plus tard : remplacer l’application OAuth par une GitHub App installée sur ce seul
@@ -311,7 +305,7 @@ L’administration (`/admin`, Sveltia CMS) se connecte à GitHub par le relais P
      « Personne physique, activité exercée à titre non professionnel et gratuit », voir l’étape 11). L’exemple
      `123 456 789 00012` **bloque la mise en ligne** ;
    - `ville` : facultative (`null` = non affichée).
-2. `public/admin/config.yml` : `repo` (`fangabalda/fan2harmonie`, étape 5.1), `base_url`
+2. `public/admin/config.yml` : `repo` (`faresinside/fan2harmonie`, étape 5.1), `base_url`
    (`https://fan2harmonie.fr`) et `auth_endpoint` (`oauth/auth.php`).
 3. `docs/GUIDE-STEPHANIE.md` : ne contient aucune adresse de technicien (le garde-fou refuse tout marqueur
    « [… à remplacer] » dans le guide).
@@ -379,7 +373,7 @@ Remplacer `$S` par `https://fan2harmonie.fr` (ou utiliser `--resolve`, étape 1)
 | Erreurs PHP jamais affichées | espace client OVH (réglages PHP) ou une page qui provoque une erreur | `display_errors` à Off pour le compte (sinon vérifier que `api/.user.ini` et `oauth/.user.ini` sont bien pris en compte) |
 | Relais : fichiers privés | `$S/oauth/lib/oauth.php`, `$S/oauth/config.php`, `$S/oauth/auth.php/x` | 403 ou 404 |
 | Administration | `$S/admin`, « Se connecter avec GitHub » | connexion ; ajouter un rendez-vous de test, l’annuler (« Séance annulée »), le supprimer : chaque changement est en ligne en quelques minutes (mesurer le délai réel à ce premier essai et le noter dans le guide de Stéphanie) |
-| Portée réelle du jeton | après la première vraie connexion : GitHub > Settings > Applications > Authorized OAuth Apps | l’application n’a que la portée prévue (`public_repo`, ou `repo` si le dépôt est privé) et Sveltia fonctionne avec elle seule |
+| Portée réelle du jeton | après la première vraie connexion : GitHub > Settings > Applications > Authorized OAuth Apps | l’application n’a que la portée prévue (`repo` pour ce dépôt privé, `public_repo` s’il devenait public) et Sveltia fonctionne avec elle seule |
 | Actualité | publier une actualité de test avec une photo, puis la supprimer | visible puis retirée |
 | Texte d’une page | corriger une virgule dans « Le Qi Gong » | correction en ligne |
 | Mentions légales | `$S/mentions-legales/` | complètes : aucun `À_COMPLÉTER`, pas le SIRET d’exemple |
@@ -482,10 +476,13 @@ Stéphanie :
   un seul dépôt (il vaut pour tous les dépôts du compte, d’où le compte GitHub DÉDIÉ conseillé à l’étape 6).
   Se déconnecter de `/admin` ne le révoque pas. En cas de doute : « Revoke all user tokens » (étape 6), et
   Settings > Applications > Authorized OAuth Apps sur le compte de l’éditrice.
-- **Dépôt public** : GitHub désactive la reconstruction de la nuit après 60 jours sans activité ; la réactiver
-  dans Actions (un dépôt privé n’a pas cette limite). En attendant, les rendez-vous passés restent dans les
-  pages, mais le navigateur des visiteurs les masque le jour même (script `src/scripts/rendezvous.ts` ; pas
-  pour un visiteur sans JavaScript).
+- **Portée `repo` du jeton** : pour un dépôt privé, GitHub n’offre pas de portée plus étroite avec une OAuth App :
+  le jeton d’une éditrice donne accès à TOUS les dépôts auxquels son compte a accès (d’où le compte DÉDIÉ au site,
+  sans autre dépôt). La GitHub App (étape 14) réglerait cela.
+- **Reconstruction de la nuit** : un dépôt privé n’est pas soumis à la désactivation après 60 jours sans activité
+  (limite des dépôts publics). Si le dépôt devenait public, la réactiver dans Actions ; en attendant, les
+  rendez-vous passés restent dans les pages, mais le navigateur des visiteurs les masque le jour même (script
+  `src/scripts/rendezvous.ts` ; pas pour un visiteur sans JavaScript).
 - **Limiteur et sauvegardes** : si le formulaire répond « Service momentanément indisponible » et que le journal
   parle du limiteur, un outil de sauvegarde a pu créer un lien physique vers `fan2harmonie-limiteur.json` :
   supprimer ce fichier dans le dossier `limiteur/`, il sera recréé.
