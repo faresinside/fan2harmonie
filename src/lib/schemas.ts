@@ -21,7 +21,7 @@ export const dateSchema = z
     const invalid =
       Number.isNaN(d.getTime()) || (typeof v === 'string' && d.toISOString().slice(0, 10) !== v);
     if (invalid) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Date invalide (AAAA-MM-JJ attendu)' });
+      ctx.addIssue({ code: 'custom', message: 'Date invalide (AAAA-MM-JJ attendu)' });
       return z.NEVER;
     }
     return d;

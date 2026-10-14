@@ -9,6 +9,8 @@
  * AUDIT_SITE_URL : le site est construit avec l'origine du serveur d'audit (canonique, Open Graph,
  * plan du site, robots.txt) dans dist-audit/, jamais dans dist/ ni dans un fichier versionné.
  * Chrome : celui fourni par l'image Playwright (CHROME_PATH), sauf si CHROME_PATH est déjà défini.
+ * Lighthouse CI n'est PAS une dépendance du projet (ses sous-dépendances ont des alertes de sécurité et n'ont rien à faire
+ * dans l'installation de la construction) : npx le télécharge à la version épinglée ci-dessous, à chaque audit.
  */
 import { spawnSync } from 'node:child_process';
 import { chromium } from '@playwright/test';
@@ -19,7 +21,7 @@ const env = {
   CHROME_PATH: process.env.CHROME_PATH || chromium.executablePath(),
 };
 
-for (const commande of ['npm run build', 'npx lhci autorun']) {
+for (const commande of ['npm run build', 'npx --yes @lhci/cli@0.15.1 autorun']) {
   const { status } = spawnSync(commande, { stdio: 'inherit', shell: true, env });
   if (status !== 0) process.exit(status ?? 1);
 }

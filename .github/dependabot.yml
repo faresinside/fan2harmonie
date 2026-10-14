@@ -1,0 +1,19 @@
+# Mises à jour automatiques (Dependabot) : une demande de modification par semaine au plus, que le technicien relit
+# et accepte (les tests du dépôt tournent dessus). Rien n'est appliqué sans relecture.
+version: 2
+updates:
+  # Actions GitHub épinglées sur un commit (.github/workflows/deploiement.yml).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"
+  # Paquets npm du site (versions exactes dans package.json) : les mises à jour de sécurité d'abord.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"

@@ -3,7 +3,7 @@ import { JEUX } from './tests/fixtures/jeux';
 
 /** Contenu réel : dist/ sur le port 4321. Chaque jeu de test : dist-fixture-<jeu>/ sur son port (tests/fixtures/jeux.ts). */
 const serveur = (port: number, env: Record<string, string> = {}) => ({
-  command: `npm run build && npm run preview -- --host 0.0.0.0 --port ${port}`,
+  command: `npm run build && npm run preview -- --host 0.0.0.0 --port ${port} --ignore-lock`,
   url: `http://localhost:${port}`,
   env,
   reuseExistingServer: false,

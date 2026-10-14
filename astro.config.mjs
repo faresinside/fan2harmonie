@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { unified } from '@astrojs/markdown-remark';
 import { site } from './src/config/site.ts';
 import { jeuDeTest } from './src/lib/fixture.ts';
 import { remarkHtmlEnTexte } from './src/lib/remark-html-en-texte.ts';
@@ -24,7 +25,9 @@ export default defineConfig({
   markdown: {
     // Le HTML brut des contenus Markdown s'affiche comme du texte, jamais interprété ; images distantes et liens
     // à schéma dangereux (javascript:, data:…) deviennent du texte, sans jamais faire échouer la construction.
-    remarkPlugins: [remarkHtmlEnTexte, remarkLiensSurs],
-    remarkRehype: { allowDangerousHtml: false },
+    processor: unified({
+      remarkPlugins: [remarkHtmlEnTexte, remarkLiensSurs],
+      remarkRehype: { allowDangerousHtml: false },
+    }),
   },
 });

@@ -14,7 +14,7 @@ Tout tourne dans Docker : rien à installer sur le PC (seuls `docker` et `git` t
 
 ## Architecture
 
-- **Site statique Astro 5** (TypeScript strict) : une page d’accueil défilante et les mentions légales. Les
+- **Site statique Astro 7** (TypeScript strict) : une page d’accueil défilante et les mentions légales. Les
   contenus (`src/content/` : rendez-vous, actualités, textes des pages) sont des fichiers validés par des schémas
   Zod (`src/lib/schemas.ts`) ; les rendez-vous passés sont retirés à chaque construction (chaque nuit) et, le
   jour même, masqués dans le navigateur par un petit script (`src/scripts/rendezvous.ts`, amélioration

@@ -25,15 +25,15 @@
   },
   "dependencies": {
     "@astrojs/check": "0.9.10",
+    "@astrojs/markdown-remark": "7.3.2",
     "@astrojs/sitemap": "3.7.4",
     "@axe-core/playwright": "4.13.0",
     "@fontsource-variable/cormorant": "5.3.0",
     "@fontsource-variable/source-sans-3": "5.3.0",
     "@fontsource/allura": "5.3.0",
-    "@lhci/cli": "0.15.1",
     "@playwright/test": "1.63.0",
-    "@sveltia/cms": "0.228.0",
-    "astro": "5.18.2",
+    "@sveltia/cms": "0.238.0",
+    "astro": "7.3.8",
     "sharp": "0.35.5",
     "typescript": "5.9.3",
     "vitest": "5.0.3"

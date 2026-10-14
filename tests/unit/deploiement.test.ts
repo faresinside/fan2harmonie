@@ -336,15 +336,18 @@ describe('déploiement : sécurité', () => {
     expect(texte).not.toMatch(/BEGIN [A-Z ]*PRIVATE KEY/);
   });
 
-  it('actions officielles seulement (actions/*), épinglées en version majeure ; jamais « curl | sh »', () => {
+  it('actions officielles seulement (actions/*), épinglées sur un commit complet (40 caractères), version en commentaire ; jamais « curl | sh »', () => {
     const actions = etapes.flatMap((e) => (e.uses ? [e.uses] : []));
-    expect(actions.sort()).toEqual([
-      'actions/checkout@v4',
-      'actions/checkout@v4',
-      'actions/download-artifact@v4',
-      'actions/setup-node@v4',
-      'actions/upload-artifact@v4',
+    // Un commit précis, jamais une étiquette de version (« @v4 » peut être déplacée) : Dependabot tient les épinglages à jour.
+    for (const a of actions) expect(a, a).toMatch(/^actions\/[a-z-]+@[0-9a-f]{40}$/);
+    expect(actions.map((a) => a.split('@')[0]).sort()).toEqual([
+      'actions/checkout',
+      'actions/checkout',
+      'actions/download-artifact',
+      'actions/setup-node',
+      'actions/upload-artifact',
     ]);
+    expect(texte.match(/uses: actions\/[a-z-]+@[0-9a-f]{40} # v4$/gm)).toHaveLength(5);
     expect(scripts.join('\n')).not.toMatch(/(curl|wget)[^\n|]*\|\s*(ba|z)?sh/);
   });
 });
