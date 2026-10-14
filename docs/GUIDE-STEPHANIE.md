@@ -96,7 +96,7 @@ capture d’écran aide beaucoup).
 - **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain dans la page affichée, puis
   du site lui-même lors de la mise à jour de la nuit. Inutile de les supprimer.
 - **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont gardés sur GitHub avec leur
-  historique, que vous seule et moi pouvons consulter. Une photo ou un texte supprimé du site reste
+  historique, que seules les personnes autorisées sur GitHub peuvent consulter. Une photo ou un texte supprimé du site reste
   visible dans l’historique des modifications. Réfléchissez donc avant de publier une information personnelle.
 - **Les messages du formulaire de contact** arrivent dans votre boîte **contact@fan2harmonie.fr**, que vous lisez
   sur **https://mail.ovh.net**. Supprimez les messages une fois traités : ils ne doivent pas être gardés plus de

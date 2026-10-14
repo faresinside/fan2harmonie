@@ -187,6 +187,8 @@ Stéphanie (compte GitHub `fangabalda`, double authentification activée) y est 
 3. Les originaux des images (photo personnelle d’origine) ne sont JAMAIS ajoutés au dépôt : seules les versions
    réduites pour le web (`src/assets/`) y sont.
 
+Cette situation est **provisoire** : le site sera ensuite transmis à Stéphanie (étape 16, séance par Teams).
+
 ### 5.2 Double authentification
 
 Obligatoire pour chaque collaborateur (Settings > Password and authentication).
@@ -538,3 +540,75 @@ Ce qui a été constaté sur l’hébergement réel (OVH Starter, cluster `clust
   affiche « Prochaines dates bientôt ».
 - **Le PDF de Stéphanie** (`docs/Fan2Harmonie-presentation-Stephanie.pdf`) se régénère avec
   `node scripts/pdf-presentation.mjs` à partir de `docs/presentation-stephanie.html` (à relire quand le site ou l’administration change).
+
+## 16. Transmission du site à Stéphanie (séance par Teams)
+
+**But : à la fin, le dépôt GitHub, l’application OAuth, les secrets de déploiement, le compte d’hébergement OVH et les boîtes e-mail
+appartiennent à Stéphanie, et le technicien n’a plus aucun accès ni aucune copie.** Les étapes 5 et 6 décrivent la situation provisoire
+(dépôt chez le technicien) ; après la transmission, lire « le technicien » comme « Stéphanie » dans ces étapes.
+
+### Règle d’or : ne jamais se faire donner un mot de passe
+
+Pendant la séance, **Stéphanie partage son écran et fait elle-même les connexions** (GitHub, OVH). Le technicien guide et peut, dans Teams,
+demander le contrôle de la souris pour cliquer à sa place, SAUF pour saisir un mot de passe ou un code de double authentification.
+Éviter la variante « elle me donne son identifiant et son mot de passe, elle le change après » : avec la double authentification le mot de passe
+seul ne suffit pas, et un mot de passe écrit dans un message ou vu dans une réunion enregistrée reste un risque même changé ensuite.
+Si le technicien doit agir dans son dépôt, elle l’invite temporairement comme collaborateur (rôle « Write »).
+
+### Avant la séance (technicien)
+
+1. Tout est commité sur `main`. Préparer la copie à historique nettoyé (sans `demo/`, sans la photo personnelle d’origine, sans adresse
+   personnelle dans les commits) :
+
+   ```sh
+   ANCIEN_EMAIL='<adresse personnelle des anciens commits>' NOUVEL_EMAIL='<identifiant>+<nom>@users.noreply.github.com' \
+       bash scripts/historique-propre.sh ../fan2harmonie-pour-stephanie
+   ```
+
+   Le script ne modifie pas le dépôt d’origine et vérifie qu’aucune trace ne reste.
+2. Dans cette copie : mettre `repo` de `public/admin/config.yml` à `<compte de Stéphanie>/fan2harmonie`, mettre à jour le README et la
+   documentation qui citent l’ancien nom, puis `npm ci` et `npm test` (le garde-fou `npm run verifier:mise-en-ligne` doit passer), et commiter.
+3. Le dépôt de Stéphanie sera **PUBLIC** : sur l’offre gratuite de GitHub, les environnements (secrets limités à `main`) ne fonctionnent que
+   pour un dépôt public (voir 5.1). Rien de sensible n’y est (l’historique est nettoyé, les secrets n’y sont jamais). La portée de
+   l’application OAuth sera donc **`public_repo`** : à écrire dans `oauth-config.php` (`'scope' => 'public_repo'`).
+4. Préparer un `oauth-config.php` neuf (modèle `public/oauth/config.sample.php`), sans secret. L’ancienne application OAuth du technicien
+   n’est pas réutilisée.
+
+### Pendant la séance (Stéphanie aux commandes, partage d’écran)
+
+1. **GitHub** : la double authentification est active. Créer le dépôt `fan2harmonie`, **public, VIDE** (ni README, ni licence).
+2. Elle invite le technicien (Settings > Collaborators, « Write »), qui pousse la copie propre :
+
+   ```sh
+   cd ../fan2harmonie-pour-stephanie
+   git remote add origin https://github.com/<compte de Stéphanie>/fan2harmonie.git
+   git push -u origin main
+   ```
+
+3. **Environnement** : Settings > Environments > New environment `production`, « Deployment branches » limité à `main`, PUIS les sept secrets
+   (étape 5.4). Les valeurs sont les mêmes, sauf `DEPLOY_PASSWORD` : **Stéphanie change d’abord le mot de passe SFTP** dans son espace client OVH
+   (Hébergement > FTP - SSH), car l’ancien est connu du technicien, et colle elle-même le nouveau dans le secret. `DEPLOY_KNOWN_HOSTS` : le contenu du
+   fichier `known_hosts` du serveur (information publique, que le technicien lui envoie).
+4. **Application OAuth** sur SON compte (étape 6, avec « le technicien » lu comme « Stéphanie »). Elle écrit le Client ID et le nouveau secret
+   dans `oauth-config.php` (avec `'scope' => 'public_repo'`) et l’envoie elle-même par SFTP, en droits 600, dans `fan2harmonie-contact/`
+   (elle remplace l’ancien fichier). Le technicien ne voit jamais ce secret.
+5. **Premier déploiement depuis son dépôt** : onglet Actions du dépôt (les activer s’il le propose), puis Run workflow. Vérifier le site, le
+   formulaire de contact, puis `/admin` avec son compte GitHub (modifier et supprimer un rendez-vous de test).
+6. **Retirer le technicien** des collaborateurs du dépôt (ou le garder en « Write » si elle le souhaite, pour l’assistance).
+7. **OVH** (compte de Stéphanie) : changer le mot de passe de l’espace client et activer la double authentification ; retirer ou remplacer le technicien
+   dans les contacts du compte s’il y figure ; changer les mots de passe des deux boîtes e-mail ; garder le contrat de sous-traitance d’OVH.
+8. Ranger les secrets (mot de passe SFTP, secret OAuth, mots de passe des boîtes) dans un **gestionnaire de mots de passe** à elle.
+
+### Après la séance (technicien) : ne rien garder
+
+- Supprimer le dépôt `faresinside/fan2harmonie` (Settings > Danger Zone), son application OAuth (Developer settings > OAuth Apps) et ses
+  secrets ; désactiver le workflow s’il subsiste.
+- Supprimer sur son PC : le clone du projet, la copie `fan2harmonie-pour-stephanie`, le dossier `prive/` (configurations et `known_hosts`) et les
+  copies de sauvegarde ; vérifier que ses outils (gestionnaire de mots de passe, `gh`) n’ont plus de secret du site.
+- Confirmer à Stéphanie la liste de ce qui a été supprimé.
+
+### Variante non retenue : transférer le dépôt existant (« Transfer ownership »)
+
+Plus rapide, mais l’historique contient encore la photo personnelle d’origine, le dossier `demo/` et des adresses personnelles, et un dépôt
+PRIVÉ sur un compte gratuit n’a pas d’environnements (le déploiement échouerait faute de secrets). À éviter, sauf à nettoyer l’historique puis à
+rendre le dépôt public.
