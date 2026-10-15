@@ -19,3 +19,5 @@ Le QI GONG est ainsi un art qui allie le corps (matière), l’énergie (les sou
 La pratique en mouvement du QI GONG fait circuler le QI. Son équilibre dans le corps est essentiel pour maintenir la santé et le bien-être.
 
 La pratique en postures statiques du qi gong emmagasinent l’énergie.
+
+Venez essayer pour faire votre propre expérience
