@@ -22,7 +22,7 @@ Vous pourrez vous garer au parking rue de la ferme\
 Le lieu se trouve juste à gauche de ce parking, coordonnées gps 48,64703°N, 1,811268°E\
 Il sera indiqué par le fanion « Fan 2 Harmonie »
 
-Des vêtements souples et chaussure plates sont conseillés pour pratiquer
+Des vêtements souples et chaussures plates sont conseillés pour pratiquer
 
 Si besoin, n’hésitez pas à me contacter depuis « [contactez-moi](#contact) »
 
