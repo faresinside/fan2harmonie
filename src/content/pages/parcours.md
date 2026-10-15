@@ -22,6 +22,6 @@ C’est pourquoi, pendant l’année scolaire 2026, je vous invite à venir essa
 
 Parce qu’après avoir passé tant d’années à dépenser mon énergie, j’ai découvert le plaisir de l’habiter pleinement.
 
-Cette évolution personnelle a naturellement donné naissance à « Fan 2 Harmonie » : "fan" pour Fanny (mon p'tit nom) , 2 pour "d'" et "harmonie " pour ce que le Qi Gong représente le plus pour moi. 
+Cette évolution personnelle a naturellement donné naissance à « Fan 2 Harmonie » : "Fan" pour Fanny (mon p'tit nom) , "2" pour d' et "harmonie " pour ce que le Qi Gong représente le plus pour moi. 
 
-fan2harmonie est un projet qui me ressemble et qui traduit aujourd’hui mon envie de partager ce chemin vers plus d’équilibre, de sérénité et de bien-être.
+Fan 2 Harmonie est un projet qui me ressemble et qui traduit aujourd’hui mon envie de partager ce chemin vers plus d’équilibre, de sérénité et de bien-être.
