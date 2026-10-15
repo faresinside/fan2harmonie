@@ -12,10 +12,10 @@ Je vous invite à un moment de bien-être et d’harmonie à travers la pratique
 
 - Mouvements doux dans le respect de notre corps
 - Respiration consciente
-- Relaxation
+- Relaxations 
 
 Gratuite et accessible à tous, à tout âge, et, à tous niveaux\
-Rejoignez-moi les samedi à 16h00 ou les dimanches à 16h00
+Rejoignez-moi les samedi à 16h00 ou les dimanches à 10h00
 
 Dans le parc de Rambouillet en allant à la bergerie\
 Vous pourrez vous garer au parking rue de la ferme\
