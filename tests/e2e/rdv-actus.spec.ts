@@ -228,14 +228,14 @@ test.describe('tri et rendez-vous passés (jeu « melange »)', () => {
     await expect(rendezvous(page).nth(1)).toContainText('16h00');
   });
 
-  test('les 3 actualités les plus récentes, plus récente d’abord', async ({ page }) => {
+  test('les actualités (jusqu’à six), plus récente d’abord', async ({ page }) => {
     await page.goto('/');
     await expect(actualites(page).locator('h3')).toHaveText([
       'Actualité de mars',
       'Actualité de février',
       'Actualité de janvier',
+      'Actualité de décembre',
     ]);
-    await expect(page.locator('#actualites')).not.toContainText('décembre');
     await expect(actualites(page).nth(0).locator('time')).toHaveText('1er mars 2026');
   });
 });

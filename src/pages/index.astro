@@ -136,6 +136,13 @@ const actualites = await Promise.all(
 
     appliquerDates(document);
   </script>
+
+  <script>
+    // Photos des actualités : agrandissement au clic sur une vignette (src/scripts/galerie.ts).
+    import { initialiserGaleries } from '../scripts/galerie';
+
+    initialiserGaleries(document);
+  </script>
 </Base>
 
 <style>

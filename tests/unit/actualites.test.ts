@@ -18,10 +18,24 @@ describe('formatDateLongueFr', () => {
 });
 
 describe('dernieresActualites', () => {
-  it('les 3 plus récentes, plus récente d’abord, sans modifier la liste reçue', () => {
-    const items = [actu('a', '2026-01-10'), actu('b', '2026-03-01'), actu('c', '2025-12-01'), actu('d', '2026-02-14')];
-    expect(dernieresActualites(items).map((a) => a.id)).toEqual(['b', 'd', 'a']);
-    expect(items.map((a) => a.id)).toEqual(['a', 'b', 'c', 'd']);
+  it('les 6 plus récentes par défaut (sur 8), plus récente d’abord, sans modifier la liste reçue', () => {
+    const items = [
+      actu('a', '2026-01-10'),
+      actu('b', '2026-03-01'),
+      actu('c', '2025-12-01'),
+      actu('d', '2026-02-14'),
+      actu('e', '2025-11-05'),
+      actu('f', '2025-10-20'),
+      actu('g', '2025-09-01'),
+      actu('h', '2026-04-02'),
+    ];
+    expect(dernieresActualites(items).map((a) => a.id)).toEqual(['h', 'b', 'd', 'a', 'c', 'e']);
+    expect(items.map((a) => a.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
+  });
+
+  it('`n` choisi : les `n` plus récentes', () => {
+    const items = [actu('a', '2026-01-10'), actu('b', '2026-03-01'), actu('c', '2025-12-01')];
+    expect(dernieresActualites(items, 2).map((a) => a.id)).toEqual(['b', 'a']);
   });
 
   it('même date : ordre stable par identifiant', () => {

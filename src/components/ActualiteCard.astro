@@ -2,26 +2,29 @@
 /**
  * Une actualité : image facultative, date, titre, texte (Markdown rendu, passé dans le slot), dans cet ordre
  * dans le document comme à l'écran (aucune propriété CSS « order »).
- * Sans image, aucun élément <img> et aucun emplacement vide. Le titre et le texte se coupent
+ * Une seule photo : image avant le texte (comme une photo de une). Deux photos ou plus : galerie de vignettes
+ * après le texte (GaleriePhotos). Sans photo, aucun élément <img> et aucun emplacement vide. Le titre et le texte se coupent
  * au besoin (titres de 90 caractères, mots très longs) sans jamais déborder.
  * Le titre est affiché comme du texte (échappement d'Astro) ; le HTML brut du Markdown est neutralisé
  * dans astro.config.mjs (remarkHtmlEnTexte).
  */
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import GaleriePhotos from './GaleriePhotos.astro';
 import { formatDateLongueFr } from '../lib/actualites';
 
 interface Props {
   titre: string;
   date: Date;
-  /** Photos de l'actualité (peut être vide) ; seule la première est affichée pour l'instant. */
+  /** Photos de l'actualité (0 à 12). */
   photos: { image: ImageMetadata; legende?: string | undefined }[];
 }
 
 const { titre, date, photos } = Astro.props;
-const photo = photos[0];
+const galerie = photos.length > 1;
+const photo = galerie ? undefined : photos[0];
 const image = photo?.image;
-// Texte alternatif : la légende si elle n'est pas vide, sinon le titre de l'actualité.
+// Photo unique, texte alternatif : la légende si elle n'est pas vide, sinon le titre de l'actualité.
 const imageAlt = photo?.legende?.trim() || titre;
 ---
 
@@ -46,6 +49,7 @@ const imageAlt = photo?.legende?.trim() || titre;
     <div class="prose actu__corps">
       <slot />
     </div>
+    {galerie && <GaleriePhotos titre={titre} photos={photos} />}
   </div>
 </article>
 

@@ -14,7 +14,7 @@ export function formatDateLongueFr(date: Date): string {
 }
 
 /** Les `n` actualités les plus récentes, plus récente d'abord (même date : par identifiant). Ne modifie pas `items`. */
-export function dernieresActualites<T extends { id: string; data: { date: Date } }>(items: T[], n = 3): T[] {
+export function dernieresActualites<T extends { id: string; data: { date: Date } }>(items: T[], n = 6): T[] {
   return [...items]
     .sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id))
     .slice(0, n);

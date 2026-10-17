@@ -1,0 +1,145 @@
+---
+/**
+ * Galerie d'une actualité à plusieurs photos : vignettes carrées en grille, sous le texte. Chaque vignette est
+ * un bouton qui ouvre la photo agrandie dans l'unique <dialog> de la galerie (src/scripts/galerie.ts).
+ * La version agrandie (1 600 px de large) est calculée à la construction et son adresse rangée dans
+ * data-grand : elle n'est téléchargée qu'au clic. Texte alternatif : src/lib/galerie.ts (jamais vide).
+ */
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { texteAlternatif } from '../lib/galerie';
+
+interface Props {
+  titre: string;
+  photos: { image: ImageMetadata; legende?: string | undefined }[];
+}
+
+const { titre, photos } = Astro.props;
+const vignettes = await Promise.all(
+  photos.map(async ({ image, legende }, i) => ({
+    image,
+    alt: texteAlternatif(legende, titre, i + 1, photos.length),
+    grand: (await getImage({ src: image, width: Math.min(1600, image.width) })).src,
+  })),
+);
+---
+
+<div class="galerie" data-galerie>
+  <ul class="galerie__vignettes" role="list">
+    {
+      vignettes.map(({ image, alt, grand }) => (
+        <li>
+          <button
+            type="button"
+            class="galerie__vignette"
+            data-galerie-vignette
+            data-grand={grand}
+            aria-label={`Agrandir la photo : ${alt}`}
+          >
+            <Image
+              src={image}
+              alt={alt}
+              width={480}
+              widths={[240, 480]}
+              sizes="(min-width: 48rem) 10rem, calc((100vw - 2rem) / 3)"
+              loading="lazy"
+              decoding="async"
+              class="galerie__miniature"
+            />
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+
+  <dialog class="galerie__dialogue" aria-label={`Photos : ${titre}`}>
+    <div class="galerie__cadre">
+      <img class="galerie__grande" alt="" decoding="async" />
+      <button type="button" class="bouton bouton--rose" data-galerie-fermer autofocus>Fermer</button>
+    </div>
+  </dialog>
+</div>
+
+<style>
+  .galerie {
+    margin-top: var(--s-4);
+  }
+
+  /* Vignettes carrées : trois par ligne sur téléphone, davantage si la place le permet. */
+  .galerie__vignettes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(6.5rem, 30%), 1fr));
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .galerie__vignette {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-2);
+    background: none;
+    cursor: zoom-in;
+  }
+
+  .galerie__miniature {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--r-2);
+    box-shadow: var(--ombre-douce);
+  }
+
+  /* Le cadre remplit tout le dialogue : un clic sur le dialogue lui-même est un clic sur le fond. */
+  .galerie__dialogue {
+    width: min(64rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-3);
+    background: var(--creme);
+    box-shadow: var(--ombre-levee);
+  }
+
+  .galerie__dialogue::backdrop {
+    background: rgb(29 50 32 / 0.85);
+  }
+
+  .galerie__cadre {
+    display: grid;
+    justify-items: center;
+    gap: var(--s-2);
+    padding: var(--s-2);
+  }
+
+  .galerie__grande {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100dvh - 9rem);
+    width: auto;
+    height: auto;
+    border-radius: var(--r-2);
+  }
+
+  /* Ouverture en fondu, seulement si le visiteur n'a pas demandé de réduire les animations. */
+  @media (prefers-reduced-motion: no-preference) {
+    .galerie__dialogue[open] {
+      animation: galerie-fondu var(--duree) var(--ease-souffle);
+    }
+
+    .galerie__dialogue[open]::backdrop {
+      animation: galerie-fondu var(--duree) var(--ease-souffle);
+    }
+  }
+
+  @keyframes galerie-fondu {
+    from {
+      opacity: 0;
+    }
+  }
+</style>
