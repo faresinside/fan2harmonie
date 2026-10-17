@@ -16,7 +16,7 @@ Critères de réussite : Stéphanie change l'accueil, le lieu et les photos sans
 
 - **`main` est la source de vérité du contenu.** Stéphanie utilise déjà l'admin : 15 commits de contenu (rendez-vous du 25 octobre, textes « pratique », « qigong », « parcours », actualité « bienvenue ») ont été créés directement sur `main`. `preprod` a été remise à niveau en rebasant sur `origin/main`. Règle : avant chaque recette et avant la fusion finale, resynchroniser `preprod` avec `origin/main` (jamais écraser ces contenus) ; la fusion finale vérifie qu'aucun fichier de `src/content/` de `main` n'est perdu.
 - **Incohérence déjà en ligne** : le texte « La pratique » de Stéphanie annonce « samedi à 16h00 ou dimanche à **10h00** », alors que le bandeau d'accueil et la description Google disent « samedis ou dimanches à 16h00 ». Les réglages éditables (accueil, référencement) la corrigent à la source ; les valeurs initiales seront celles que Stéphanie confirme (à lui demander avant la mise en production), pas une copie aveugle des textes en dur.
-- **Son texte est repris à l'identique** : l'itinéraire (parking, fanion, coordonnées) déplacé dans `lieu.yml` reprend ses mots actuels de `pratique.md` sans les modifier. Ses autres modifications de contenu ne sont pas touchées.
+- **Son texte est repris à l'identique** : l'itinéraire (parking, fanion, coordonnées) déplacé dans `lieu.md` reprend ses mots actuels de `pratique.md` sans les modifier. Ses autres modifications de contenu ne sont pas touchées.
 - **Tests sous Windows** : 4 cas de `tests/unit/scripts-deploiement.test.ts` échouent sur ce poste (arguments avec guillemet ou retour à la ligne transmis par `spawnSync` à bash sous Windows ; lancés à la main, les scripts refusent correctement ces valeurs). La CI Linux de `main` est verte. Hors périmètre : ces 4 échecs sont connus, pas des régressions ; tout autre échec bloque la recette.
 
 ## Hors périmètre
@@ -27,22 +27,22 @@ Refonte graphique, nouvelles pages, multilingue, analytics, base de données ou 
 
 ### 1. Réglages éditables : stockage
 
-Nouvelle collection de contenu Astro `reglages`, trois fichiers YAML dans `src/content/reglages/` : `accueil.yml`, `lieu.yml`, `referencement.yml`. Elle suit la règle des `pages` : toujours lue dans `src/content/` même avec un jeu de test (`src/lib/fixture.ts`, type `Collection`). Schémas Zod dans `src/lib/schemas.ts` (source unique, vérifiée contre `public/admin/config.yml` par `tests/unit/cms-config.test.ts`). Dans l'admin : une collection « Réglages du site » (type `files`, comme « Textes des pages »), trois entrées.
+Nouvelle collection de contenu Astro `reglages`, trois fichiers Markdown à en-tête (front matter), comme les `pages`, dans `src/content/reglages/` : `accueil.md`, `lieu.md`, `referencement.md`. Même chargeur (glob) et mêmes plugins remark que les `pages` (le HTML brut reste neutralisé) ; le lieu a un corps Markdown (indications d'accès). Elle suit la règle des `pages` : toujours lue dans `src/content/` même avec un jeu de test (`src/lib/fixture.ts`, type `Collection`). Schémas Zod dans `src/lib/schemas.ts` (source unique, vérifiée contre `public/admin/config.yml` par `tests/unit/cms-config.test.ts`). Dans l'admin : une collection « Réglages du site » (type `files`, comme « Textes des pages »), trois entrées.
 
 Les valeurs initiales reprennent exactement les textes actuels : la construction avant et après est identique tant que rien n'est modifié.
 
 ### 2. Accueil
 
-`accueil.yml` : `accroche` (« 1 heure pour vous… »), `titre` (« Qi Gong »), `sousTitre` (« Animation découverte »), `devise`, `infos` (liste d'éléments affichés séparés par « · »), `bouton` (texte du bouton, ancre `#rdv` inchangée), `bienfaits` (liste de 4 : `libelle`, `icone` parmi les 4 icônes existantes). `Hero.astro` les lit ; les animations, l'ordre du DOM et l'accessibilité (h1, séparateurs `aria-hidden`) restent identiques.
+`accueil.md` : `accroche` (« 1 heure pour vous… »), `titre` (« Qi Gong »), `sousTitre` (« Animation découverte »), `devise`, `infos` (liste d'éléments affichés séparés par « · »), `bouton` (texte du bouton, ancre `#rdv` inchangée), `bienfaits` (liste de 4 : `libelle`, `icone` parmi les 4 icônes existantes). `Hero.astro` les lit ; les animations, l'ordre du DOM et l'accessibilité (h1, séparateurs `aria-hidden`) restent identiques.
 
 ### 3. Lieu
 
-`lieu.yml` : `nom` (« Parc de Rambouillet, près de la bergerie »), `latitude`, `longitude`, corps Markdown `acces` (parking, fanion…). Utilisé par :
+`lieu.md` : `nom` (« Parc de Rambouillet, près de la bergerie »), `latitude`, `longitude`, corps Markdown `acces` (parking, fanion…). Utilisé par :
 
 - `LienCarte.astro` (coordonnées affichées, lien Google Maps) ;
-- la section « La pratique » : l'itinéraire (paragraphe « Dans le parc de Rambouillet… fanion « Fan 2 Harmonie » ») sort de `pratique.md` pour venir de `lieu.yml`, mot pour mot, sans dupliquer les coordonnées ;
-- le lieu des rendez-vous : le champ `lieu` du schéma des rendez-vous n'a plus de défaut figé ; vide, il prend `lieu.nom` à la construction (et le champ de l'admin n'a plus de valeur par défaut). Aucun rendez-vous existant ne porte l'ancien nom (vérifié : seul `.gitkeep`) ;
-- `jsonld.ts` : « lieu habituel » = `lieu.nom` reçu en paramètre ; coordonnées depuis `lieu.yml`. Plus de `LIEU_PAR_DEFAUT` ni de `site.gps` en dur.
+- la section « La pratique » : l'itinéraire (paragraphe « Dans le parc de Rambouillet… fanion « Fan 2 Harmonie » ») sort de `pratique.md` pour venir de `lieu.md`, mot pour mot, sans dupliquer les coordonnées ;
+- le lieu des rendez-vous : le champ `lieu` du schéma des rendez-vous n'a plus de défaut figé ; vide, il prend `lieu.nom` à la construction (et le champ de l'admin n'a plus de valeur par défaut). Les rendez-vous existants portent explicitement `lieu: Parc de Rambouillet, près de la bergerie` (valeur par défaut écrite par l'admin) : migration prévue, qui supprime la ligne `lieu:` quand elle est égale à l'ancien nom par défaut, faite à l'implémentation puis refaite avant la fusion finale pour les fichiers créés entre-temps par la propriétaire ;
+- `jsonld.ts` : « lieu habituel » = `lieu.nom` reçu en paramètre ; coordonnées depuis `lieu.md`. Plus de `LIEU_PAR_DEFAUT` ni de `site.gps` en dur.
 
 Validation : latitude entre -90 et 90, longitude entre -180 et 180.
 
@@ -71,9 +71,9 @@ Nombre d'actualités affichées sur l'accueil : de 3 à 6 (`dernieresActualites`
 
 Dans le code :
 
-- Titre et description de la page, modifiables dans `referencement.yml` (valeurs actuelles par défaut) ; champ facultatif `verificationGoogle` rendu en `<meta name="google-site-verification">` : Stéphanie colle elle-même le code donné par la Search Console, sans développeur.
+- Titre et description de la page, modifiables dans `referencement.md` (valeurs actuelles par défaut) ; champ facultatif `verificationGoogle` rendu en `<meta name="google-site-verification">` : Stéphanie colle elle-même le code donné par la Search Console, sans développeur.
 - Titres et textes mieux alignés sur les requêtes réelles (« Qi Gong Rambouillet », « gratuit », « en plein air »), sans bourrage de mots-clés.
-- Courte FAQ visible (où, quand, tarif, tenue) avec données structurées `FAQPage` ; données structurées des évènements enrichies avec le lieu éditable et les photos.
+- Courte FAQ visible (où, quand, tarif, tenue), éditable (stockée dans `accueil.md`) et ne mentionnant jamais d'horaire d'ouverture, pour ne pas contredire les horaires éditables, avec données structurées `FAQPage` ; données structurées des évènements enrichies avec le lieu éditable (une actualité n'est pas une séance : pas de photos dans le JSON-LD).
 - Sitemap : date de dernière modification.
 - Vérifier que la page est servie sans blocage d'indexation et que `noindex` ne concerne que la 404.
 
