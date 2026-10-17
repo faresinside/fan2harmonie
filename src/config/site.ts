@@ -15,7 +15,6 @@ export const site: {
   email: string;
   /** Script de contact PHP du même hébergement (public/api/contact.php) : même origine, rien ne sort de France. */
   formEndpoint: string;
-  gps: { lat: 48.64703; lon: 1.811268 };
   /** SIRET, facultatif : la ligne « SIRET » des mentions légales n'apparaît que s'il est renseigné. */
   siret: string | null;
   /** Ville, facultative : affichée dans les mentions légales seulement si elle est renseignée. */
@@ -33,7 +32,6 @@ export const site: {
   url: process.env['AUDIT_SITE_URL'] || 'https://fan2harmonie.fr',
   email: 'contact@fan2harmonie.fr',
   formEndpoint: '/api/contact.php',
-  gps: { lat: 48.64703, lon: 1.811268 },
   // Stéphanie exerce à titre gratuit, sans entreprise : pas de SIRET.
   siret: null,
   ville: null,

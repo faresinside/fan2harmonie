@@ -7,7 +7,6 @@ import {
   CODE_GOOGLE_REGEX,
   HEURE_REGEX,
   ICONES_BIENFAIT,
-  LIEU_PAR_DEFAUT,
   accueilSchema,
   actualiteSchema,
   dateSchema,
@@ -188,7 +187,8 @@ describe('config.yml de Sveltia CMS', () => {
     const rdv = collection('rendezvous');
     expect(champ(rdv, 'date').required).not.toBe(false);
     expect(champ(rdv, 'heure').required).not.toBe(false);
-    expect(champ(rdv, 'lieu').default).toBe(LIEU_PAR_DEFAUT);
+    expect(champ(rdv, 'lieu').default).toBeUndefined();
+    expect(champ(rdv, 'lieu').hint).toContain('Laissez vide pour le lieu habituel');
     expect(champ(rdv, 'lieu').required).toBe(false);
     expect(champ(rdv, 'remarque').required).toBe(false);
     expect(champ(rdv, 'annule').widget).toBe('boolean');
@@ -434,7 +434,7 @@ describe('fichiers tels qu’écrits par le CMS (YAML sans guillemets), lus par 
       '---',
       'date: 2026-10-17',
       'heure: 16:00',
-      `lieu: ${LIEU_PAR_DEFAUT}`,
+      'lieu: Salle des fêtes',
       'remarque: Annulé en cas de pluie',
       'annule: false',
       '---',

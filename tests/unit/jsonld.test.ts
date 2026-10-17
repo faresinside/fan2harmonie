@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { decalageParis, donneesSite, serialiserJsonLd, type Seance } from '../../src/lib/jsonld';
-import { LIEU_PAR_DEFAUT } from '../../src/lib/schemas';
 
 const infos = {
   nom: 'Fan 2 Harmonie',
@@ -8,12 +7,12 @@ const infos = {
   url: 'https://www.exemple.fr/',
   image: 'https://www.exemple.fr/_astro/hero.jpg',
   organisateur: 'Stéphanie Gabalda',
-  gps: { lat: 48.64703, lon: 1.811268 },
+  lieu: { nom: 'Parc test', lat: 48.1, lon: 1.2 },
 };
 const seance = (surcharge: Partial<Seance> = {}): Seance => ({
   date: '2026-10-17',
   heure: '10:00',
-  lieu: LIEU_PAR_DEFAUT,
+  lieu: 'Parc test',
   annule: false,
   ...surcharge,
 });
@@ -64,9 +63,9 @@ describe('donneesSite', () => {
       isAccessibleForFree: true,
       location: {
         '@type': 'Place',
-        name: LIEU_PAR_DEFAUT,
+        name: 'Parc test',
         address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' },
-        geo: { '@type': 'GeoCoordinates', latitude: 48.64703, longitude: 1.811268 },
+        geo: { '@type': 'GeoCoordinates', latitude: 48.1, longitude: 1.2 },
       },
       image: ['https://www.exemple.fr/_astro/hero.jpg'],
       organizer: { '@type': 'Person', name: 'Stéphanie Gabalda', url: 'https://www.exemple.fr/' },
@@ -79,6 +78,18 @@ describe('donneesSite', () => {
     const [, evenement] = donneesSite(infos, [seance({ annule: true, lieu: 'Salle des fêtes' })])['@graph'] as [unknown, Record<string, unknown>];
     expect(evenement?.['eventStatus']).toBe('https://schema.org/EventCancelled');
     expect(evenement?.['location']).toEqual({ '@type': 'Place', name: 'Salle des fêtes', address: 'Salle des fêtes' });
+    expect(JSON.stringify(evenement?.['location'])).not.toContain('geo');
+  });
+
+  it('le lieu habituel est celui des réglages : un autre nom de lieu ne reçoit ni ville ni GPS', () => {
+    const renomme = { ...infos, lieu: { nom: 'Étang du parc', lat: 48.7, lon: 1.9 } };
+    const [, ancien, nouveau] = donneesSite(renomme, [seance({ lieu: 'Parc test' }), seance({ lieu: 'Étang du parc' })])['@graph'] as [unknown, Record<string, unknown>, Record<string, unknown>];
+    expect(ancien?.['location']).toEqual({ '@type': 'Place', name: 'Parc test', address: 'Parc test' });
+    expect(nouveau?.['location']).toMatchObject({
+      name: 'Étang du parc',
+      address: { addressLocality: 'Rambouillet' },
+      geo: { latitude: 48.7, longitude: 1.9 },
+    });
   });
 
   it('plusieurs séances : un évènement chacune, dans l’ordre reçu', () => {

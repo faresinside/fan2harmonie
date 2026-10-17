@@ -1,5 +1,3 @@
-import { LIEU_PAR_DEFAUT } from './schemas';
-
 /** Sérialise des données structurées pour <script type="application/ld+json"> sans risque de fermer la balise. */
 export function serialiserJsonLd(donnees: unknown): string {
   return JSON.stringify(donnees).replace(/</g, '\\u003c');
@@ -14,7 +12,8 @@ export interface InfosSite {
   image: string;
   /** Prénom et nom de l'éditrice, organisatrice des séances (déjà publics : mentions légales). */
   organisateur: string;
-  gps: { lat: number; lon: number };
+  /** Lieu habituel de la pratique (réglages) : nom et coordonnées. */
+  lieu: { nom: string; lat: number; lon: number };
 }
 
 /** Une séance à venir, telle qu'elle est affichée dans la liste des rendez-vous. */
@@ -47,7 +46,7 @@ export function decalageParis(date: string, heure: string): string {
  */
 export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
   const evenements = seances.map((s) => {
-    const habituel = s.lieu === LIEU_PAR_DEFAUT;
+    const habituel = s.lieu === infos.lieu.nom;
     return {
       '@type': 'Event',
       name: 'Séance de Qi Gong en plein air',
@@ -61,7 +60,7 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
             '@type': 'Place',
             name: s.lieu,
             address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' },
-            geo: { '@type': 'GeoCoordinates', latitude: infos.gps.lat, longitude: infos.gps.lon },
+            geo: { '@type': 'GeoCoordinates', latitude: infos.lieu.lat, longitude: infos.lieu.lon },
           }
         : { '@type': 'Place', name: s.lieu, address: s.lieu },
       image: [infos.image],

@@ -7,6 +7,7 @@ import '../styles/fonts.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import { getImage } from 'astro:assets';
+import { getEntry } from 'astro:content';
 import { site } from '../config/site';
 import { donneesSite, serialiserJsonLd, type Seance } from '../lib/jsonld';
 import { jeton } from '../lib/jetons';
@@ -34,6 +35,10 @@ const canonique = absolue(Astro.url.pathname);
 // Image de partage (Open Graph) : la photo d'accueil recadrée (l'affiche n'est pas utilisée pour le partage).
 const imageOg = await getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 });
 
+// Lieu habituel (réglages) : lu ici pour que toutes les pages, 404 et mentions légales comprises, aient les mêmes données.
+const lieu = await getEntry('reglagesLieu', 'lieu');
+if (!lieu) throw new Error('Réglages manquants : src/content/reglages/lieu.md');
+
 const jsonLd = donneesSite(
   {
     nom: site.nom,
@@ -41,7 +46,7 @@ const jsonLd = donneesSite(
     url: absolue('/'),
     image: absolue(imageOg.src),
     organisateur: site.editeur,
-    gps: site.gps,
+    lieu: { nom: lieu.data.nom, lat: lieu.data.latitude, lon: lieu.data.longitude },
   },
   seances,
 );

@@ -20,6 +20,7 @@ import IconSilhouette from '../components/IconSilhouette.astro';
 import IconSouffle from '../components/IconSouffle.astro';
 import IconLotus from '../components/IconLotus.astro';
 import { upcoming } from '../lib/rendezvous';
+import { resoudreLieu } from '../lib/lieu';
 import { dernieresActualites } from '../lib/actualites';
 
 async function page(id: 'pratique' | 'qigong' | 'parcours') {
@@ -31,10 +32,19 @@ async function page(id: 'pratique' | 'qigong' | 'parcours') {
 
 const [pratique, qigong, parcours] = await Promise.all([page('pratique'), page('qigong'), page('parcours')]);
 
+// Lieu habituel (réglages) : nom, coordonnées et indications d'accès. Une séance sans lieu propre s'y tient.
+const lieuEntree = await getEntry('reglagesLieu', 'lieu');
+if (!lieuEntree) throw new Error('Réglages manquants : src/content/reglages/lieu.md');
+const { Content: IndicationsLieu } = await render(lieuEntree);
+const lieu = lieuEntree.data;
+/** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
+const avecIndications = Boolean(lieuEntree.body?.trim());
+
+// Lieu résolu une fois pour toutes : liste des rendez-vous et données structurées affichent le même nom.
 const rendezvous = upcoming(
   (await getCollection('rendezvous')).map((r) => r.data),
   new Date(),
-);
+).map((r) => ({ ...r, lieu: resoudreLieu(r.lieu, lieu.nom) }));
 
 const actualites = await Promise.all(
   dernieresActualites(await getCollection('actualites')).map(async (a) => ({
@@ -69,7 +79,15 @@ const actualites = await Promise.all(
       <div class="prose">
         <pratique.Content />
       </div>
-      <LienCarte />
+      <LienCarte gps={{ lat: lieu.latitude, lon: lieu.longitude }}>
+        {
+          avecIndications && (
+            <div class="prose">
+              <IndicationsLieu />
+            </div>
+          )
+        }
+      </LienCarte>
     </Section>
 
     <Section id="qigong" titre={qigong.titre} accent="le souffle vital" ton="chaud">

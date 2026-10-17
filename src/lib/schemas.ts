@@ -1,8 +1,6 @@
 // `astro/zod` : même instance de Zod que celle utilisée par les collections Astro.
 import { z } from 'astro/zod';
 
-export const LIEU_PAR_DEFAUT = 'Parc de Rambouillet, près de la bergerie';
-
 /** Format HH:MM, 00:00 à 23:59 (réutilisable, p. ex. par la config du CMS). */
 export const HEURE_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -30,7 +28,8 @@ export const dateSchema = z
 export const rendezvousSchema = z.object({
   date: dateSchema,
   heure: z.string().regex(HEURE_REGEX),
-  lieu: z.string().default(LIEU_PAR_DEFAUT),
+  /** Facultatif : absent ou vide, la séance a lieu au lieu habituel (réglages « Lieu de la pratique »). */
+  lieu: z.string().optional(),
   remarque: z.string().optional(),
   annule: z.boolean().default(false),
 });

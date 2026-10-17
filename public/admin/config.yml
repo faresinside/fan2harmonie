@@ -24,7 +24,7 @@ slug:
   clean_accents: true
 
 # Champ facultatif laissé vide : non écrit dans le fichier, pour que le site applique sa valeur par défaut
-# (lieu habituel) et qu'une actualité sans photo n'ait pas de chemin d'image vide.
+# (lieu habituel des réglages) et qu'une actualité sans photo n'ait pas de chemin d'image vide.
 output:
   omit_empty_optional_fields: true
 
@@ -89,8 +89,7 @@ collections:
         label: Lieu
         widget: string
         required: false
-        default: Parc de Rambouillet, près de la bergerie
-        hint: Laissez le lieu habituel, sauf si la séance a lieu ailleurs.
+        hint: Laissez vide pour le lieu habituel (celui de « Lieu de la pratique » dans les réglages du site), sauf si la séance a lieu ailleurs.
       - name: remarque
         label: Remarque
         widget: string

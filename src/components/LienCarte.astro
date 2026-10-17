@@ -1,15 +1,24 @@
 ---
-/** Lieu de la pratique : coordonnées GPS en texte et lien Google Maps, construits depuis `site.gps`. */
-import { site } from '../config/site';
-import { coordonneesFr, lienCarte } from '../lib/carte';
+/**
+ * Lieu de la pratique : indications d'accès (contenu fourni, facultatif), coordonnées GPS en texte et lien Google Maps,
+ * construits depuis les coordonnées reçues (réglages « Lieu de la pratique »).
+ */
+import { coordonneesFr, lienCarte, type Gps } from '../lib/carte';
+
+interface Props {
+  gps: Gps;
+}
+
+const { gps } = Astro.props;
 ---
 
 <div class="lieu">
   <p class="lieu__titre">Le lieu</p>
+  <slot />
   <p class="lieu__gps">
-    Coordonnées GPS : <span class="lieu__coordonnees">{coordonneesFr(site.gps)}</span>
+    Coordonnées GPS : <span class="lieu__coordonnees">{coordonneesFr(gps)}</span>
   </p>
-  <a class="lieu__lien" href={lienCarte(site.gps)} target="_blank" rel="noopener noreferrer">
+  <a class="lieu__lien" href={lienCarte(gps)} target="_blank" rel="noopener noreferrer">
     Ouvrir dans Google Maps <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
   </a>
 </div>
@@ -28,6 +37,10 @@ import { coordonneesFr, lienCarte } from '../lib/carte';
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--encre-doux);
+  }
+
+  .lieu :global(.prose) {
+    margin-top: var(--s-1);
   }
 
   .lieu__gps {

@@ -12,7 +12,7 @@ import {
 describe('rendezvousSchema', () => {
   it('accepte une date et une heure valides, avec valeurs par défaut', () => {
     const r = rendezvousSchema.parse({ date: '2026-10-10', heure: '16:00' });
-    expect(r.lieu).toBe('Parc de Rambouillet, près de la bergerie');
+    expect(r.lieu).toBeUndefined();
     expect(r.annule).toBe(false);
     expect(r.remarque).toBeUndefined();
   });
