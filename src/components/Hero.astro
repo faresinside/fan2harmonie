@@ -10,13 +10,21 @@ import IconSouffle from './IconSouffle.astro';
 import IconLotus from './IconLotus.astro';
 import IconSilhouette from './IconSilhouette.astro';
 import IconYinYang from './IconYinYang.astro';
+import type { Accueil } from '../lib/schemas';
 
-const bienfaits = [
-  { Icone: IconSouffle, libelle: 'Faire circuler l’énergie' },
-  { Icone: IconLotus, libelle: 'Calmer l’esprit' },
-  { Icone: IconSilhouette, libelle: 'Travailler les muscles profonds' },
-  { Icone: IconYinYang, libelle: 'Souplesse' },
-];
+interface Props {
+  accueil: Accueil;
+}
+
+const { accueil } = Astro.props;
+
+/** Icône choisie dans l'administration → composant (liste fermée : ICONES_BIENFAIT). */
+const ICONES = {
+  souffle: IconSouffle,
+  lotus: IconLotus,
+  silhouette: IconSilhouette,
+  yinyang: IconYinYang,
+} satisfies Record<Accueil['bienfaits'][number]['icone'], unknown>;
 ---
 
 <section id="accueil" class="accueil" aria-labelledby="accueil-titre">
@@ -37,18 +45,29 @@ const bienfaits = [
 
     <div class="accueil__contenu container">
       <div class="accueil__texte">
-        <p class="script accueil__accent apparait" style="--retard: 0ms">1 heure pour vous…</p>
+        <p class="script accueil__accent apparait" style="--retard: 0ms">{accueil.accroche}</p>
         <h1 id="accueil-titre" class="accueil__titre apparait" style="--retard: 60ms">
-          <span class="accueil__titre-principal">Qi Gong</span><span class="sr-only"> : </span>
-          <span class="accueil__titre-second">Animation découverte</span>
+          <span class="accueil__titre-principal">{accueil.titre}</span><span class="sr-only"> : </span>
+          <span class="accueil__titre-second">{accueil.sousTitre}</span>
         </h1>
-        <p class="accueil__devise apparait" style="--retard: 120ms">Respirez, Bougez, Équilibrez-vous</p>
+        <p class="accueil__devise apparait" style="--retard: 120ms">{accueil.devise}</p>
         <p class="accueil__infos apparait" style="--retard: 180ms">
-          Parc de Rambouillet <span aria-hidden="true">·</span> samedis ou dimanches à 16h00
-          <span aria-hidden="true">·</span> gratuit
+          {
+            accueil.infos.map((info, i) => (
+              <>
+                {i > 0 && (
+                  <>
+                    {' '}
+                    <span aria-hidden="true">·</span>{' '}
+                  </>
+                )}
+                {info}
+              </>
+            ))
+          }
         </p>
         <div class="apparait" style="--retard: 240ms">
-          <a class="bouton bouton--rose accueil__appel" href="#rdv">Venez essayer</a>
+          <a class="bouton bouton--rose accueil__appel" href="#rdv">{accueil.bouton}</a>
         </div>
       </div>
 
@@ -71,12 +90,15 @@ const bienfaits = [
   <div class="accueil__bienfaits">
     <ul class="bienfaits container" role="list">
       {
-        bienfaits.map(({ Icone, libelle }, i) => (
-          <li class="bienfaits__item apparait" style={`--retard: ${300 + i * 80}ms`}>
-            <Icone />
-            <span>{libelle}</span>
-          </li>
-        ))
+        accueil.bienfaits.map(({ icone, libelle }, i) => {
+          const Icone = ICONES[icone];
+          return (
+            <li class="bienfaits__item apparait" style={`--retard: ${300 + i * 80}ms`}>
+              <Icone />
+              <span>{libelle}</span>
+            </li>
+          );
+        })
       }
     </ul>
   </div>

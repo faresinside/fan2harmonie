@@ -37,6 +37,11 @@ const lieuEntree = await getEntry('reglagesLieu', 'lieu');
 if (!lieuEntree) throw new Error('Réglages manquants : src/content/reglages/lieu.md');
 const { Content: IndicationsLieu } = await render(lieuEntree);
 const lieu = lieuEntree.data;
+
+// Textes de l'accueil (réglages) : accroche, titre, infos, bouton et bienfaits.
+const accueilEntree = await getEntry('reglagesAccueil', 'accueil');
+if (!accueilEntree) throw new Error('Texte manquant : src/content/reglages/accueil.md');
+const accueil = accueilEntree.data;
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
 
@@ -68,7 +73,7 @@ const actualites = await Promise.all(
   <Header actualites={actualites.length > 0} />
 
   <main id="contenu" tabindex="-1">
-    <Hero />
+    <Hero accueil={accueil} />
 
     <Section id="rdv" titre="Prochains rendez-vous" accent="Rejoignez-moi" ton="chaud" mise="centree">
       <RdvList items={rendezvous} />
