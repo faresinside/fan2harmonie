@@ -14,6 +14,7 @@ import Section from '../components/Section.astro';
 import RdvList from '../components/RdvList.astro';
 import ActualiteCard from '../components/ActualiteCard.astro';
 import LienCarte from '../components/LienCarte.astro';
+import Faq from '../components/Faq.astro';
 import ContactForm from '../components/ContactForm.astro';
 import Footer from '../components/Footer.astro';
 import IconSilhouette from '../components/IconSilhouette.astro';
@@ -42,6 +43,12 @@ const lieu = lieuEntree.data;
 const accueilEntree = await getEntry('reglagesAccueil', 'accueil');
 if (!accueilEntree) throw new Error('Texte manquant : src/content/reglages/accueil.md');
 const accueil = accueilEntree.data;
+
+// Titre, description et code de vérification Google de l'accueil (réglages « Référencement Google »).
+const referencementEntree = await getEntry('reglagesReferencement', 'referencement');
+if (!referencementEntree) throw new Error('Texte manquant : src/content/reglages/referencement.md');
+const referencement = referencementEntree.data;
+
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
 
@@ -60,8 +67,10 @@ const actualites = await Promise.all(
 ---
 
 <Base
-  titre="Fan 2 Harmonie — Qi Gong au parc de Rambouillet"
-  description="Qi Gong gratuit en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Accessible à tous, à tout âge et à tous niveaux."
+  titre={referencement.titre}
+  description={referencement.description}
+  verificationGoogle={referencement.verificationGoogle}
+  faq={accueil.faq}
   seances={rendezvous.map((r) => ({
     date: r.date.toISOString().slice(0, 10),
     heure: r.heure,
@@ -93,6 +102,7 @@ const actualites = await Promise.all(
           )
         }
       </LienCarte>
+      <Faq items={accueil.faq} />
     </Section>
 
     <Section id="qigong" titre={qigong.titre} accent="le souffle vital" ton="chaud">

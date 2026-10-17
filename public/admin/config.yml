@@ -271,6 +271,25 @@ collections:
                 maxlength: 60
                 hint: Un bienfait en quelques mots, 60 caractères au maximum.
             hint: Les bienfaits de la pratique affichés sur l’accueil. Entre 1 et 6.
+          - name: faq
+            label: Questions fréquentes
+            label_singular: question
+            widget: list
+            required: false
+            max: 8
+            summary: '{{question}}'
+            fields:
+              - name: question
+                label: Question
+                widget: string
+                maxlength: 120
+                hint: La question telle qu’une personne la poserait, 120 caractères au maximum.
+              - name: reponse
+                label: Réponse
+                widget: text
+                maxlength: 400
+                hint: Une réponse courte, 400 caractères au maximum. N’écrivez pas d’heure, elle changerait d’une séance à l’autre.
+            hint: Les questions affichées dans « La pratique » et connues de Google. Jusqu’à 8, ou aucune.
       - name: lieu
         label: Lieu de la pratique
         file: src/content/reglages/lieu.md

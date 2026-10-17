@@ -357,12 +357,12 @@ describe('config.yml de Sveltia CMS', () => {
 
     /** Bornes réellement appliquées par un schéma Zod, trouvées en l'interrogeant (longueurs 0 à 300 de `valeur`). */
     type Sonde = { safeParse(v: unknown): { success: boolean } };
-    const bornes = (schema: Sonde, fabrique: (n: number) => unknown): { min: number; max: number } => {
-      const acceptees = Array.from({ length: 301 }, (_, n) => n).filter((n) => schema.safeParse(fabrique(n)).success);
+    const bornes = (schema: Sonde, fabrique: (n: number) => unknown, sonde = 300): { min: number; max: number } => {
+      const acceptees = Array.from({ length: sonde + 1 }, (_, n) => n).filter((n) => schema.safeParse(fabrique(n)).success);
       if (acceptees.length === 0) throw new Error('aucune longueur acceptée par le schéma');
       const min = Math.min(...acceptees);
       const max = Math.max(...acceptees);
-      expect(max, 'borne haute trouvée trop proche de la limite de sonde').toBeLessThan(300);
+      expect(max, 'borne haute trouvée trop proche de la limite de sonde').toBeLessThan(sonde);
       expect(acceptees.length, 'longueurs acceptées non contiguës').toBe(max - min + 1);
       return { min, max };
     };
@@ -370,8 +370,8 @@ describe('config.yml de Sveltia CMS', () => {
     const liste = (n: number) => Array.from({ length: n }, () => 'a');
 
     /** Le champ texte du CMS impose les mêmes bornes que le schéma (obligatoire si le minimum est 1 ou plus). */
-    const verifieChaine = (nom: string, f: Champ, schema: Sonde) => {
-      const { min, max } = bornes(schema, chaine);
+    const verifieChaine = (nom: string, f: Champ, schema: Sonde, sonde = 300) => {
+      const { min, max } = bornes(schema, chaine, sonde);
       expect(f['maxlength'], `${nom} : maxlength`).toBe(max);
       if (min > 1) expect(f['minlength'], `${nom} : minlength`).toBe(min);
       else expect(f['minlength'], `${nom} : minlength`).toBeUndefined();
@@ -419,6 +419,29 @@ describe('config.yml de Sveltia CMS', () => {
       const forme = accueilSchema.shape.bienfaits.element.shape;
       verifieChaine('bienfaits.libelle', champ(bienfaits as { fields?: Champ[] }, 'libelle'), forme.libelle);
       expect(champ(bienfaits as { fields?: Champ[] }, 'icone').required, 'bienfaits.icone : obligatoire').not.toBe(false);
+    });
+
+    it('FAQ : liste facultative de 0 à 8 questions, question (ligne) et réponse (texte) bornées par le schéma', () => {
+      const faq = champ(fichier('accueil'), 'faq');
+      expect(faq.widget).toBe('list');
+      expect(faq.required).toBe(false);
+      expect(faq['min']).toBeUndefined();
+      const uneQuestion = { question: 'a', reponse: 'a' };
+      const nb = bornes(accueilSchema.shape.faq, (n) => Array.from({ length: n }, () => uneQuestion));
+      expect(nb.min).toBe(0);
+      expect(faq['max'], 'faq : max').toBe(nb.max);
+      expect(faq['max']).toBe(8);
+      const sous = faq['fields'] as Champ[];
+      expect(sous.map((x) => x.name)).toEqual(['question', 'reponse']);
+      const forme = accueilSchema.shape.faq.unwrap().element.shape;
+      const question = champ({ fields: sous }, 'question');
+      expect(question.widget).toBe('string');
+      verifieChaine('faq.question', { ...question, required: question.required ?? true }, forme.question);
+      const reponse = champ({ fields: sous }, 'reponse');
+      expect(reponse.widget).toBe('text');
+      verifieChaine('faq.reponse', { ...reponse, required: reponse.required ?? true }, forme.reponse, 600);
+      // Facultative dans le fichier : sans « faq », le site n'affiche aucune FAQ.
+      expect(accueilSchema.shape.faq.safeParse(undefined)).toMatchObject({ success: true, data: [] });
     });
 
     it('lieu : champs obligatoires comme dans le schéma', () => {

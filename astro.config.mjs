@@ -21,7 +21,13 @@ export default defineConfig({
   // Feuilles de style en ligne (le CSS du site est petit) : aucune requête ne bloque le premier affichage.
   build: { inlineStylesheets: 'always' },
   // /admin est un fichier statique de public/ : il n'est pas une page et n'entre donc pas dans le plan du site.
-  integrations: [sitemap()],
+  // Date de modification (construction du jour) pour l'accueil seulement : les mentions légales changent rarement.
+  integrations: [
+    sitemap({
+      serialize: (item) =>
+        item.url === new URL('/', site.url).href ? { ...item, lastmod: new Date().toISOString() } : item,
+    }),
+  ],
   markdown: {
     // Le HTML brut des contenus Markdown s'affiche comme du texte, jamais interprété ; images distantes et liens
     // à schéma dangereux (javascript:, data:…) deviennent du texte, sans jamais faire échouer la construction.

@@ -72,6 +72,16 @@ export const accueilSchema = z.object({
     )
     .min(1)
     .max(6),
+  /** Questions fréquentes : affichées dans « La pratique » et décrites à Google (FAQPage). Aucune : rien n'est affiché. */
+  faq: z
+    .array(
+      z.object({
+        question: z.string().min(1).max(120),
+        reponse: z.string().min(1).max(400),
+      }),
+    )
+    .max(8)
+    .default([]),
 });
 
 export type Accueil = z.infer<typeof accueilSchema>;

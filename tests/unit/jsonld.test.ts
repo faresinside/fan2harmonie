@@ -103,6 +103,41 @@ describe('donneesSite', () => {
   });
 });
 
+describe('donneesSite : FAQ', () => {
+  const faq = [
+    { question: 'Combien coûte une séance ?', reponse: 'Les séances sont gratuites.' },
+    { question: 'Quelle tenue prévoir ?', reponse: 'Des vêtements souples et des chaussures plates.' },
+  ];
+
+  it('FAQ absente ou vide : aucun nœud FAQPage', () => {
+    for (const donnees of [donneesSite(infos, []), donneesSite(infos, [], []), donneesSite(infos, [seance()], [])]) {
+      expect(JSON.stringify(donnees)).not.toContain('FAQPage');
+    }
+  });
+
+  it('deux questions : un nœud FAQPage avec deux Question dont la réponse acceptée reprend le texte affiché', () => {
+    const graphe = donneesSite(infos, [], faq)['@graph'];
+    const page = graphe.find((n) => n['@type'] === 'FAQPage') as { mainEntity: Record<string, unknown>[] };
+    expect(page).toBeDefined();
+    expect(page.mainEntity).toEqual(
+      faq.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.reponse },
+      })),
+    );
+    // Le site reste le premier nœud, les évènements ne sont pas perdus.
+    expect(graphe[0]?.['@type']).toBe('WebSite');
+    expect(donneesSite(infos, [seance()], faq)['@graph'].map((n) => n['@type'])).toEqual(['WebSite', 'Event', 'FAQPage']);
+  });
+
+  it('une question saisie dans /admin ne peut pas fermer la balise script', () => {
+    const sortie = serialiserJsonLd(donneesSite(infos, [], [{ question: '</script>', reponse: 'a < b' }]));
+    expect(sortie).not.toContain('<');
+    expect(JSON.parse(sortie)['@graph'][1].mainEntity[0].name).toBe('</script>');
+  });
+});
+
 describe('serialiserJsonLd', () => {
   it('échappe « < » : une chaîne ne peut pas fermer la balise script', () => {
     const sortie = serialiserJsonLd({ description: '</script><script>alert(1)</script>' });

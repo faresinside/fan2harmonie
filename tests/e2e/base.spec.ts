@@ -1,4 +1,13 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
+import { parse } from 'yaml';
+import { site } from '../../src/config/site';
+
+/** Front matter d'un fichier de réglages (src/content/reglages/<nom>.md), lu comme le fait le site. */
+function reglages<T>(nom: string): T {
+  const texte = readFileSync(`src/content/reglages/${nom}.md`, 'utf8').replace(/\r\n/g, '\n');
+  return parse(/^---\n([\s\S]*?)\n---/.exec(texte)?.[1] ?? '') as T;
+}
 
 /** Familles réellement chargées (FontFace au statut « loaded »). */
 async function famillesChargees(page: Page): Promise<string[]> {
@@ -25,8 +34,10 @@ test.describe('mise en page de base', () => {
     expect(scripts.length).toBe(1);
     const donnees = JSON.parse(scripts[0] ?? '') as { '@context': string; '@graph': Record<string, unknown>[] };
     expect(donnees['@context']).toBe('https://schema.org');
-    const [site, ...evenements] = donnees['@graph'];
-    expect(site).toMatchObject({ '@type': 'WebSite', name: 'Fan 2 Harmonie', inLanguage: 'fr-FR' });
+    const [accueil, ...autres] = donnees['@graph'];
+    // La FAQ (FAQPage) est vérifiée à part : ici, le site et les séances.
+    const evenements = autres.filter((n) => n['@type'] !== 'FAQPage');
+    expect(accueil).toMatchObject({ '@type': 'WebSite', name: 'Fan 2 Harmonie', inLanguage: 'fr-FR' });
     expect(JSON.stringify(donnees)).not.toMatch(/LocalBusiness|priceRange|areaServed|postalCode|streetAddress/);
     // Chaque séance à venir : évènement gratuit, daté à l'heure de Paris, avec un lieu.
     for (const e of evenements) {
@@ -36,6 +47,76 @@ test.describe('mise en page de base', () => {
     }
     // Un évènement par feuillet de la liste des rendez-vous.
     await expect(page.locator('#rdv li[data-date]')).toHaveCount(evenements.length);
+  });
+
+  test('référencement : titre et description de l’accueil = référencement.md, aucune vérification Google tant que le champ est vide, pas de noindex', async ({ page }) => {
+    const ref = reglages<{ titre: string; description: string; verificationGoogle?: string }>('referencement');
+    await page.goto('/');
+    await expect(page).toHaveTitle(ref.titre);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', ref.description);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', ref.titre);
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', ref.description);
+    // Ni horaire ni jour dans le titre et la description : ils changeraient sans que Google le sache.
+    expect(`${ref.titre} ${ref.description}`).not.toMatch(/\d\s?h\s?\d{0,2}|\d{1,2}:\d{2}/);
+    // Le code de vérification n'est rendu que s'il est renseigné (le contenu de départ n'en a pas).
+    expect(ref.verificationGoogle).toBeUndefined();
+    await expect(page.locator('meta[name="google-site-verification"]')).toHaveCount(0);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+    await expect(page.locator('h1')).toHaveCount(1);
+  });
+
+  test('canonique de l’accueil : l’adresse du site, avec la barre finale', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', new URL('/', site.url).href);
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+  });
+
+  test('FAQ : questions visibles dans « La pratique », sans horaire, identiques aux données structurées (FAQPage)', async ({ page }) => {
+    const { faq } = reglages<{ faq: { question: string; reponse: string }[] }>('accueil');
+    expect(faq).toHaveLength(4);
+    await page.goto('/');
+    const blocs = page.locator('#pratique details.faq__question');
+    await expect(blocs).toHaveCount(4);
+    const visibles = await blocs.evaluateAll((els) =>
+      els.map((e) => ({
+        question: e.querySelector('summary')?.textContent?.trim() ?? '',
+        reponse: e.querySelector('.faq__reponse')?.textContent?.trim() ?? '',
+      })),
+    );
+    expect(visibles).toEqual(faq.map((f) => ({ question: f.question.trim(), reponse: f.reponse.trim() })));
+    for (const f of faq) expect(`${f.question} ${f.reponse}`).not.toMatch(/\d\s?h\s?\d{0,2}|\d{1,2}:\d{2}/);
+    // Données structurées : exactement les questions et réponses affichées.
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const graphe = (JSON.parse(scripts[0] ?? '') as { '@graph': Record<string, unknown>[] })['@graph'];
+    const pages = graphe.filter((n) => n['@type'] === 'FAQPage');
+    expect(pages).toHaveLength(1);
+    const entites = (pages[0]?.['mainEntity'] ?? []) as { '@type': string; name: string; acceptedAnswer: { text: string } }[];
+    expect(entites.map((q) => q['@type'])).toEqual(['Question', 'Question', 'Question', 'Question']);
+    expect(entites.map((q) => ({ question: q.name, reponse: q.acceptedAnswer.text }))).toEqual(
+      visibles.map((v) => ({ question: v.question, reponse: v.reponse })),
+    );
+  });
+
+  test('FAQ : réponse repliée au départ, ouverte au clavier', async ({ page }) => {
+    await page.goto('/');
+    const premier = page.locator('#pratique details.faq__question').first();
+    await expect(premier).not.toHaveAttribute('open', '');
+    await premier.locator('summary').focus();
+    await page.keyboard.press('Enter');
+    await expect(premier).toHaveAttribute('open', '');
+    await expect(premier.locator('.faq__reponse')).toBeVisible();
+  });
+
+  test('plan du site : date de modification (lastmod) sur l’accueil seulement', async ({ request }) => {
+    const xml = await (await request.get('/sitemap-0.xml')).text();
+    const urls = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1] ?? '');
+    expect(urls).toHaveLength(2);
+    const loc = (u: string) => /<loc>([^<]+)<\/loc>/.exec(u)?.[1];
+    const accueil = urls.find((u) => loc(u) === new URL('/', site.url).href) ?? '';
+    const lastmod = /<lastmod>([^<]+)<\/lastmod>/.exec(accueil)?.[1];
+    expect(lastmod).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    expect(Math.abs(Date.now() - new Date(lastmod ?? '').getTime())).toBeLessThan(24 * 3600 * 1000);
+    expect(urls.filter((u) => u !== accueil).join('')).not.toContain('lastmod');
   });
 
   test('lien canonique présent et absolu', async ({ page }) => {

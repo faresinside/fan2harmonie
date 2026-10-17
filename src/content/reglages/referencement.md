@@ -1,4 +1,4 @@
 ---
-titre: Fan 2 Harmonie — Qi Gong au parc de Rambouillet
-description: Qi Gong gratuit en plein air au parc de Rambouillet, les samedis ou dimanches à 16h00. Accessible à tous, à tout âge et à tous niveaux.
+titre: Qi Gong gratuit à Rambouillet — Fan 2 Harmonie
+description: Séances de Qi Gong gratuites en plein air au parc de Rambouillet (Yvelines), ouvertes à tous, à tout âge et à tous niveaux. Dates et lieu sur le site.
 ---
