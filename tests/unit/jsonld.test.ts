@@ -56,7 +56,7 @@ describe('donneesSite', () => {
     expect(evenement).toEqual({
       '@type': 'Event',
       name: 'Séance de Qi Gong en plein air',
-      description: 'Qi Gong en plein air Apportez un tapis.',
+      description: 'Séance de Qi Gong gratuite en plein air, ouverte à tous, à tout âge et à tous niveaux. Apportez un tapis.',
       startDate: '2026-10-17T10:00:00+02:00',
       eventStatus: 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
@@ -90,6 +90,12 @@ describe('donneesSite', () => {
       address: { addressLocality: 'Rambouillet' },
       geo: { latitude: 48.7, longitude: 1.9 },
     });
+  });
+
+  it('description d’un évènement : texte fixe (sans remarque), indépendant de la description du référencement', () => {
+    const autre = { ...infos, description: 'Une autre description de référencement, modifiée par Stéphanie.' };
+    const [, evenement] = donneesSite(autre, [seance()])['@graph'] as [unknown, Record<string, unknown>];
+    expect(evenement?.['description']).toBe('Séance de Qi Gong gratuite en plein air, ouverte à tous, à tout âge et à tous niveaux.');
   });
 
   it('plusieurs séances : un évènement chacune, dans l’ordre reçu', () => {

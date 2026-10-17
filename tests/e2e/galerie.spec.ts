@@ -94,6 +94,18 @@ test('clic sur le fond ferme, le focus revient à la vignette', async ({ page })
   await expect(troisieme).toBeFocused();
 });
 
+test('après fermeture, l’image agrandie est vidée : une autre vignette charge sa propre photo', async ({ page }) => {
+  const { dialogue } = await ouvrirTroisieme(page);
+  await page.keyboard.press('Escape');
+  await expect(cinq(page).locator('dialog[open]')).toHaveCount(0);
+  await expect(cinq(page).locator('dialog img')).not.toHaveAttribute('src', /./);
+  const premiere = vignettes(page).first();
+  await premiere.click();
+  await expect(dialogue).toBeVisible();
+  await expect(dialogue.locator('img')).toHaveAttribute('src', (await premiere.getAttribute('data-grand'))!);
+  await expect(dialogue.locator('img')).toHaveAttribute('alt', (await premiere.locator('img').getAttribute('alt'))!);
+});
+
 test('un clic sur la photo agrandie ne ferme pas', async ({ page }) => {
   const { dialogue } = await ouvrirTroisieme(page);
   await dialogue.locator('img').click();

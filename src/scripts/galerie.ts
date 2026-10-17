@@ -29,6 +29,8 @@ export function initialiserGaleries(racine: ParentNode): void {
     dialogue.querySelector('[data-galerie-fermer]')?.addEventListener('click', () => dialogue.close());
     // Échap déclenche « cancel » puis « close » nativement ; toutes les fermetures passent par « close ».
     dialogue.addEventListener('close', () => {
+      // L'image agrandie est vidée : la photo précédente ne reste pas sous le texte alternatif de la suivante.
+      image.removeAttribute('src');
       vignetteOuverte?.focus();
       vignetteOuverte = null;
     });

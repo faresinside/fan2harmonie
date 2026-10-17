@@ -33,6 +33,9 @@ export interface QuestionFaq {
   reponse: string;
 }
 
+/** Description fixe d'une séance : indépendante de la description du référencement (qui ne décrit que le site). */
+const DESCRIPTION_SEANCE = 'Séance de Qi Gong gratuite en plein air, ouverte à tous, à tout âge et à tous niveaux.';
+
 /** Décalage de Paris par rapport à UTC à une date et une heure locales : « +02:00 » l'été, « +01:00 » l'hiver. */
 export function decalageParis(date: string, heure: string): string {
   const approx = new Date(`${date}T${heure}:00Z`);
@@ -57,7 +60,7 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[], faq: r
     return {
       '@type': 'Event',
       name: 'Séance de Qi Gong en plein air',
-      description: s.remarque ? `${infos.description} ${s.remarque}` : infos.description,
+      description: s.remarque ? `${DESCRIPTION_SEANCE} ${s.remarque}` : DESCRIPTION_SEANCE,
       startDate: `${s.date}T${s.heure}:00${decalageParis(s.date, s.heure)}`,
       eventStatus: s.annule ? 'https://schema.org/EventCancelled' : 'https://schema.org/EventScheduled',
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
