@@ -79,6 +79,7 @@ Commandes à lancer depuis le PC (forme Docker) ; les alias `npm run …` sont d
 - GitHub : créer l’environnement `production` limité à `main` AVANT d’ajouter les secrets, qui sont des secrets
   d’environnement (jamais des secrets de dépôt) ; détail à l’étape 5 de la checklist.
 - **Guide de Stéphanie** pour l’administration : [`docs/GUIDE-STEPHANIE.md`](docs/GUIDE-STEPHANIE.md).
+- **Procédure Google** (Search Console, plan du site, fiche Google Business Profile) pour Stéphanie : [`docs/PROCEDURE-GOOGLE.md`](docs/PROCEDURE-GOOGLE.md).
 - Revenir en arrière : durablement par `git revert` sur `main` ; en urgence, lancement manuel du déploiement
   depuis `main` avec `ref` = SHA complet d’un ancien commit (provisoire : écrasé au prochain push ou la nuit).
 

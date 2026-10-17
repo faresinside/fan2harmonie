@@ -58,14 +58,24 @@ puis cliquez sur **Supprimer** et confirmez. (Inutile pour les séances passées
 1. À gauche, cliquez sur **Actualités**, puis sur **Nouveau**.
 2. **Titre** : court, 90 caractères au maximum.
 3. **Date** : les actualités les plus récentes s’affichent en premier.
-4. **Photo** (facultative) : cliquez sur **Parcourir**, puis choisissez une photo de votre ordinateur ou de votre
+4. **Photos** (facultatives) : sous **« Photos »**, cliquez sur le bouton d’ajout, puis sur **Parcourir** et choisissez une photo de votre ordinateur ou de votre
    téléphone (format JPEG, PNG ou WebP). Elle est réduite automatiquement : pas besoin de la retoucher.
    Ne publiez pas la photo d’une personne reconnaissable sans son accord.
 5. **Texte** : écrivez votre nouvelle. Les boutons au-dessus permettent de mettre un mot en **gras** ou en
    *italique*, ou d’ajouter un lien.
 6. **Enregistrer**.
 
-## f) Corriger un texte
+## f) Publier une actualité avec plusieurs photos
+
+Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
+
+1. Sous **« Photos »**, cliquez sur le bouton d’ajout, puis sur **Parcourir** pour choisir une première photo.
+2. **« Légende »** (facultative) : une courte phrase qui décrit la photo, pour les personnes qui ne la voient pas.
+3. Pour une autre photo, cliquez de nouveau sur le bouton d’ajout. Les flèches permettent de changer l’ordre,
+   la corbeille de retirer une photo.
+4. **Enregistrer**. Sur le site, un clic sur une photo l’ouvre en grand. L’accueil affiche vos six dernières actualités.
+
+## g) Corriger un texte
 
 ![Textes des pages](images/guide/textes-des-pages.png)
 
@@ -75,7 +85,29 @@ puis cliquez sur **Supprimer** et confirmez. (Inutile pour les séances passées
 - Pour passer à la ligne, laissez **une ligne vide** entre deux paragraphes (appuyez deux fois sur « Entrée »).
 - Écrivez simplement votre texte : pas de code ni de balises, les boutons suffisent pour le gras et l’italique.
 
-## g) Quand le site se met-il à jour ?
+## h) Modifier la page d’accueil
+
+À gauche, cliquez sur **« Réglages du site »**, puis sur **« Page d’accueil »**. Vous y trouvez la phrase d’accroche,
+le titre, le sous-titre, la devise, les petites lignes d’informations pratiques, le texte du bouton et les bienfaits
+(pour chacun, choisissez le dessin et écrivez quelques mots). Les limites de longueur sont indiquées sous chaque
+champ. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
+
+**« Questions fréquentes »** : en bas de la fiche, ajoutez vos questions et leurs réponses (8 au plus). Elles
+s’affichent dans « La pratique » et Google les connaît. N’y écrivez pas d’heure, elle changerait d’une séance à l’autre.
+
+## i) Modifier le lieu
+
+Dans **« Réglages du site »**, cliquez sur **« Lieu de la pratique »** : le nom du lieu, sa latitude et sa longitude
+(deux nombres avec des décimales : dans Google Maps, un clic droit sur le lieu les affiche), et les indications pour
+s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les deux nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
+
+## j) Référencement Google
+
+Dans **« Réglages du site »**, la fiche **« Référencement Google »** contient le titre et la description que Google
+affiche sous le nom de votre site. Elle contient aussi le **code de vérification Google**, à coller une seule fois.
+Pour que Google connaisse votre site, suivez pas à pas la procédure : [`PROCEDURE-GOOGLE.md`](PROCEDURE-GOOGLE.md).
+
+## k) Quand le site se met-il à jour ?
 
 Après chaque enregistrement, **le site se met à jour en quelques minutes** (en pratique, environ 2 minutes).
 Rechargez alors la page du site pour voir le changement.
@@ -84,13 +116,13 @@ Si rien n’a changé au bout de cinq minutes : rechargez la page en appuyant su
 fermez et rouvrez la page). Si le changement n’apparaît toujours pas après un quart d’heure, ce n’est pas grave :
 votre modification est bien gardée, écrivez-moi simplement (rubrique suivante).
 
-## h) En cas de doute
+## l) En cas de doute
 
 Chaque modification est gardée : en cas d’erreur, je peux toujours remettre une version précédente
 (vous ne pouvez pas le faire vous-même, mais vous n’en avez pas besoin). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez-moi, en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
-## i) Bon à savoir
+## m) Bon à savoir
 
 - **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible, le site les distingue tout seul.
 - **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain dans la page affichée, puis

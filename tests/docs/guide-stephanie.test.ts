@@ -83,6 +83,40 @@ describe('docs/GUIDE-STEPHANIE.md', () => {
   });
 });
 
+describe('docs/GUIDE-STEPHANIE.md : accueil, lieu, plusieurs photos, référencement', () => {
+  it('les nouvelles rubriques', () => {
+    for (const titre of [
+      'Publier une actualité avec plusieurs photos',
+      'Modifier la page d’accueil',
+      'Modifier le lieu',
+      'Référencement Google',
+    ]) {
+      expect(texte, titre).toMatch(new RegExp(`^## [a-z]\\) ${titre}`, 'm'));
+    }
+  });
+
+  it('les libellés exacts de l’administration et le renvoi vers la procédure Google', () => {
+    for (const fragment of [
+      '« Réglages du site »',
+      '« Page d’accueil »',
+      '« Lieu de la pratique »',
+      '« Questions fréquentes »',
+      '« Référencement Google »',
+      '« Photos »',
+      '« Légende »',
+      '12 photos',
+      'PROCEDURE-GOOGLE.md',
+    ]) {
+      expect(texte, fragment).toContain(fragment);
+    }
+  });
+
+  it('les rubriques se suivent de a) à m) sans trou', () => {
+    const lettres = [...texte.matchAll(/^## ([a-z])\) /gm)].map((m) => m[1]).join('');
+    expect(lettres).toBe('abcdefghijklm');
+  });
+});
+
 describe('docs/GUIDE-STEPHANIE.md : points de la revue (round 1)', () => {
   it('pas de fausse promesse : c’est l’auteur du site (« je ») qui remet une version précédente', () => {
     expect(texte).not.toMatch(/rien de ce que vous faites ici n’est définitif|Vous ne pouvez rien casser/i);
