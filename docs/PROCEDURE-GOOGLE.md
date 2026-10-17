@@ -20,7 +20,8 @@ La Search Console est l’outil gratuit de Google qui vous dit comment votre sit
 2. Google propose deux types de « propriété ». Choisissez celui de droite, **« Préfixe de l’URL »**.
 3. Écrivez l’adresse de votre site, exactement : **https://fan2harmonie.fr/** puis cliquez sur **Continuer**.
 4. Google propose plusieurs méthodes de vérification (il veut s’assurer que le site est bien à vous). Choisissez
-   **« Balise HTML »**. Google affiche alors une ligne qui ressemble à ceci :
+   **« Balise HTML »**. Si vous ne la voyez pas tout de suite, ouvrez **« Autres méthodes de validation »** (selon
+   l’affichage de Google, elle s’y trouve). Google affiche alors une ligne qui ressemble à ceci :
    `<meta name="google-site-verification" content="une-longue-suite-de-lettres">`
 5. Dans cette ligne, repérez la longue suite de lettres et de chiffres entre les guillemets, juste après
    `content=`. Sélectionnez **seulement cette suite**, puis copiez-la. Ne laissez pas la fenêtre de Google :
@@ -33,7 +34,7 @@ La Search Console est l’outil gratuit de Google qui vous dit comment votre sit
 9. Cliquez sur **Enregistrer**.
 10. Attendez que le site se mette à jour : environ 2 minutes, parfois jusqu’à un quart d’heure (rubrique
     « Quand le site se met-il à jour ? » de votre guide). Rechargez votre site pour être sûre.
-11. Revenez dans l’onglet de la Search Console et cliquez sur **« Valider »**. Google affiche « Propriété validée » :
+11. Revenez dans l’onglet de la Search Console et cliquez sur **« Valider »**. Google affiche un message de réussite (par exemple « Propriété validée », selon son affichage) :
     c’est gagné. Si Google refuse, attendez encore quelques minutes et recommencez.
 
 **Si cette méthode ne marche pas** : Google propose aussi de vérifier par un enregistrement ajouté chez le
@@ -48,12 +49,13 @@ Le plan du site est un fichier que votre site fabrique tout seul et qui liste se
 1. Dans la Search Console, cliquez sur **« Sitemaps »** dans le menu de gauche.
 2. Dans la case « Ajouter un sitemap », écrivez **sitemap-index.xml**. Son adresse complète est
    https://fan2harmonie.fr/sitemap-index.xml.
-3. Cliquez sur **« Envoyer »**. Google affiche « Réussite » au bout d’un moment.
+3. Cliquez sur **« Envoyer »**. Au bout d’un moment, Google affiche un état de réussite (le mot exact peut varier).
 
 Ensuite, demandez à Google de venir voir la page d’accueil sans attendre :
 
 1. Dans la barre de recherche en haut de la Search Console, collez **https://fan2harmonie.fr/**. Cette barre
-   s’appelle **« Inspection de l’URL »**.
+   s’appelle **« Inspection de l’URL »** (selon l’affichage de Google, elle peut
+   porter un texte proche, comme « Inspecter n’importe quelle URL », et le même outil figure aussi dans le menu de gauche).
 2. Appuyez sur « Entrée », puis cliquez sur **« Demander une indexation »**.
 3. Patientez quelques instants, puis fermez la fenêtre. Inutile de recommencer : une demande suffit.
 
@@ -64,7 +66,8 @@ Cette fiche fait apparaître Fan 2 Harmonie sur Google Maps et dans les recherch
 
 1. Ouvrez **https://business.google.com** et connectez-vous avec votre compte Google.
 2. Nom de l’activité : **Fan 2 Harmonie**.
-3. Choisissez une catégorie proche de votre activité, par exemple « Cours de Qi Gong » ou « Professeur de bien-être ».
+3. Choisissez une catégorie proche de votre activité, par exemple « Cours de Qi Gong » ou « Professeur de bien-être » (ces noms ne sont que des exemples : Google
+   propose les siens).
 4. Votre activité se déroule en plein air, dans un lieu public, et elle est gratuite : indiquez que vous n’avez
    **pas de local** où recevoir des clients. **Ne publiez pas d’adresse postale privée**, en particulier votre
    domicile. Indiquez plutôt la zone où vous intervenez (Rambouillet).

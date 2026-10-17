@@ -13,6 +13,9 @@ const texte = existsSync(CHEMIN) ? readFileSync(CHEMIN, 'utf8') : '';
 /** Mêmes mots interdits que le guide (tests/docs/guide-stephanie.test.ts). */
 const INTERDITS = ['commit', 'dépôt', 'depot', 'build', 'markdown', 'slug', 'front matter', 'workflow', 'rsync'];
 
+/** Mot entier, casse ignorée, accents compris (`\p{L}` : le double antislash est indispensable dans ce littéral). */
+const motEntier = (mot: string): RegExp => new RegExp(`(^|[^\\p{L}])${mot}([^\\p{L}]|$)`, 'iu');
+
 describe('docs/PROCEDURE-GOOGLE.md', () => {
   it('existe et fait moins de 1 200 mots', () => {
     expect(texte.length).toBeGreaterThan(2000);
@@ -20,7 +23,18 @@ describe('docs/PROCEDURE-GOOGLE.md', () => {
   });
 
   it.each(INTERDITS)('aucun mot technique : « %s »', (mot) => {
-    expect(texte).not.toMatch(new RegExp(`(^|[^\p{L}])${mot}([^\p{L}]|$)`, 'iu'));
+    expect(texte).not.toMatch(motEntier(mot));
+  });
+
+  it('le motif des mots interdits repère les mots entiers et seulement eux', () => {
+    expect('le build du site').toMatch(motEntier('build'));
+    expect('Commit').toMatch(motEntier('commit'));
+    expect('Le « front matter », ici').toMatch(motEntier('front matter'));
+    expect('le dépôt.').toMatch(motEntier('dépôt'));
+    expect('rebuilder').not.toMatch(motEntier('build'));
+    expect('construction').not.toMatch(motEntier('build'));
+    expect('commité').not.toMatch(motEntier('commit'));
+    expect('pdépôt').not.toMatch(motEntier('dépôt'));
   });
 
   it('les rubriques', () => {

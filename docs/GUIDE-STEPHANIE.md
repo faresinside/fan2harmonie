@@ -71,8 +71,8 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 
 1. Sous **« Photos »**, cliquez sur le bouton d’ajout, puis sur **Parcourir** pour choisir une première photo.
 2. **« Légende »** (facultative) : une courte phrase qui décrit la photo, pour les personnes qui ne la voient pas.
-3. Pour une autre photo, cliquez de nouveau sur le bouton d’ajout. Les flèches permettent de changer l’ordre,
-   la corbeille de retirer une photo.
+3. Pour une autre photo, cliquez de nouveau sur le bouton d’ajout. Les petites icônes à côté de chaque photo
+   permettent de la déplacer ou de la retirer.
 4. **Enregistrer**. Sur le site, un clic sur une photo l’ouvre en grand. L’accueil affiche vos six dernières actualités.
 
 ## g) Corriger un texte
