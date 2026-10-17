@@ -4,11 +4,16 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
 import {
+  CODE_GOOGLE_REGEX,
   HEURE_REGEX,
+  ICONES_BIENFAIT,
   LIEU_PAR_DEFAUT,
+  accueilSchema,
   actualiteSchema,
   dateSchema,
+  lieuSchema,
   pageSchema,
+  referencementSchema,
   rendezvousSchema,
 } from '../../src/lib/schemas';
 
@@ -62,7 +67,7 @@ describe('config.yml de Sveltia CMS', () => {
     expect(c.backend['branch']).toBe('main');
     expect(c['publish_mode']).toBe('simple');
     expect(c['local_backend']).toBeUndefined();
-    expect(c.collections.map((x) => x.name).sort()).toEqual(['actualites', 'pages', 'rendezvous']);
+    expect(c.collections.map((x) => x.name).sort()).toEqual(['actualites', 'pages', 'reglages', 'rendezvous']);
   });
 
   it('connexion GitHub par le relais du site lui-même : base_url = https://<hôte de site.url>, auth_endpoint = oauth/auth.php', async () => {
@@ -229,6 +234,117 @@ describe('config.yml de Sveltia CMS', () => {
     expect(image.widget).toBe('image');
     expect(image.required).toBe(false);
     expect(image['choose_url']).toBe(false);
+  });
+
+  describe('réglages du site', () => {
+    const fichier = (nom: string): Fichier => {
+      const f = (collection('reglages').files ?? []).find((x) => x.name === nom);
+      if (!f) throw new Error(`fichier ${nom} absent`);
+      return f;
+    };
+
+    it('collection de fichiers fixes (ni création ni suppression), trois fichiers présents', () => {
+      const r = collection('reglages');
+      expect(r.label).toBe('Réglages du site');
+      expect(r.folder).toBeUndefined();
+      expect(r['create']).not.toBe(true);
+      expect(r['delete']).not.toBe(true);
+      expect((r['editor'] as Record<string, unknown>)['preview']).toBe(false);
+      const fichiers = r.files ?? [];
+      expect(fichiers.map((f) => f.name).sort()).toEqual(['accueil', 'lieu', 'referencement']);
+      for (const f of fichiers) {
+        expect(f.file).toBe(`src/content/reglages/${f.name}.md`);
+        expect(existsSync(path.join(RACINE, f.file)), f.file).toBe(true);
+      }
+      expect(Object.fromEntries(fichiers.map((f) => [f.name, f.label]))).toEqual({
+        accueil: 'Page d’accueil',
+        lieu: 'Lieu de la pratique',
+        referencement: 'Référencement Google',
+      });
+    });
+
+    it('champs de chaque fichier (hors corps) = clés du schéma Zod', () => {
+      expect(champsFrontMatter(fichier('accueil'))).toEqual(cles(accueilSchema.shape));
+      expect(champsFrontMatter(fichier('lieu'))).toEqual(cles(lieuSchema.shape));
+      expect(champsFrontMatter(fichier('referencement'))).toEqual(cles(referencementSchema.shape));
+    });
+
+    it('lieu : latitude et longitude en nombres décimaux, bornes du schéma', () => {
+      const lieu = fichier('lieu');
+      const bornes = { latitude: [-90, 90], longitude: [-180, 180] } as const;
+      for (const [nom, [min, max]] of Object.entries(bornes)) {
+        const f = champ(lieu, nom);
+        expect(f.widget, nom).toBe('number');
+        expect(f['value_type'], nom).toBe('float');
+        expect(f['min'], nom).toBe(min);
+        expect(f['max'], nom).toBe(max);
+        expect(lieuSchema.shape[nom as 'latitude' | 'longitude'].safeParse(min).success, nom).toBe(true);
+        expect(lieuSchema.shape[nom as 'latitude' | 'longitude'].safeParse(max + 1).success, nom).toBe(false);
+      }
+    });
+
+    it('lieu : corps Markdown limité comme les pages', () => {
+      const e = champ(fichier('lieu'), 'body');
+      expect(e.widget).toBe('markdown');
+      expect(e['modes']).toEqual(['rich_text']);
+      expect(e['editor_components']).toEqual([]);
+      expect(e['buttons']).toEqual(['bold', 'italic', 'link', 'bulleted-list']);
+      expect(e.hint).toContain('Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.');
+    });
+
+    it('code Google : motif du schéma, facultatif, refuse la balise <meta> entière', () => {
+      const f = champ(fichier('referencement'), 'verificationGoogle');
+      expect(f.required).toBe(false);
+      expect(f.pattern?.[0]).toBe(CODE_GOOGLE_REGEX.source);
+      expect(f.pattern?.[1]).toMatch(/balise/);
+      expect(f.hint).toBe('Collez seulement le code (la suite de lettres et de chiffres), pas toute la balise');
+      const code = 'abcdefghij_KLMNOP-1234567890';
+      expect(motif(f).test(code)).toBe(true);
+      expect(motif(f).test(`<meta name="google-site-verification" content="${code}" />`)).toBe(false);
+      expect(motif(f).test('court')).toBe(false);
+    });
+
+    it('bienfaits : icônes du schéma, liste de 1 à 6', () => {
+      const bienfaits = champ(fichier('accueil'), 'bienfaits');
+      expect(bienfaits.widget).toBe('list');
+      expect(bienfaits['min']).toBe(1);
+      expect(bienfaits['max']).toBe(6);
+      const sous = bienfaits['fields'] as Champ[];
+      expect(sous.map((x) => x.name).sort()).toEqual(['icone', 'libelle']);
+      const icone = sous.find((x) => x.name === 'icone') as Champ;
+      expect(icone.widget).toBe('select');
+      const valeurs = (icone['options'] as Array<string | { value: string }>).map((o) =>
+        typeof o === 'string' ? o : o.value,
+      );
+      expect(valeurs).toEqual([...ICONES_BIENFAIT]);
+    });
+
+    it('infos : liste de 1 à 5 éléments', () => {
+      const infos = champ(fichier('accueil'), 'infos');
+      expect(infos.widget).toBe('list');
+      expect(infos['min']).toBe(1);
+      expect(infos['max']).toBe(5);
+    });
+
+    it('limites de longueur identiques à celles du schéma', () => {
+      const accueil = fichier('accueil');
+      const attendu: Record<string, number> = { accroche: 60, titre: 40, sousTitre: 60, devise: 80, bouton: 30 };
+      for (const [nom, max] of Object.entries(attendu)) {
+        expect(champ(accueil, nom)['maxlength'], nom).toBe(max);
+      }
+      expect(champ(fichier('lieu'), 'nom')['maxlength']).toBe(120);
+      expect(champ(fichier('referencement'), 'titre')['maxlength']).toBe(70);
+      expect(champ(fichier('referencement'), 'description')['maxlength']).toBe(170);
+    });
+
+    it('chaque champ a un libellé et une aide en français', () => {
+      for (const f of collection('reglages').files ?? []) {
+        for (const c of f.fields) {
+          expect(c.label?.trim(), `${f.name}.${c.name} : label`).toBeTruthy();
+          expect(c.hint?.trim(), `${f.name}.${c.name} : hint`).toBeTruthy();
+        }
+      }
+    });
   });
 
   it('éditeur Markdown : sans HTML ni composants, mode texte enrichi seul, aide sur les paragraphes', () => {

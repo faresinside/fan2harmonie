@@ -183,3 +183,132 @@ collections:
         label: Mon parcours
         file: src/content/pages/parcours.md
         fields: *champs_page
+
+  - name: reglages
+    label: Réglages du site
+    label_singular: Réglage
+    description: >-
+      Les textes de la page d’accueil, le lieu de la pratique et les informations pour Google.
+      On peut les corriger, mais pas en ajouter ni en supprimer.
+    editor:
+      preview: false
+    files:
+      - name: accueil
+        label: Page d’accueil
+        file: src/content/reglages/accueil.md
+        fields:
+          - name: accroche
+            label: Phrase d’accroche
+            widget: string
+            maxlength: 60
+            hint: La petite phrase au-dessus du titre, 60 caractères au maximum.
+          - name: titre
+            label: Titre
+            widget: string
+            maxlength: 40
+            hint: Le grand titre de l’accueil, 40 caractères au maximum.
+          - name: sousTitre
+            label: Sous-titre
+            widget: string
+            maxlength: 60
+            hint: Une ligne sous le titre, 60 caractères au maximum.
+          - name: devise
+            label: Devise
+            widget: string
+            maxlength: 80
+            hint: La phrase en trois mots sous le sous-titre, 80 caractères au maximum.
+          - name: infos
+            label: Informations pratiques
+            label_singular: information
+            widget: list
+            min: 1
+            max: 5
+            field:
+              name: info
+              label: Information
+              widget: string
+              maxlength: 60
+              hint: Une information courte, 60 caractères au maximum.
+            hint: 'Les petites lignes affichées sous la devise (par exemple : le lieu, le jour, le prix). Entre 1 et 5 lignes.'
+          - name: bouton
+            label: Texte du bouton
+            widget: string
+            maxlength: 30
+            hint: Le texte du bouton qui mène aux rendez-vous, 30 caractères au maximum.
+          - name: bienfaits
+            label: Les bienfaits
+            label_singular: bienfait
+            widget: list
+            min: 1
+            max: 6
+            summary: '{{libelle}}'
+            fields:
+              - name: icone
+                label: Dessin
+                widget: select
+                default: souffle
+                options:
+                  - { label: Souffle, value: souffle }
+                  - { label: Lotus, value: lotus }
+                  - { label: Silhouette, value: silhouette }
+                  - { label: Yin et yang, value: yinyang }
+                hint: Le petit dessin affiché à côté du bienfait.
+              - name: libelle
+                label: Texte
+                widget: string
+                maxlength: 60
+                hint: Un bienfait en quelques mots, 60 caractères au maximum.
+            hint: Les bienfaits de la pratique affichés sur l’accueil. Entre 1 et 6.
+      - name: lieu
+        label: Lieu de la pratique
+        file: src/content/reglages/lieu.md
+        fields:
+          - name: nom
+            label: Nom du lieu
+            widget: string
+            maxlength: 120
+            hint: Le lieu tel qu’il est affiché, 120 caractères au maximum.
+          - name: latitude
+            label: Latitude
+            widget: number
+            value_type: float
+            min: -90
+            max: 90
+            hint: Un nombre avec des décimales, par exemple 48.64703. Dans Google Maps, un clic droit sur le lieu donne ces deux nombres.
+          - name: longitude
+            label: Longitude
+            widget: number
+            value_type: float
+            min: -180
+            max: 180
+            hint: Un nombre avec des décimales, par exemple 1.811268 (le deuxième nombre donné par Google Maps).
+          - name: body
+            label: Indications pour s’y rendre
+            widget: markdown
+            required: false
+            modes: [rich_text]
+            buttons: [bold, italic, link, bulleted-list]
+            editor_components: []
+            hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+      - name: referencement
+        label: Référencement Google
+        file: src/content/reglages/referencement.md
+        fields:
+          - name: titre
+            label: Titre dans Google
+            widget: string
+            minlength: 10
+            maxlength: 70
+            hint: Le titre affiché dans les résultats de recherche, de 10 à 70 caractères.
+          - name: description
+            label: Description dans Google
+            widget: text
+            minlength: 50
+            maxlength: 170
+            hint: Le résumé affiché sous le titre dans les résultats de recherche, de 50 à 170 caractères.
+          - name: verificationGoogle
+            label: Code de vérification Google
+            widget: string
+            required: false
+            pattern: ['^[A-Za-z0-9_-]{20,100}$', 'Collez seulement le code (lettres, chiffres, tirets), pas toute la balise']
+            hint: Collez seulement le code (la suite de lettres et de chiffres), pas toute la balise
