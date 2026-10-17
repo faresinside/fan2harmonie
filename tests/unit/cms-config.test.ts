@@ -326,15 +326,78 @@ describe('config.yml de Sveltia CMS', () => {
       expect(infos['max']).toBe(5);
     });
 
-    it('limites de longueur identiques à celles du schéma', () => {
+    /** Bornes réellement appliquées par un schéma Zod, trouvées en l'interrogeant (longueurs 0 à 300 de `valeur`). */
+    type Sonde = { safeParse(v: unknown): { success: boolean } };
+    const bornes = (schema: Sonde, fabrique: (n: number) => unknown): { min: number; max: number } => {
+      const acceptees = Array.from({ length: 301 }, (_, n) => n).filter((n) => schema.safeParse(fabrique(n)).success);
+      if (acceptees.length === 0) throw new Error('aucune longueur acceptée par le schéma');
+      const min = Math.min(...acceptees);
+      const max = Math.max(...acceptees);
+      expect(max, 'borne haute trouvée trop proche de la limite de sonde').toBeLessThan(300);
+      expect(acceptees.length, 'longueurs acceptées non contiguës').toBe(max - min + 1);
+      return { min, max };
+    };
+    const chaine = (n: number) => 'a'.repeat(n);
+    const liste = (n: number) => Array.from({ length: n }, () => 'a');
+
+    /** Le champ texte du CMS impose les mêmes bornes que le schéma (obligatoire si le minimum est 1 ou plus). */
+    const verifieChaine = (nom: string, f: Champ, schema: Sonde) => {
+      const { min, max } = bornes(schema, chaine);
+      expect(f['maxlength'], `${nom} : maxlength`).toBe(max);
+      if (min > 1) expect(f['minlength'], `${nom} : minlength`).toBe(min);
+      else expect(f['minlength'], `${nom} : minlength`).toBeUndefined();
+      if (min >= 1) expect(f.required, `${nom} : obligatoire`).not.toBe(false);
+      else expect(f.required, `${nom} : facultatif`).toBe(false);
+    };
+
+    it('champs texte : minlength, maxlength et caractère obligatoire lus dans les schémas Zod', () => {
       const accueil = fichier('accueil');
-      const attendu: Record<string, number> = { accroche: 60, titre: 40, sousTitre: 60, devise: 80, bouton: 30 };
-      for (const [nom, max] of Object.entries(attendu)) {
-        expect(champ(accueil, nom)['maxlength'], nom).toBe(max);
+      for (const nom of ['accroche', 'titre', 'sousTitre', 'devise', 'bouton'] as const) {
+        verifieChaine(`accueil.${nom}`, champ(accueil, nom), accueilSchema.shape[nom]);
       }
-      expect(champ(fichier('lieu'), 'nom')['maxlength']).toBe(120);
-      expect(champ(fichier('referencement'), 'titre')['maxlength']).toBe(70);
-      expect(champ(fichier('referencement'), 'description')['maxlength']).toBe(170);
+      verifieChaine('lieu.nom', champ(fichier('lieu'), 'nom'), lieuSchema.shape.nom);
+      const ref = fichier('referencement');
+      verifieChaine('referencement.titre', champ(ref, 'titre'), referencementSchema.shape.titre);
+      verifieChaine('referencement.description', champ(ref, 'description'), referencementSchema.shape.description);
+      // Code Google : facultatif, longueur portée par le motif (CODE_GOOGLE_REGEX), pas par minlength/maxlength.
+      const code = champ(ref, 'verificationGoogle');
+      expect(referencementSchema.shape.verificationGoogle.safeParse(undefined).success).toBe(true);
+      expect(code.required).toBe(false);
+      expect(code['minlength']).toBeUndefined();
+      expect(code['maxlength']).toBeUndefined();
+      const lg = bornes(referencementSchema.shape.verificationGoogle, chaine);
+      for (const n of [lg.min - 1, lg.min, lg.max, lg.max + 1]) {
+        expect(motif(code).test(chaine(n)), `code de ${n} caractères`).toBe(
+          referencementSchema.shape.verificationGoogle.safeParse(chaine(n)).success,
+        );
+      }
+    });
+
+    it('listes : nombre d’éléments (min, max) et longueur des textes lus dans les schémas Zod', () => {
+      const accueil = fichier('accueil');
+      // infos : liste de textes.
+      const infos = champ(accueil, 'infos');
+      const nbInfos = bornes(accueilSchema.shape.infos, liste);
+      expect(infos['min'], 'infos : min').toBe(nbInfos.min);
+      expect(infos['max'], 'infos : max').toBe(nbInfos.max);
+      verifieChaine('infos : élément', infos['field'] as Champ, accueilSchema.shape.infos.element);
+      // bienfaits : liste de { icone, libelle }.
+      const bienfaits = champ(accueil, 'bienfaits');
+      const unBienfait = { icone: ICONES_BIENFAIT[0], libelle: 'a' };
+      const nbBienfaits = bornes(accueilSchema.shape.bienfaits, (n) => Array.from({ length: n }, () => unBienfait));
+      expect(bienfaits['min'], 'bienfaits : min').toBe(nbBienfaits.min);
+      expect(bienfaits['max'], 'bienfaits : max').toBe(nbBienfaits.max);
+      const forme = accueilSchema.shape.bienfaits.element.shape;
+      verifieChaine('bienfaits.libelle', champ(bienfaits as { fields?: Champ[] }, 'libelle'), forme.libelle);
+      expect(champ(bienfaits as { fields?: Champ[] }, 'icone').required, 'bienfaits.icone : obligatoire').not.toBe(false);
+    });
+
+    it('lieu : champs obligatoires comme dans le schéma', () => {
+      const lieu = fichier('lieu');
+      for (const nom of ['latitude', 'longitude'] as const) {
+        expect(lieuSchema.shape[nom].safeParse(undefined).success, nom).toBe(false);
+        expect(champ(lieu, nom).required, nom).not.toBe(false);
+      }
     });
 
     it('chaque champ a un libellé et une aide en français', () => {
