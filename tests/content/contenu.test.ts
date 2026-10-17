@@ -59,8 +59,8 @@ describe('contenus : conformes aux schémas du site', () => {
     const fm = parseFrontmatter(lire(f)).frontmatter;
     const r = actualiteSchema.safeParse(fm);
     expect(r.success, JSON.stringify(r.error?.issues)).toBe(true);
-    if (typeof fm['image'] === 'string') {
-      expect(existsSync(path.resolve(RACINE, path.dirname(f), fm['image'])), String(fm['image'])).toBe(true);
+    for (const photo of (fm['photos'] as Array<{ image: string }> | undefined) ?? []) {
+      expect(existsSync(path.resolve(RACINE, path.dirname(f), photo.image)), photo.image).toBe(true);
     }
   });
 

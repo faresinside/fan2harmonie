@@ -1,3 +1,6 @@
+import { parseFrontmatter } from '@astrojs/markdown-remark';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   accueilSchema,
@@ -56,6 +59,36 @@ describe('actualiteSchema', () => {
 
   it('rejette un titre de 91 caractères', () => {
     expect(actualiteSchema.safeParse({ titre: 'a'.repeat(91), date: '2026-10-04' }).success).toBe(false);
+  });
+
+  describe('photos', () => {
+    const base = { titre: 'Stage', date: '2026-10-04' };
+    const photos = (n: number, legende?: string) =>
+      Array.from({ length: n }, (_, i) => ({ image: `./p${i}.jpg`, ...(legende === undefined ? {} : { legende }) }));
+
+    it('accepte l’absence de photos', () => {
+      expect(actualiteSchema.safeParse(base).success).toBe(true);
+      expect(actualiteSchema.safeParse({ ...base, photos: [] }).success).toBe(true);
+    });
+
+    it.each([0, 1, 12])('accepte %i photo(s)', (n) => {
+      expect(actualiteSchema.safeParse({ ...base, photos: photos(n) }).success).toBe(true);
+    });
+
+    it('rejette 13 photos', () => {
+      expect(actualiteSchema.safeParse({ ...base, photos: photos(13) }).success).toBe(false);
+    });
+
+    it('légende facultative, de 120 caractères au plus', () => {
+      expect(actualiteSchema.safeParse({ ...base, photos: [{ image: './p.jpg' }] }).success).toBe(true);
+      expect(actualiteSchema.safeParse({ ...base, photos: photos(1, 'a'.repeat(120)) }).success).toBe(true);
+      expect(actualiteSchema.safeParse({ ...base, photos: photos(1, 'a'.repeat(121)) }).success).toBe(false);
+    });
+
+    it('une photo a toujours une image, et l’ancien champ `image` n’existe plus', () => {
+      expect(actualiteSchema.safeParse({ ...base, photos: [{ legende: 'x' }] }).success).toBe(false);
+      expect(Object.keys(actualiteSchema.shape)).not.toContain('image');
+    });
   });
 });
 
@@ -143,5 +176,28 @@ describe('referencementSchema', () => {
 
   it('rejette une description de 49 caractères', () => {
     expect(referencementSchema.safeParse({ ...base, description: 'd'.repeat(49) }).success).toBe(false);
+  });
+});
+
+describe('jeu de test « galerie »', () => {
+  const dossier = path.resolve(__dirname, '../fixtures/content/galerie/actualites');
+  const photosDe = (nom: string) => {
+    const fm = parseFrontmatter(readFileSync(path.join(dossier, `${nom}.md`), 'utf8')).frontmatter;
+    expect(actualiteSchema.safeParse(fm).success, nom).toBe(true);
+    return (fm['photos'] ?? []) as Array<{ image: string; legende?: string }>;
+  };
+
+  it('une photo, cinq photos (dont 2 sans légende et une légende de 120 caractères), aucune photo', () => {
+    expect(photosDe('une-photo')).toHaveLength(1);
+    expect(photosDe('une-photo')[0]?.legende).toBeTruthy();
+    const cinq = photosDe('cinq-photos');
+    expect(cinq).toHaveLength(5);
+    expect(cinq.filter((p) => !p.legende)).toHaveLength(2);
+    expect(Math.max(...cinq.map((p) => p.legende?.length ?? 0))).toBe(120);
+    expect(photosDe('sans-photo')).toEqual([]);
+  });
+
+  it('les cinq images existent', () => {
+    for (const p of photosDe('cinq-photos')) expect(existsSync(path.join(dossier, p.image)), p.image).toBe(true);
   });
 });

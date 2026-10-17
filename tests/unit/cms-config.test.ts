@@ -221,7 +221,7 @@ describe('config.yml de Sveltia CMS', () => {
     expect(slug.editable).toBe(false);
   });
 
-  it('image d’actualité : public_folder relatif au fichier .md = media_folder', () => {
+  it('photos d’actualité : public_folder relatif au fichier .md = media_folder', () => {
     const actus = collection('actualites');
     const mediaFolder = actus['media_folder'] as string;
     const publicFolder = actus['public_folder'] as string;
@@ -230,10 +230,39 @@ describe('config.yml de Sveltia CMS', () => {
     const depuisLeFichier = path.resolve(RACINE, actus.folder ?? '', publicFolder);
     expect(depuisLeFichier).toBe(depuisLaRacine);
     expect(existsSync(depuisLaRacine)).toBe(true);
-    const image = champ(actus, 'image');
+    expect(actus.fields?.map((f) => f.name)).not.toContain('image');
+  });
+
+  it('photos d’actualité : liste facultative de 0 à 12 photos, légende de 120 caractères au plus, lues dans le schéma', () => {
+    const photos = champ(collection('actualites'), 'photos');
+    expect(photos.widget).toBe('list');
+    expect(photos.label).toBe('Photos');
+    expect(photos.required).toBe(false);
+    expect(photos.hint).toBe(
+      'Ajoutez autant de photos que vous voulez (12 au plus). La légende est facultative, elle décrit la photo pour les personnes qui ne la voient pas.',
+    );
+    const unePhoto = { image: './p.jpg' };
+    const acceptees = Array.from({ length: 30 }, (_, n) => n).filter(
+      (n) => actualiteSchema.shape.photos.safeParse(Array.from({ length: n }, () => unePhoto)).success,
+    );
+    expect(Math.min(...acceptees)).toBe(0);
+    expect(photos['min']).toBeUndefined();
+    expect(photos['max']).toBe(Math.max(...acceptees));
+    expect(photos['max']).toBe(12);
+    const sous = photos['fields'] as Champ[];
+    expect(sous.map((x) => x.name)).toEqual(['image', 'legende']);
+    const image = champ({ fields: sous }, 'image');
     expect(image.widget).toBe('image');
-    expect(image.required).toBe(false);
+    expect(image.required).not.toBe(false);
     expect(image['choose_url']).toBe(false);
+    expect(image['accept']).toBe('image/jpeg,image/png,image/webp');
+    const legende = champ({ fields: sous }, 'legende');
+    expect(legende.widget).toBe('string');
+    expect(legende.required).toBe(false);
+    const forme = actualiteSchema.shape.photos.unwrap().element.shape;
+    const longueurs = Array.from({ length: 301 }, (_, n) => n).filter((n) => forme.legende.safeParse('a'.repeat(n)).success);
+    expect(legende['maxlength']).toBe(Math.max(...longueurs));
+    expect(legende['maxlength']).toBe(120);
   });
 
   describe('réglages du site', () => {
@@ -446,20 +475,23 @@ describe('fichiers tels qu’écrits par le CMS (YAML sans guillemets), lus par 
     expect(rdv.annule).toBe(false);
   });
 
-  it('actualité : image relative au fichier .md, résolue dans media_folder', () => {
+  it('actualité : photos relatives au fichier .md, résolues dans media_folder', () => {
     const actus = collection('actualites');
     const md = [
       '---',
       'titre: Stage de printemps',
       'date: 2026-10-04',
-      `image: ${actus['public_folder'] as string}/photo.webp`,
+      'photos:',
+      `  - image: ${actus['public_folder'] as string}/photo.webp`,
+      '    legende: Le groupe sous les arbres',
       '---',
       '',
       'Texte.',
     ].join('\n');
     const fm = parseFrontmatter(md).frontmatter;
     expect(actualiteSchema.safeParse(fm).success).toBe(true);
-    const cible = path.resolve(RACINE, 'src/content/actualites', fm['image'] as string);
+    const photos = fm['photos'] as Array<{ image: string }>;
+    const cible = path.resolve(RACINE, 'src/content/actualites', photos[0]?.image ?? '');
     expect(cible).toBe(path.join(RACINE, 'src/assets/actualites/photo.webp'));
   });
 });

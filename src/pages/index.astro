@@ -113,8 +113,8 @@ const actualites = await Promise.all(
       actualites.length > 0 && (
         <Section id="actualites" titre="Actualités" ton="chaud" mise="centree">
           <div class="actualites">
-            {actualites.map(({ titre, date, image, Content }) => (
-              <ActualiteCard titre={titre} date={date} image={image}>
+            {actualites.map(({ titre, date, photos, Content }) => (
+              <ActualiteCard titre={titre} date={date} photos={photos}>
                 <Content />
               </ActualiteCard>
             ))}

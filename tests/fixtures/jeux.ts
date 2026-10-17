@@ -13,6 +13,7 @@ export const JEUX = {
   'annule-premier': 4328,
   'tout-annule': 4329,
   aucun: 4330,
+  galerie: 4331,
 } as const;
 
 export type Jeu = keyof typeof JEUX;

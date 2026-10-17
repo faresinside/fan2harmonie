@@ -1,7 +1,8 @@
 import { defineCollection } from 'astro:content';
+import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 import { contentBase } from './lib/fixture';
-import { accueilSchema, actualiteSchema, lieuSchema, pageSchema, referencementSchema, rendezvousSchema } from './lib/schemas';
+import { accueilSchema, actualiteSchema, lieuSchema, pageSchema, photoSchema, referencementSchema, rendezvousSchema } from './lib/schemas';
 
 export const collections = {
   rendezvous: defineCollection({
@@ -10,8 +11,9 @@ export const collections = {
   }),
   actualites: defineCollection({
     loader: glob({ pattern: '**/*.md', base: contentBase('actualites') }),
-    // Image facultative : chemin relatif au fichier Markdown, résolu en ImageMetadata pour astro:assets.
-    schema: ({ image }) => actualiteSchema.extend({ image: image().optional() }),
+    // Photos (0 à 12) : chemins relatifs au fichier Markdown, résolus en ImageMetadata pour astro:assets.
+    schema: ({ image }) =>
+      actualiteSchema.extend({ photos: z.array(photoSchema.extend({ image: image() })).max(12).default([]) }),
   }),
   pages: defineCollection({
     loader: glob({ pattern: '**/*.md', base: contentBase('pages') }),

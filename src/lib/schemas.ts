@@ -36,10 +36,16 @@ export const rendezvousSchema = z.object({
 
 export type Rendezvous = z.infer<typeof rendezvousSchema>;
 
+/** Une photo d'actualité : fichier (chemin relatif au .md) et légende facultative, qui sert de texte alternatif. */
+export const photoSchema = z.object({
+  image: z.string(),
+  legende: z.string().max(120).optional(),
+});
+
 export const actualiteSchema = z.object({
   titre: z.string().max(90),
   date: dateSchema,
-  image: z.string().optional(),
+  photos: z.array(photoSchema).max(12).optional(),
 });
 
 export const pageSchema = z.object({

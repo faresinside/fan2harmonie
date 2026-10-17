@@ -14,12 +14,15 @@ import { formatDateLongueFr } from '../lib/actualites';
 interface Props {
   titre: string;
   date: Date;
-  image?: ImageMetadata | undefined;
-  /** Texte alternatif de l'image : le titre par défaut. */
-  imageAlt?: string | undefined;
+  /** Photos de l'actualité (peut être vide) ; seule la première est affichée pour l'instant. */
+  photos: { image: ImageMetadata; legende?: string | undefined }[];
 }
 
-const { titre, date, image, imageAlt = titre } = Astro.props;
+const { titre, date, photos } = Astro.props;
+const photo = photos[0];
+const image = photo?.image;
+// Texte alternatif : la légende si elle n'est pas vide, sinon le titre de l'actualité.
+const imageAlt = photo?.legende?.trim() || titre;
 ---
 
 <article class:list={['actu', { 'actu--image': image }]}>

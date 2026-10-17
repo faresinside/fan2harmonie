@@ -296,7 +296,7 @@ test.describe('espace d’administration /admin/', () => {
     const heures = rdvDuJour.map((f) => rendezvousSchema.parse(parseFrontmatter(apresDeux[f] ?? '').frontmatter).heure);
     expect(heures).toEqual(['16:00', '10:00']);
 
-    // Actualité sans photo : aucune clé `image` écrite (omit_empty_optional_fields), fichier valide.
+    // Actualité sans photo : aucune clé `photos` écrite (omit_empty_optional_fields), fichier valide.
     await page.goto('/admin/#/collections/actualites/new');
     await page.getByRole('textbox', { name: 'Titre' }).fill('Sans photo');
     await page.locator('input[type=date]').fill('2099-10-03');
@@ -307,7 +307,7 @@ test.describe('espace d’administration /admin/', () => {
     const sansPhoto = Object.entries(await fichiersEcrits(page)).find(([f]) => f.endsWith('-sans-photo.md'))?.[1];
     expect(sansPhoto).toBeDefined();
     const fmSansPhoto = parseFrontmatter(sansPhoto ?? '').frontmatter;
-    expect(fmSansPhoto).not.toHaveProperty('image');
+    expect(fmSansPhoto).not.toHaveProperty('photos');
     expect(actualiteSchema.safeParse(fmSansPhoto).success).toBe(true);
 
     // Actualité avec photo téléversée et texte sur deux paragraphes.
@@ -318,13 +318,14 @@ test.describe('espace d’administration /admin/', () => {
     await page.keyboard.type('Premier paragraphe.');
     await page.keyboard.press('Enter');
     await page.keyboard.type('Second paragraphe.');
+    await page.getByRole('group', { name: /Photos/ }).getByRole('button', { name: /Ajouter/ }).click();
     await page.getByRole('group', { name: /Photo/ }).getByRole('button', { name: 'Parcourir' }).click();
     const selecteur = page.waitForEvent('filechooser');
     await page.getByRole('dialog').getByRole('button', { name: /Téléverser/ }).click();
     await (await selecteur).setFiles('src/assets/photos/hero.jpg');
     await expect(page.getByRole('dialog').getByText('hero.jpg')).toBeVisible();
     await page.getByRole('dialog').getByRole('button', { name: 'Insérer' }).click();
-    await expect(page.getByRole('group', { name: /Photo/ })).toContainText('../../assets/actualites/hero.webp');
+    await expect(page.getByRole('group', { name: /Photos/ })).toContainText('../../assets/actualites/hero.webp');
     await page.getByRole('button', { name: 'Enregistrer' }).click();
     await expect(page.getByText(/Stage d’été/).first()).toBeVisible();
 
@@ -342,7 +343,8 @@ test.describe('espace d’administration /admin/', () => {
     const actu = parseFrontmatter(fichiers[cheminActu ?? ''] ?? '');
     expect(actualiteSchema.safeParse(actu.frontmatter).success).toBe(true);
     // Photo convertie en WebP dans src/assets/actualites, chemin relatif au fichier .md (exigé par Astro).
-    expect(actu.frontmatter['image']).toBe('../../assets/actualites/hero.webp');
+    // Une seule photo, sans légende : aucune clé `legende` vide écrite.
+    expect(actu.frontmatter['photos']).toEqual([{ image: '../../assets/actualites/hero.webp' }]);
     expect(Object.keys(fichiers)).toContain(`${racine}src/assets/actualites/hero.webp`);
     expect(actu.content).not.toMatch(/<br|<!--/i);
     expect(actu.content).toContain('Premier paragraphe.\n\nSecond paragraphe.');

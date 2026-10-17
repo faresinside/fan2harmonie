@@ -137,13 +137,26 @@ collections:
         format: YYYY-MM-DD
         time_format: false
         hint: Date de l’actualité ; les plus récentes s’affichent en premier.
-      - name: image
-        label: Photo
-        widget: image
+      - name: photos
+        label: Photos
+        label_singular: Photo
+        widget: list
         required: false
-        choose_url: false
-        accept: image/jpeg,image/png,image/webp
-        hint: Facultatif. Une photo JPEG, PNG ou WebP, de préférence en format paysage ; elle est réduite automatiquement.
+        max: 12
+        hint: Ajoutez autant de photos que vous voulez (12 au plus). La légende est facultative, elle décrit la photo pour les personnes qui ne la voient pas.
+        fields:
+          - name: image
+            label: Photo
+            widget: image
+            choose_url: false
+            accept: image/jpeg,image/png,image/webp
+            hint: Une photo JPEG, PNG ou WebP, de préférence en format paysage ; elle est réduite automatiquement.
+          - name: legende
+            label: Légende
+            widget: string
+            required: false
+            maxlength: 120
+            hint: Facultatif. Une courte phrase qui décrit la photo, 120 caractères au maximum.
       - name: body
         label: Texte
         widget: markdown
