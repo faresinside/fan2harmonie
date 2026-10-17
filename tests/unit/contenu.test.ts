@@ -16,6 +16,12 @@ describe('contentBase (jeux de contenus de test)', () => {
     expect(contentBase('pages', env)).toBe('./src/content/pages');
   });
 
+  it('les réglages ne dépendent jamais du jeu de test', () => {
+    const env = { CONTENT_FIXTURE: '1', CONTENT_FIXTURE_SET: 'vide' };
+    expect(contentBase('reglages', env)).toBe('./src/content/reglages');
+    expect(contentBase('reglages', {})).toBe('./src/content/reglages');
+  });
+
   it.each([undefined, '', '../src', 'a/b'])('jeu absent ou invalide (%s) : erreur explicite', (jeu) => {
     const env: Record<string, string | undefined> = { CONTENT_FIXTURE: '1', CONTENT_FIXTURE_SET: jeu };
     expect(() => contentBase('rendezvous', env)).toThrow(/CONTENT_FIXTURE_SET/);

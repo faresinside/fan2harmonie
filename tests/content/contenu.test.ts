@@ -2,7 +2,7 @@ import { parseFrontmatter } from '@astrojs/markdown-remark';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { actualiteSchema, pageSchema, rendezvousSchema } from '../../src/lib/schemas';
+import { accueilSchema, actualiteSchema, lieuSchema, pageSchema, referencementSchema, rendezvousSchema } from '../../src/lib/schemas';
 
 /**
  * Contrôle du contenu RÉEL (src/content/**\/*.md), écrit par l'éditrice dans /admin : `npm run verifier:contenu`.
@@ -66,5 +66,15 @@ describe('contenus : conformes aux schémas du site', () => {
 
   it.each(fichiers('src/content/pages'))('%s : texte de page valide', (f) => {
     expect(pageSchema.safeParse(parseFrontmatter(lire(f)).frontmatter).success).toBe(true);
+  });
+
+  it.each([
+    ['src/content/reglages/accueil.md', accueilSchema],
+    ['src/content/reglages/lieu.md', lieuSchema],
+    ['src/content/reglages/referencement.md', referencementSchema],
+  ] as const)('%s : réglage présent et valide', (f, schema) => {
+    expect(existsSync(path.join(RACINE, f)), f).toBe(true);
+    const r = schema.safeParse(parseFrontmatter(lire(f)).frontmatter);
+    expect(r.success, JSON.stringify(r.error?.issues)).toBe(true);
   });
 });

@@ -46,3 +46,48 @@ export const actualiteSchema = z.object({
 export const pageSchema = z.object({
   titre: z.string(),
 });
+
+/** Icônes disponibles pour les bienfaits de l'accueil (composants Icon*.astro). */
+export const ICONES_BIENFAIT = ['souffle', 'lotus', 'silhouette', 'yinyang'] as const;
+
+/** Textes de la page d'accueil (src/content/reglages/accueil.md). */
+export const accueilSchema = z.object({
+  accroche: z.string().min(1).max(60),
+  titre: z.string().min(1).max(40),
+  sousTitre: z.string().min(1).max(60),
+  devise: z.string().min(1).max(80),
+  infos: z.array(z.string().min(1).max(60)).min(1).max(5),
+  bouton: z.string().min(1).max(30),
+  bienfaits: z
+    .array(
+      z.object({
+        icone: z.enum(ICONES_BIENFAIT),
+        libelle: z.string().min(1).max(60),
+      }),
+    )
+    .min(1)
+    .max(6),
+});
+
+export type Accueil = z.infer<typeof accueilSchema>;
+
+/** Lieu de la pratique (src/content/reglages/lieu.md ; les indications d'accès sont le corps du fichier). */
+export const lieuSchema = z.object({
+  nom: z.string().min(1).max(120),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+export type Lieu = z.infer<typeof lieuSchema>;
+
+/** Code de vérification Google Search Console : seulement la valeur de `content`, pas la balise. */
+export const CODE_GOOGLE_REGEX = /^[A-Za-z0-9_-]{20,100}$/;
+
+/** Référencement de l'accueil (src/content/reglages/referencement.md). */
+export const referencementSchema = z.object({
+  titre: z.string().min(10).max(70),
+  description: z.string().min(50).max(170),
+  verificationGoogle: z.string().regex(CODE_GOOGLE_REGEX).optional(),
+});
+
+export type Referencement = z.infer<typeof referencementSchema>;

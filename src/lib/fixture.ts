@@ -1,12 +1,12 @@
 /**
  * Jeux de contenus de test pour les tests E2E.
  * CONTENT_FIXTURE=1 et CONTENT_FIXTURE_SET=<jeu> : les rendez-vous et actualités viennent de
- * tests/fixtures/content/<jeu>/ ; les textes des pages restent les vrais (src/content/pages).
+ * tests/fixtures/content/<jeu>/ ; les textes des pages et les réglages restent les vrais (src/content/pages, src/content/reglages).
  * Lu par src/content.config.ts (dossiers des collections) et astro.config.mjs (dossiers de sortie).
  */
 type Env = Record<string, string | undefined>;
 
-export type Collection = 'rendezvous' | 'actualites' | 'pages';
+export type Collection = 'rendezvous' | 'actualites' | 'pages' | 'reglages';
 
 /** Nom du jeu actif, ou undefined hors mode test. Erreur explicite si le jeu est absent ou mal formé. */
 export function jeuDeTest(env: Env = process.env): string | undefined {
@@ -21,5 +21,5 @@ export function jeuDeTest(env: Env = process.env): string | undefined {
 /** Dossier lu par le chargeur glob de la collection. */
 export function contentBase(collection: Collection, env: Env = process.env): string {
   const jeu = jeuDeTest(env);
-  return jeu && collection !== 'pages' ? `./tests/fixtures/content/${jeu}/${collection}` : `./src/content/${collection}`;
+  return jeu && collection !== 'pages' && collection !== 'reglages' ? `./tests/fixtures/content/${jeu}/${collection}` : `./src/content/${collection}`;
 }
