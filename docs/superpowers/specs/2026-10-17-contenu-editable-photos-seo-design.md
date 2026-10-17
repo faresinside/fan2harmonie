@@ -12,6 +12,13 @@ Le site est en ligne. Trois besoins :
 
 Critères de réussite : Stéphanie change l'accueil, le lieu et les photos sans développeur ; rien ne change visuellement tant qu'elle n'a rien modifié ; tous les tests passent ; le site est inscrit à Google avec une procédure qu'elle peut suivre seule.
 
+## Point de départ constaté (2026-10-18)
+
+- **`main` est la source de vérité du contenu.** Stéphanie utilise déjà l'admin : 15 commits de contenu (rendez-vous du 25 octobre, textes « pratique », « qigong », « parcours », actualité « bienvenue ») ont été créés directement sur `main`. `preprod` a été remise à niveau en rebasant sur `origin/main`. Règle : avant chaque recette et avant la fusion finale, resynchroniser `preprod` avec `origin/main` (jamais écraser ces contenus) ; la fusion finale vérifie qu'aucun fichier de `src/content/` de `main` n'est perdu.
+- **Incohérence déjà en ligne** : le texte « La pratique » de Stéphanie annonce « samedi à 16h00 ou dimanche à **10h00** », alors que le bandeau d'accueil et la description Google disent « samedis ou dimanches à 16h00 ». Les réglages éditables (accueil, référencement) la corrigent à la source ; les valeurs initiales seront celles que Stéphanie confirme (à lui demander avant la mise en production), pas une copie aveugle des textes en dur.
+- **Son texte est repris à l'identique** : l'itinéraire (parking, fanion, coordonnées) déplacé dans `lieu.yml` reprend ses mots actuels de `pratique.md` sans les modifier. Ses autres modifications de contenu ne sont pas touchées.
+- **Tests sous Windows** : 4 cas de `tests/unit/scripts-deploiement.test.ts` échouent sur ce poste (arguments avec guillemet ou retour à la ligne transmis par `spawnSync` à bash sous Windows ; lancés à la main, les scripts refusent correctement ces valeurs). La CI Linux de `main` est verte. Hors périmètre : ces 4 échecs sont connus, pas des régressions ; tout autre échec bloque la recette.
+
 ## Hors périmètre
 
 Refonte graphique, nouvelles pages, multilingue, analytics, base de données ou serveur (le site reste statique, construit par GitHub, mis en ligne par FTPS).
@@ -33,7 +40,7 @@ Les valeurs initiales reprennent exactement les textes actuels : la construction
 `lieu.yml` : `nom` (« Parc de Rambouillet, près de la bergerie »), `latitude`, `longitude`, corps Markdown `acces` (parking, fanion…). Utilisé par :
 
 - `LienCarte.astro` (coordonnées affichées, lien Google Maps) ;
-- la section « La pratique » : l'itinéraire sort de `pratique.md` pour venir de `lieu.yml`, sans dupliquer les coordonnées ;
+- la section « La pratique » : l'itinéraire (paragraphe « Dans le parc de Rambouillet… fanion « Fan 2 Harmonie » ») sort de `pratique.md` pour venir de `lieu.yml`, mot pour mot, sans dupliquer les coordonnées ;
 - le lieu des rendez-vous : le champ `lieu` du schéma des rendez-vous n'a plus de défaut figé ; vide, il prend `lieu.nom` à la construction (et le champ de l'admin n'a plus de valeur par défaut). Aucun rendez-vous existant ne porte l'ancien nom (vérifié : seul `.gitkeep`) ;
 - `jsonld.ts` : « lieu habituel » = `lieu.nom` reçu en paramètre ; coordonnées depuis `lieu.yml`. Plus de `LIEU_PAR_DEFAUT` ni de `site.gps` en dur.
 
