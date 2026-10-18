@@ -80,6 +80,31 @@ test('clic sur la 3e vignette : la photo correspondante, agrandie, dans le dialo
   await expect(dialogue.getByRole('button', { name: 'Fermer' })).toBeVisible();
 });
 
+for (const viewport of [
+  { width: 1280, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`la photo agrandie est centrée dans la fenêtre (${viewport.width}×${viewport.height})`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    const { dialogue } = await ouvrirTroisieme(page);
+    const image = dialogue.locator('img');
+    await expect.poll(() => image.evaluate((i) => (i as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+    await expect(async () => {
+      const boite = await dialogue.boundingBox();
+      expect(boite).not.toBeNull();
+      const { x, y, width, height } = boite!;
+      // Entièrement dans la fenêtre.
+      expect(x).toBeGreaterThanOrEqual(0);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(x + width).toBeLessThanOrEqual(viewport.width);
+      expect(y + height).toBeLessThanOrEqual(viewport.height);
+      // Centrée (marges gauche/droite et haut/bas égales à 2 px près).
+      expect(Math.abs(x + width / 2 - viewport.width / 2)).toBeLessThanOrEqual(2);
+      expect(Math.abs(y + height / 2 - viewport.height / 2)).toBeLessThanOrEqual(2);
+    }).toPass();
+  });
+}
+
 test('Échap ferme, le focus revient à la 3e vignette', async ({ page }) => {
   const { troisieme } = await ouvrirTroisieme(page);
   await page.keyboard.press('Escape');

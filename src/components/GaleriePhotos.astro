@@ -99,6 +99,8 @@ const vignettes = await Promise.all(
   .galerie__dialogue {
     width: min(64rem, calc(100vw - 2rem));
     max-height: calc(100dvh - 2rem);
+    /* La remise à zéro globale (margin: 0) supprime le centrage natif du <dialog> modal. */
+    margin: auto;
     padding: 0;
     border: 0;
     border-radius: var(--r-3);
