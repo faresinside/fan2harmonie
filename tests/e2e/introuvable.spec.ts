@@ -44,6 +44,21 @@ for (const largeur of [390, 1280]) {
   });
 }
 
+test('page 404 : les libellés du menu sont ceux des réglages, vers les sections de l’accueil', async ({ page }) => {
+  await page.goto(INCONNUE);
+  const liens = page.locator('header nav a');
+  await expect(liens).toHaveText([
+    'Rendez-vous',
+    'La pratique',
+    'Le Qi Gong',
+    'Qui est Fan 2 Harmonie',
+    'Actualités',
+    'Contact',
+  ]);
+  const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+  expect(hrefs).toEqual(['/#rdv', '/#pratique', '/#qigong', '/#qui', '/#actualites', '/#contact']);
+});
+
 test('construction : dist/404.html, absente du plan du site ; .htaccess et .user.ini copiés tels quels', async ({ request }) => {
   expect(existsSync('dist/404.html')).toBe(true);
   const plan = await (await request.get('/sitemap-0.xml')).text();

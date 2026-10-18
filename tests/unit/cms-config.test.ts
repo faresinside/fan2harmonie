@@ -11,6 +11,7 @@ import {
   actualiteSchema,
   dateSchema,
   lieuSchema,
+  menuSchema,
   pageSchema,
   referencementSchema,
   rendezvousSchema,
@@ -272,7 +273,7 @@ describe('config.yml de Sveltia CMS', () => {
       return f;
     };
 
-    it('collection de fichiers fixes (ni création ni suppression), trois fichiers présents', () => {
+    it('collection de fichiers fixes (ni création ni suppression), quatre fichiers présents', () => {
       const r = collection('reglages');
       expect(r.label).toBe('Réglages du site');
       expect(r.folder).toBeUndefined();
@@ -280,7 +281,7 @@ describe('config.yml de Sveltia CMS', () => {
       expect(r['delete']).not.toBe(true);
       expect((r['editor'] as Record<string, unknown>)['preview']).toBe(false);
       const fichiers = r.files ?? [];
-      expect(fichiers.map((f) => f.name).sort()).toEqual(['accueil', 'lieu', 'referencement']);
+      expect(fichiers.map((f) => f.name).sort()).toEqual(['accueil', 'lieu', 'menu', 'referencement']);
       for (const f of fichiers) {
         expect(f.file).toBe(`src/content/reglages/${f.name}.md`);
         expect(existsSync(path.join(RACINE, f.file)), f.file).toBe(true);
@@ -288,6 +289,7 @@ describe('config.yml de Sveltia CMS', () => {
       expect(Object.fromEntries(fichiers.map((f) => [f.name, f.label]))).toEqual({
         accueil: 'Page d’accueil',
         lieu: 'Lieu de la pratique',
+        menu: 'Menu et titres',
         referencement: 'Référencement Google',
       });
     });
@@ -296,6 +298,7 @@ describe('config.yml de Sveltia CMS', () => {
       expect(champsFrontMatter(fichier('accueil'))).toEqual(cles(accueilSchema.shape));
       expect(champsFrontMatter(fichier('lieu'))).toEqual(cles(lieuSchema.shape));
       expect(champsFrontMatter(fichier('referencement'))).toEqual(cles(referencementSchema.shape));
+      expect(champsFrontMatter(fichier('menu'))).toEqual(cles(menuSchema.shape));
     });
 
     it('lieu : latitude et longitude en nombres décimaux, bornes du schéma', () => {
@@ -385,6 +388,11 @@ describe('config.yml de Sveltia CMS', () => {
         verifieChaine(`accueil.${nom}`, champ(accueil, nom), accueilSchema.shape[nom]);
       }
       verifieChaine('lieu.nom', champ(fichier('lieu'), 'nom'), lieuSchema.shape.nom);
+      // Menu : six libellés (30 caractères au plus) et trois titres de section (60 au plus), tous obligatoires.
+      const menu = fichier('menu');
+      for (const nom of Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>) {
+        verifieChaine(`menu.${nom}`, champ(menu, nom), menuSchema.shape[nom]);
+      }
       const ref = fichier('referencement');
       verifieChaine('referencement.titre', champ(ref, 'titre'), referencementSchema.shape.titre);
       verifieChaine('referencement.description', champ(ref, 'description'), referencementSchema.shape.description);
@@ -449,6 +457,20 @@ describe('config.yml de Sveltia CMS', () => {
       for (const nom of ['latitude', 'longitude'] as const) {
         expect(lieuSchema.shape[nom].safeParse(undefined).success, nom).toBe(false);
         expect(champ(lieu, nom).required, nom).not.toBe(false);
+      }
+    });
+
+    it('menu : pas de corps Markdown, libellés de 1 à 30 caractères et titres de 1 à 60, lus dans le schéma', () => {
+      const menu = fichier('menu');
+      expect(menu.fields.map((f) => f.name)).not.toContain('body');
+      for (const f of menu.fields) expect(f.widget, f.name).toBe('string');
+      for (const nom of ['rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'] as const) {
+        expect(bornes(menuSchema.shape[nom], chaine), nom).toEqual({ min: 1, max: 30 });
+        expect(champ(menu, nom)['maxlength'], nom).toBe(30);
+      }
+      for (const nom of ['titreRdv', 'titreActualites', 'titreContact'] as const) {
+        expect(bornes(menuSchema.shape[nom], chaine), nom).toEqual({ min: 1, max: 60 });
+        expect(champ(menu, nom)['maxlength'], nom).toBe(60);
       }
     });
 

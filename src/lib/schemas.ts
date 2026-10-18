@@ -106,3 +106,24 @@ export const referencementSchema = z.object({
 });
 
 export type Referencement = z.infer<typeof referencementSchema>;
+
+/** Un libellé ou un titre modifiable : sans espaces autour, jamais vide (ni fait seulement d'espaces). */
+const texteReglable = (max: number) => z.string().trim().min(1).max(max);
+
+/**
+ * Menu du haut et titres des sections de l'accueil (src/content/reglages/menu.md).
+ * Seuls les mots changent : l'ordre des liens et les sections visées sont fixes.
+ */
+export const menuSchema = z.object({
+  rdv: texteReglable(30),
+  pratique: texteReglable(30),
+  qigong: texteReglable(30),
+  qui: texteReglable(30),
+  actualites: texteReglable(30),
+  contact: texteReglable(30),
+  titreRdv: texteReglable(60),
+  titreActualites: texteReglable(60),
+  titreContact: texteReglable(60),
+});
+
+export type Menu = z.infer<typeof menuSchema>;

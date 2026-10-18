@@ -49,6 +49,11 @@ const referencementEntree = await getEntry('reglagesReferencement', 'referenceme
 if (!referencementEntree) throw new Error('Texte manquant : src/content/reglages/referencement.md');
 const referencement = referencementEntree.data;
 
+// Mots du menu et titres des sections « Prochains rendez-vous », « Actualités » et « Contactez-moi » (réglages « Menu et titres »).
+const menuEntree = await getEntry('reglagesMenu', 'menu');
+if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
+const menu = menuEntree.data;
+
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
 
@@ -84,7 +89,7 @@ const actualites = await Promise.all(
   <main id="contenu" tabindex="-1">
     <Hero accueil={accueil} />
 
-    <Section id="rdv" titre="Prochains rendez-vous" accent="Rejoignez-moi" ton="chaud" mise="centree">
+    <Section id="rdv" titre={menu.titreRdv} accent="Rejoignez-moi" ton="chaud" mise="centree">
       <RdvList items={rendezvous} />
     </Section>
 
@@ -121,7 +126,7 @@ const actualites = await Promise.all(
 
     {
       actualites.length > 0 && (
-        <Section id="actualites" titre="Actualités" ton="chaud" mise="centree">
+        <Section id="actualites" titre={menu.titreActualites} ton="chaud" mise="centree">
           <div class="actualites">
             {actualites.map(({ titre, date, photos, Content }) => (
               <ActualiteCard titre={titre} date={date} photos={photos}>
@@ -133,7 +138,7 @@ const actualites = await Promise.all(
       )
     }
 
-    <Section id="contact" titre="Contactez-moi" accent="une question ?" mise="centree">
+    <Section id="contact" titre={menu.titreContact} accent="une question ?" mise="centree">
       <ContactForm />
     </Section>
   </main>

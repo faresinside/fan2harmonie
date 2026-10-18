@@ -21,6 +21,28 @@ test.describe('structure de la page', () => {
     }
   });
 
+  test('menu : les six libellés d’aujourd’hui, dans l’ordre, vers leurs ancres', async ({ page }) => {
+    await page.goto('/');
+    const liens = page.locator('header nav a');
+    await expect(liens).toHaveText([
+      'Rendez-vous',
+      'La pratique',
+      'Le Qi Gong',
+      'Qui est Fan 2 Harmonie',
+      'Actualités',
+      'Contact',
+    ]);
+    const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+    expect(hrefs).toEqual(['#rdv', '#pratique', '#qigong', '#qui', '#actualites', '#contact']);
+  });
+
+  test('titres des sections réglables : « Prochains rendez-vous », « Actualités », « Contactez-moi »', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#rdv h2')).toHaveText('Prochains rendez-vous');
+    await expect(page.locator('#actualites h2')).toHaveText('Actualités');
+    await expect(page.locator('#contact h2')).toHaveText('Contactez-moi');
+  });
+
   test('un seul h1', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('h1')).toHaveCount(1);

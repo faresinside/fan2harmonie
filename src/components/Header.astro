@@ -6,6 +6,7 @@
  * le bouton apparaît et la navigation devient un panneau déroulant. Script absent ou en échec : navigation visible.
  */
 import { Image } from 'astro:assets';
+import { getEntry } from 'astro:content';
 import logo from '../assets/logo/logo.png';
 
 interface Props {
@@ -21,13 +22,18 @@ interface Props {
 const { actualites = true, surAccueil = true } = Astro.props;
 const prefixe = surAccueil ? '' : '/';
 
+// Mots du menu (réglages « Menu et titres ») : l'ordre et les sections visées restent fixes.
+const menuEntree = await getEntry('reglagesMenu', 'menu');
+if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
+const menu = menuEntree.data;
+
 const liens = [
-  { ancre: 'rdv', libelle: 'Rendez-vous' },
-  { ancre: 'pratique', libelle: 'La pratique' },
-  { ancre: 'qigong', libelle: 'Le Qi Gong' },
-  { ancre: 'qui', libelle: 'Qui est Fan 2 Harmonie' },
-  { ancre: 'actualites', libelle: 'Actualités' },
-  { ancre: 'contact', libelle: 'Contact' },
+  { ancre: 'rdv', libelle: menu.rdv },
+  { ancre: 'pratique', libelle: menu.pratique },
+  { ancre: 'qigong', libelle: menu.qigong },
+  { ancre: 'qui', libelle: menu.qui },
+  { ancre: 'actualites', libelle: menu.actualites },
+  { ancre: 'contact', libelle: menu.contact },
 ]
   .filter(({ ancre }) => actualites || ancre !== 'actualites')
   .map(({ ancre, libelle }) => ({ href: `${prefixe}#${ancre}`, libelle }));

@@ -8,6 +8,7 @@ import {
   CODE_GOOGLE_REGEX,
   ICONES_BIENFAIT,
   lieuSchema,
+  menuSchema,
   referencementSchema,
   rendezvousSchema,
 } from '../../src/lib/schemas';
@@ -176,6 +177,50 @@ describe('referencementSchema', () => {
 
   it('rejette une description de 49 caractères', () => {
     expect(referencementSchema.safeParse({ ...base, description: 'd'.repeat(49) }).success).toBe(false);
+  });
+});
+
+describe('menuSchema', () => {
+  const base = {
+    rdv: 'Rendez-vous',
+    pratique: 'La pratique',
+    qigong: 'Le Qi Gong',
+    qui: 'Qui est Fan 2 Harmonie',
+    actualites: 'Actualités',
+    contact: 'Contact',
+    titreRdv: 'Prochains rendez-vous',
+    titreActualites: 'Actualités',
+    titreContact: 'Contactez-moi',
+  };
+  const libelles = ['rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'] as const;
+  const titres = ['titreRdv', 'titreActualites', 'titreContact'] as const;
+
+  it('accepte les valeurs actuelles du site', () => {
+    expect(menuSchema.safeParse(base).success).toBe(true);
+  });
+
+  it.each(libelles)('libellé « %s » : 30 caractères acceptés, 31 refusés', (cle) => {
+    expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(30) }).success).toBe(true);
+    expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(31) }).success).toBe(false);
+  });
+
+  it.each(titres)('titre « %s » : 60 caractères acceptés, 61 refusés', (cle) => {
+    expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(60) }).success).toBe(true);
+    expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(61) }).success).toBe(false);
+  });
+
+  it.each([...libelles, ...titres])('« %s » : vide ou seulement des espaces refusé', (cle) => {
+    expect(menuSchema.safeParse({ ...base, [cle]: '' }).success).toBe(false);
+    expect(menuSchema.safeParse({ ...base, [cle]: '   ' }).success).toBe(false);
+  });
+
+  it('refuse un libellé absent', () => {
+    const { contact: _contact, ...sansContact } = base;
+    expect(menuSchema.safeParse(sansContact).success).toBe(false);
+  });
+
+  it('retire les espaces autour du texte', () => {
+    expect(menuSchema.parse({ ...base, rdv: '  Séances  ' }).rdv).toBe('Séances');
   });
 });
 

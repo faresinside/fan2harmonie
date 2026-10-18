@@ -200,7 +200,7 @@ collections:
     label: Réglages du site
     label_singular: Réglage
     description: >-
-      Les textes de la page d’accueil, le lieu de la pratique et les informations pour Google.
+      Les textes de la page d’accueil, le lieu de la pratique, les mots du menu et les titres des sections, et les informations pour Google.
       On peut les corriger, mais pas en ajouter ni en supprimer.
     editor:
       preview: false
@@ -321,6 +321,55 @@ collections:
             buttons: [bold, italic, link, bulleted-list]
             editor_components: []
             hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+      - name: menu
+        label: Menu et titres
+        file: src/content/reglages/menu.md
+        fields:
+          - name: rdv
+            label: Lien « Rendez-vous » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à la section des rendez-vous, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: pratique
+            label: Lien « La pratique » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à la section « La pratique », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: qigong
+            label: Lien « Le Qi Gong » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à la section « Le Qi Gong », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: qui
+            label: Lien « Qui est Fan 2 Harmonie » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à la section de présentation, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: actualites
+            label: Lien « Actualités » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à la section des actualités (le lien disparaît s’il n’y a aucune actualité), 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: contact
+            label: Lien « Contact » du menu
+            widget: string
+            maxlength: 30
+            hint: Le mot affiché dans la barre de menu pour aller à le formulaire de contact, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: titreRdv
+            label: Titre de la section « Prochains rendez-vous »
+            widget: string
+            maxlength: 60
+            hint: Le titre affiché en haut de la section des rendez-vous, 60 caractères au maximum.
+          - name: titreActualites
+            label: Titre de la section « Actualités »
+            widget: string
+            maxlength: 60
+            hint: Le titre affiché en haut de la section des actualités, 60 caractères au maximum.
+          - name: titreContact
+            label: Titre de la section « Contactez-moi »
+            widget: string
+            maxlength: 60
+            hint: Le titre affiché en haut de la section du formulaire de contact, 60 caractères au maximum.
       - name: referencement
         label: Référencement Google
         file: src/content/reglages/referencement.md

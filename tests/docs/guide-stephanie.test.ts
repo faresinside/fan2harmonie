@@ -117,6 +117,20 @@ describe('docs/GUIDE-STEPHANIE.md : accueil, lieu, plusieurs photos, référence
   });
 });
 
+describe('docs/GUIDE-STEPHANIE.md : menu et titres des sections', () => {
+  it('explique où changer les mots du menu et les titres, et ce qui ne change pas', () => {
+    for (const fragment of ['« Menu et titres »', 'mots du menu', 'trois titres', 'l’ordre']) {
+      expect(texte, fragment).toContain(fragment);
+    }
+    expect(texte).toMatch(/« Réglages du site »[^.]*« Menu et titres »/);
+  });
+
+  it('la présentation signale aussi qu’on peut changer le menu', () => {
+    const presentation = readFileSync(path.join(RACINE, 'docs/presentation-stephanie.html'), 'utf8');
+    expect(presentation).toContain('Menu et titres');
+  });
+});
+
 describe('docs/GUIDE-STEPHANIE.md : points de la revue (round 1)', () => {
   it('pas de fausse promesse : c’est l’auteur du site (« je ») qui remet une version précédente', () => {
     expect(texte).not.toMatch(/rien de ce que vous faites ici n’est définitif|Vous ne pouvez rien casser/i);

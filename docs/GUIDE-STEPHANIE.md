@@ -2,9 +2,8 @@
 
 Bonjour Stéphanie,
 
-Ce petit guide vous accompagne pour faire vivre votre site : ajouter vos séances, publier une nouvelle,
-corriger un texte. Tout se fait depuis votre navigateur, sans rien installer. Prenez votre temps : une erreur se
-corrige simplement en modifiant de nouveau la fiche.
+Ce petit guide vous aide à faire vivre votre site : ajouter vos séances, publier une nouvelle, corriger un texte.
+Tout se fait depuis votre navigateur, sans rien installer. Une erreur se corrige en modifiant de nouveau la fiche.
 
 ## a) Se connecter
 
@@ -39,7 +38,7 @@ Ensuite, à chaque fois :
 
 ![Nouveau rendez-vous](images/guide/nouveau-rendez-vous.png)
 
-*(Cette capture date d’avant : le champ « Lieu » est maintenant vide pour le lieu habituel.)*
+*(Capture ancienne : le champ « Lieu » est maintenant vide pour le lieu habituel.)*
 
 ## c) Annuler une séance
 
@@ -49,14 +48,14 @@ savent ainsi qu’elle n’a pas lieu.
 
 ## d) Supprimer un rendez-vous
 
-Pour retirer complètement une séance du site : dans la liste des rendez-vous, cochez la case devant la séance,
+Pour retirer une séance du site : dans la liste des rendez-vous, cochez la case devant la séance,
 puis cliquez sur **Supprimer** et confirmez.
 
 ## e) Publier une actualité avec une photo
 
 ![Nouvelle actualité](images/guide/nouvelle-actualite.png)
 
-*(Cette capture date d’avant : le champ s’appelle maintenant « Photos » et accepte plusieurs photos.)*
+*(Capture ancienne : le champ s’appelle maintenant « Photos » et accepte plusieurs photos.)*
 
 1. À gauche, cliquez sur **Actualités**, puis sur **Nouveau**.
 2. **Titre** : court, 90 caractères au maximum.
@@ -92,10 +91,12 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 À gauche, cliquez sur **« Réglages du site »**, puis sur **« Page d’accueil »**. Vous y trouvez la phrase d’accroche,
 le titre, le sous-titre, la devise, les petites lignes d’informations pratiques, le texte du bouton et les bienfaits
 (pour chacun, choisissez le dessin et écrivez quelques mots). Les limites de longueur sont indiquées sous chaque
-champ. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
+champ. Cliquez sur **Enregistrer** : rien ne change sur le site avant.
 
 **« Questions fréquentes »** : en bas de la fiche, ajoutez vos questions et leurs réponses (8 au plus). Elles
 s’affichent dans « La pratique » et Google les connaît. N’y écrivez pas d’heure, elle changerait d’une séance à l’autre.
+
+**Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». Ni l’ordre des liens ni les sections visées ne changent.
 
 ## i) Modifier le lieu
 
@@ -103,18 +104,18 @@ Dans **« Réglages du site »**, cliquez sur **« Lieu de la pratique »** : le
 (deux nombres avec des décimales : dans Google Maps, un clic droit sur le lieu les affiche), et les indications pour
 s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les deux nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
 
-Le nom du lieu est public : écrivez un lieu public, jamais une adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil » et la réponse « Où … » des questions fréquentes.
+Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil » et la réponse « Où … » des questions fréquentes.
 
 ## j) Référencement Google
 
 Dans **« Réglages du site »**, la fiche **« Référencement Google »** contient le titre et la description que Google
 affiche sous le nom de votre site. Elle contient aussi le **code de vérification Google**, à coller une seule fois.
-Pour que Google connaisse votre site, suivez pas à pas la procédure : [`PROCEDURE-GOOGLE.md`](PROCEDURE-GOOGLE.md).
+Pour que Google connaisse votre site, suivez la procédure : [`PROCEDURE-GOOGLE.md`](PROCEDURE-GOOGLE.md).
 
 ## k) Quand le site se met-il à jour ?
 
 Après chaque enregistrement, **le site se met à jour en quelques minutes** (en pratique, environ 2 minutes).
-Rechargez alors la page du site pour voir le changement.
+Rechargez alors la page du site.
 
 Si rien n’a changé au bout de cinq minutes : rechargez la page en appuyant sur **Ctrl + F5** (ou, sur téléphone,
 fermez et rouvrez la page). Si le changement n’apparaît toujours pas après un quart d’heure, ce n’est pas grave :
@@ -123,12 +124,12 @@ votre modification est bien gardée, écrivez-moi.
 ## l) En cas de doute
 
 Chaque modification est gardée : en cas d’erreur, je peux toujours remettre une version précédente
-(vous ne pouvez pas le faire vous-même). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez-moi, en décrivant ce que vous avez fait et ce que vous voyez (une
+(vous ne pouvez pas le faire vous-même). Si quelque chose vous paraît étrange, écrivez-moi en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
 ## m) Bon à savoir
 
-- **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible, le site les distingue tout seul.
+- **Deux rendez-vous le même jour** (le matin et l’après-midi) : c’est possible.
 - **Les rendez-vous passés disparaissent tout seuls** du site : dès le lendemain, puis
   lors de la mise à jour de la nuit. Inutile de les supprimer.
 - **Ce qui est supprimé n’est pas effacé partout** : les fichiers du site sont gardés sur GitHub avec leur
@@ -144,7 +145,7 @@ capture d’écran aide beaucoup).
 - **Le champ Photos** affiche, une fois la photo choisie, un chemin un peu technique
   (« ../../assets/actualites/… ») : c’est normal, n’y touchez pas.
 - **Formulaire de contact** : si un visiteur rencontre une erreur en envoyant un message, le site lui affiche
-  votre adresse e-mail pour qu’il vous écrive directement.
+  votre adresse e-mail.
 - **Ne communiquez jamais votre mot de passe GitHub**, à personne (pas même à moi) ; ni le code de la
   double authentification. Personne n’en a besoin pour vous aider.
 - Sur un ordinateur partagé, pensez à vous déconnecter : cliquez sur le petit bonhomme en haut à droite, puis
