@@ -329,46 +329,55 @@ collections:
             label: Lien « Rendez-vous » du menu
             widget: string
             maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section des rendez-vous, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: pratique
             label: Lien « La pratique » du menu
             widget: string
             maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section « La pratique », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: qigong
             label: Lien « Le Qi Gong » du menu
             widget: string
             maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section « Le Qi Gong », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: qui
             label: Lien « Qui est Fan 2 Harmonie » du menu
             widget: string
             maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section de présentation, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: actualites
             label: Lien « Actualités » du menu
             widget: string
             maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section des actualités (le lien disparaît s’il n’y a aucune actualité), 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: contact
             label: Lien « Contact » du menu
             widget: string
             maxlength: 30
-            hint: Le mot affiché dans la barre de menu pour aller à le formulaire de contact, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
+            hint: Le mot affiché dans la barre de menu pour aller au formulaire de contact, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: titreRdv
             label: Titre de la section « Prochains rendez-vous »
             widget: string
             maxlength: 60
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le titre affiché en haut de la section des rendez-vous, 60 caractères au maximum.
           - name: titreActualites
             label: Titre de la section « Actualités »
             widget: string
             maxlength: 60
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le titre affiché en haut de la section des actualités, 60 caractères au maximum.
           - name: titreContact
             label: Titre de la section « Contactez-moi »
             widget: string
             maxlength: 60
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le titre affiché en haut de la section du formulaire de contact, 60 caractères au maximum.
       - name: referencement
         label: Référencement Google

@@ -460,17 +460,21 @@ describe('config.yml de Sveltia CMS', () => {
       }
     });
 
-    it('menu : pas de corps Markdown, libellés de 1 à 30 caractères et titres de 1 à 60, lus dans le schéma', () => {
+    it('menu : pas de corps Markdown, que des champs texte, motif refusant le vide et les espaces seuls comme le schéma', () => {
       const menu = fichier('menu');
       expect(menu.fields.map((f) => f.name)).not.toContain('body');
       for (const f of menu.fields) expect(f.widget, f.name).toBe('string');
-      for (const nom of ['rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'] as const) {
-        expect(bornes(menuSchema.shape[nom], chaine), nom).toEqual({ min: 1, max: 30 });
-        expect(champ(menu, nom)['maxlength'], nom).toBe(30);
-      }
-      for (const nom of ['titreRdv', 'titreActualites', 'titreContact'] as const) {
-        expect(bornes(menuSchema.shape[nom], chaine), nom).toEqual({ min: 1, max: 60 });
-        expect(champ(menu, nom)['maxlength'], nom).toBe(60);
+      for (const nom of Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>) {
+        const f = champ(menu, nom);
+        expect(f.pattern?.[1], `${nom} : message du motif`).toMatch(/caractère visible/);
+        for (const ko of ['', '   ']) {
+          expect(motif(f).test(ko), `${nom} : « ${ko} » refusé par le CMS`).toBe(false);
+          expect(menuSchema.shape[nom].safeParse(ko).success, `${nom} : « ${ko} » refusé par le schéma`).toBe(false);
+        }
+        for (const ok of ['Contact', ' Contact ']) {
+          expect(motif(f).test(ok), `${nom} : « ${ok} » accepté par le CMS`).toBe(true);
+          expect(menuSchema.shape[nom].safeParse(ok).success, `${nom} : « ${ok} » accepté par le schéma`).toBe(true);
+        }
       }
     });
 

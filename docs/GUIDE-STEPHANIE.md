@@ -84,14 +84,13 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 **Mon parcours**. Modifiez le texte comme dans un traitement de texte, puis **Enregistrer**.
 
 - Pour passer à la ligne, laissez **une ligne vide** entre deux paragraphes (appuyez deux fois sur « Entrée »).
-- Écrivez simplement : les boutons suffisent pour le gras et l’italique.
 
 ## h) Modifier la page d’accueil
 
 À gauche, cliquez sur **« Réglages du site »**, puis sur **« Page d’accueil »**. Vous y trouvez la phrase d’accroche,
 le titre, le sous-titre, la devise, les petites lignes d’informations pratiques, le texte du bouton et les bienfaits
 (pour chacun, choisissez le dessin et écrivez quelques mots). Les limites de longueur sont indiquées sous chaque
-champ. Cliquez sur **Enregistrer** : rien ne change sur le site avant.
+champ. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
 
 **« Questions fréquentes »** : en bas de la fiche, ajoutez vos questions et leurs réponses (8 au plus). Elles
 s’affichent dans « La pratique » et Google les connaît. N’y écrivez pas d’heure, elle changerait d’une séance à l’autre.
@@ -102,7 +101,7 @@ s’affichent dans « La pratique » et Google les connaît. N’y écrivez pas 
 
 Dans **« Réglages du site »**, cliquez sur **« Lieu de la pratique »** : le nom du lieu, sa latitude et sa longitude
 (deux nombres avec des décimales : dans Google Maps, un clic droit sur le lieu les affiche), et les indications pour
-s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les deux nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
+s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
 
 Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil » et la réponse « Où … » des questions fréquentes.
 
@@ -124,7 +123,7 @@ votre modification est bien gardée, écrivez-moi.
 ## l) En cas de doute
 
 Chaque modification est gardée : en cas d’erreur, je peux toujours remettre une version précédente
-(vous ne pouvez pas le faire vous-même). Si quelque chose vous paraît étrange, écrivez-moi en décrivant ce que vous avez fait et ce que vous voyez (une
+(vous ne pouvez pas le faire vous-même). Si quelque chose vous paraît étrange, ne cherchez pas à réparer vous-même : écrivez-moi, en décrivant ce que vous avez fait et ce que vous voyez (une
 capture d’écran aide beaucoup).
 
 ## m) Bon à savoir
