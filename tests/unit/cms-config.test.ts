@@ -429,29 +429,6 @@ describe('config.yml de Sveltia CMS', () => {
       expect(champ(bienfaits as { fields?: Champ[] }, 'icone').required, 'bienfaits.icone : obligatoire').not.toBe(false);
     });
 
-    it('FAQ : liste facultative de 0 à 8 questions, question (ligne) et réponse (texte) bornées par le schéma', () => {
-      const faq = champ(fichier('accueil'), 'faq');
-      expect(faq.widget).toBe('list');
-      expect(faq.required).toBe(false);
-      expect(faq['min']).toBeUndefined();
-      const uneQuestion = { question: 'a', reponse: 'a' };
-      const nb = bornes(accueilSchema.shape.faq, (n) => Array.from({ length: n }, () => uneQuestion));
-      expect(nb.min).toBe(0);
-      expect(faq['max'], 'faq : max').toBe(nb.max);
-      expect(faq['max']).toBe(8);
-      const sous = faq['fields'] as Champ[];
-      expect(sous.map((x) => x.name)).toEqual(['question', 'reponse']);
-      const forme = accueilSchema.shape.faq.unwrap().element.shape;
-      const question = champ({ fields: sous }, 'question');
-      expect(question.widget).toBe('string');
-      verifieChaine('faq.question', { ...question, required: question.required ?? true }, forme.question);
-      const reponse = champ({ fields: sous }, 'reponse');
-      expect(reponse.widget).toBe('text');
-      verifieChaine('faq.reponse', { ...reponse, required: reponse.required ?? true }, forme.reponse, 600);
-      // Facultative dans le fichier : sans « faq », le site n'affiche aucune FAQ.
-      expect(accueilSchema.shape.faq.safeParse(undefined)).toMatchObject({ success: true, data: [] });
-    });
-
     it('lieu : champs obligatoires comme dans le schéma', () => {
       const lieu = fichier('lieu');
       for (const nom of ['latitude', 'longitude'] as const) {

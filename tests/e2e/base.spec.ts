@@ -35,8 +35,7 @@ test.describe('mise en page de base', () => {
     const donnees = JSON.parse(scripts[0] ?? '') as { '@context': string; '@graph': Record<string, unknown>[] };
     expect(donnees['@context']).toBe('https://schema.org');
     const [accueil, ...autres] = donnees['@graph'];
-    // La FAQ (FAQPage) est vérifiée à part : ici, le site et les séances.
-    const evenements = autres.filter((n) => n['@type'] !== 'FAQPage');
+    const evenements = autres;
     expect(accueil).toMatchObject({ '@type': 'WebSite', name: 'Fan 2 Harmonie', inLanguage: 'fr-FR' });
     expect(JSON.stringify(donnees)).not.toMatch(/LocalBusiness|priceRange|areaServed|postalCode|streetAddress/);
     // Chaque séance à venir : évènement gratuit, daté à l'heure de Paris, avec un lieu.
@@ -71,40 +70,15 @@ test.describe('mise en page de base', () => {
     await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
   });
 
-  test('FAQ : questions visibles dans « La pratique », sans horaire, identiques aux données structurées (FAQPage)', async ({ page }) => {
-    const { faq } = reglages<{ faq: { question: string; reponse: string }[] }>('accueil');
-    expect(faq).toHaveLength(4);
+  test('aucune FAQ : ni bloc « Questions fréquentes » sur l’accueil, ni FAQPage dans les données structurées (types : WebSite puis Event)', async ({ page }) => {
     await page.goto('/');
-    const blocs = page.locator('#pratique details.faq__question');
-    await expect(blocs).toHaveCount(4);
-    const visibles = await blocs.evaluateAll((els) =>
-      els.map((e) => ({
-        question: e.querySelector('summary')?.textContent?.trim() ?? '',
-        reponse: e.querySelector('.faq__reponse')?.textContent?.trim() ?? '',
-      })),
-    );
-    expect(visibles).toEqual(faq.map((f) => ({ question: f.question.trim(), reponse: f.reponse.trim() })));
-    for (const f of faq) expect(`${f.question} ${f.reponse}`).not.toMatch(/\d\s?h\s?\d{0,2}|\d{1,2}:\d{2}/);
-    // Données structurées : exactement les questions et réponses affichées.
+    await expect(page.locator('details.faq__question, .faq')).toHaveCount(0);
+    await expect(page.getByText(/questions fréquentes/i)).toHaveCount(0);
     const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
     const graphe = (JSON.parse(scripts[0] ?? '') as { '@graph': Record<string, unknown>[] })['@graph'];
-    const pages = graphe.filter((n) => n['@type'] === 'FAQPage');
-    expect(pages).toHaveLength(1);
-    const entites = (pages[0]?.['mainEntity'] ?? []) as { '@type': string; name: string; acceptedAnswer: { text: string } }[];
-    expect(entites.map((q) => q['@type'])).toEqual(['Question', 'Question', 'Question', 'Question']);
-    expect(entites.map((q) => ({ question: q.name, reponse: q.acceptedAnswer.text }))).toEqual(
-      visibles.map((v) => ({ question: v.question, reponse: v.reponse })),
-    );
-  });
-
-  test('FAQ : réponse repliée au départ, ouverte au clavier', async ({ page }) => {
-    await page.goto('/');
-    const premier = page.locator('#pratique details.faq__question').first();
-    await expect(premier).not.toHaveAttribute('open', '');
-    await premier.locator('summary').focus();
-    await page.keyboard.press('Enter');
-    await expect(premier).toHaveAttribute('open', '');
-    await expect(premier.locator('.faq__reponse')).toBeVisible();
+    expect(graphe.some((n) => n['@type'] === 'FAQPage')).toBe(false);
+    expect(graphe[0]?.['@type']).toBe('WebSite');
+    expect(graphe.slice(1).every((n) => n['@type'] === 'Event')).toBe(true);
   });
 
   test('plan du site : date de modification (lastmod) sur l’accueil seulement', async ({ request }) => {

@@ -100,7 +100,6 @@ describe('docs/GUIDE-STEPHANIE.md : accueil, lieu, plusieurs photos, référence
       '« Réglages du site »',
       '« Page d’accueil »',
       '« Lieu de la pratique »',
-      '« Questions fréquentes »',
       '« Référencement Google »',
       '« Photos »',
       '« Légende »',

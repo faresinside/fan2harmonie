@@ -9,7 +9,7 @@ import '../styles/global.css';
 import { getImage } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import { site } from '../config/site';
-import { donneesSite, serialiserJsonLd, type QuestionFaq, type Seance } from '../lib/jsonld';
+import { donneesSite, serialiserJsonLd, type Seance } from '../lib/jsonld';
 import { codeVerificationGoogle } from '../lib/referencement';
 import { jeton } from '../lib/jetons';
 import tokens from '../styles/tokens.css?raw';
@@ -24,13 +24,11 @@ interface Props {
   noindex?: boolean;
   /** Séances à venir (accueil) : décrites à Google comme des évènements gratuits. */
   seances?: Seance[];
-  /** Questions fréquentes affichées sur la page (accueil) : décrites à Google (FAQPage) avec les mêmes textes. */
-  faq?: QuestionFaq[];
   /** Code de vérification Google Search Console (réglages « Référencement Google ») : balise rendue seulement s'il est valide. */
   verificationGoogle?: string | undefined;
 }
 
-const { titre, description, noindex = false, seances = [], faq = [], verificationGoogle } = Astro.props;
+const { titre, description, noindex = false, seances = [], verificationGoogle } = Astro.props;
 const codeGoogle = codeVerificationGoogle(verificationGoogle);
 
 const absolue = (chemin: string) => new URL(chemin, site.url).href;
@@ -55,7 +53,6 @@ const jsonLd = donneesSite(
     lieu: { nom: lieu.data.nom, lat: lieu.data.latitude, lon: lieu.data.longitude },
   },
   seances,
-  faq,
 );
 ---
 

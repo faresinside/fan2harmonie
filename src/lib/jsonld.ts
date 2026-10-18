@@ -27,12 +27,6 @@ export interface Seance {
   annule: boolean;
 }
 
-/** Une question fréquente de l'accueil, telle qu'elle est affichée. */
-export interface QuestionFaq {
-  question: string;
-  reponse: string;
-}
-
 /** Description fixe d'une séance : indépendante de la description du référencement (qui ne décrit que le site). */
 const DESCRIPTION_SEANCE = 'Séance de Qi Gong gratuite en plein air, ouverte à tous, à tout âge et à tous niveaux.';
 
@@ -48,13 +42,13 @@ export function decalageParis(date: string, heure: string): string {
 
 /**
  * Données structurées de l'accueil : le site (WebSite), chaque séance à venir (Event), que Google peut présenter
- * comme évènement, et la FAQ affichée (FAQPage, seulement si elle n'est pas vide, avec les textes qu'on voit à l'écran).
+ * comme évènement.
  * Seulement des faits établis : séances gratuites, lieu et heure de la fiche, annulation. Aucune
  * entreprise, aucun commerce : l'activité est exercée à titre gratuit par une personne. Ni rue, ni code postal, ni prix
  * autre que la gratuité : l'activité a lieu en plein air, sans adresse postale publique. Le lieu habituel porte la ville
  * et les coordonnées GPS ; un autre lieu n'est décrit que par le texte de la fiche (on ne devine pas sa ville).
  */
-export function donneesSite(infos: InfosSite, seances: readonly Seance[], faq: readonly QuestionFaq[] = []) {
+export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
   const evenements = seances.map((s) => {
     const habituel = s.lieu === infos.lieu.nom;
     return {
@@ -79,18 +73,6 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[], faq: r
       url: `${infos.url}#rdv`,
     };
   });
-  const questions = faq.length
-    ? [
-        {
-          '@type': 'FAQPage',
-          mainEntity: faq.map((f) => ({
-            '@type': 'Question',
-            name: f.question,
-            acceptedAnswer: { '@type': 'Answer', text: f.reponse },
-          })),
-        },
-      ]
-    : [];
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -103,7 +85,6 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[], faq: r
         inLanguage: 'fr-FR',
       },
       ...evenements,
-      ...questions,
     ],
   };
 }

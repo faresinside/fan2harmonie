@@ -92,9 +92,6 @@ le titre, le sous-titre, la devise, les petites lignes d’informations pratique
 (pour chacun, choisissez le dessin et écrivez quelques mots). Les limites de longueur sont indiquées sous chaque
 champ. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
 
-**« Questions fréquentes »** : en bas de la fiche, ajoutez vos questions et leurs réponses (8 au plus). Elles
-s’affichent dans « La pratique » et Google les connaît. N’y écrivez pas d’heure, elle changerait d’une séance à l’autre.
-
 **Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». Ni l’ordre des liens ni les sections visées ne changent.
 
 ## i) Modifier le lieu
@@ -103,7 +100,7 @@ Dans **« Réglages du site »**, cliquez sur **« Lieu de la pratique »** : le
 (deux nombres avec des décimales : dans Google Maps, un clic droit sur le lieu les affiche), et les indications pour
 s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
 
-Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil » et la réponse « Où … » des questions fréquentes.
+Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil ».
 
 ## j) Référencement Google
 

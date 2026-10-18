@@ -14,7 +14,6 @@ import Section from '../components/Section.astro';
 import RdvList from '../components/RdvList.astro';
 import ActualiteCard from '../components/ActualiteCard.astro';
 import LienCarte from '../components/LienCarte.astro';
-import Faq from '../components/Faq.astro';
 import ContactForm from '../components/ContactForm.astro';
 import Footer from '../components/Footer.astro';
 import IconSilhouette from '../components/IconSilhouette.astro';
@@ -75,7 +74,6 @@ const actualites = await Promise.all(
   titre={referencement.titre}
   description={referencement.description}
   verificationGoogle={referencement.verificationGoogle}
-  faq={accueil.faq}
   seances={rendezvous.map((r) => ({
     date: r.date.toISOString().slice(0, 10),
     heure: r.heure,
@@ -107,7 +105,6 @@ const actualites = await Promise.all(
           )
         }
       </LienCarte>
-      <Faq items={accueil.faq} />
     </Section>
 
     <Section id="qigong" titre={qigong.titre} accent="le souffle vital" ton="chaud">
