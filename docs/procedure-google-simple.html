@@ -1,0 +1,135 @@
+<!doctype html>
+<!-- Source du PDF « Fan2Harmonie-Google-Stephanie.pdf » (docs/). Régénéré par :
+     node scripts/pdf-presentation.mjs docs/procedure-google-simple.html docs/Fan2Harmonie-Google-Stephanie.pdf
+     (Chrome via Playwright). Version courte et illustrée de docs/PROCEDURE-GOOGLE.md : en cas de doute, ce dernier fait foi.
+     Les noms de boutons de Google peuvent changer : ils sont donnés « à peu près », le texte le dit. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Fan 2 Harmonie – Faire connaître votre site à Google</title>
+<style>
+  @font-face { font-family: 'Cormorant'; src: url('../node_modules/@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2') format('woff2'); font-weight: 300 700; font-style: normal; }
+  @font-face { font-family: 'Source Sans'; src: url('../node_modules/@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2') format('woff2'); font-weight: 200 900; font-style: normal; }
+  @font-face { font-family: 'Allura'; src: url('../node_modules/@fontsource/allura/files/allura-latin-400-normal.woff2') format('woff2'); }
+  :root { --foret: #2c4a2e; --dore: #c9a24a; --dore-pale: #e6d4a5; --rose: #ae4c66; --rose-doux: #f1d9dc; --creme-fonce: #f2e9d6; --encre: #26331f; --encre-doux: #4b5844; }
+  @page { size: A4; margin: 14mm 15mm 14mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 11pt/1.5 'Source Sans', sans-serif; color: var(--encre); }
+  h1, h2 { font-family: 'Cormorant', serif; color: var(--foret); margin: 0; line-height: 1.15; }
+  h1 { font-size: 27pt; }
+  h2 { font-size: 15pt; margin: 0 0 3pt; }
+  p { margin: 0 0 5pt; }
+  a, strong { color: var(--foret); }
+  a { color: var(--rose); text-decoration: none; font-weight: 600; }
+  .script { font-family: 'Allura', cursive; color: var(--rose); font-size: 22pt; line-height: 1; }
+  .entete { text-align: center; padding-bottom: 8pt; border-bottom: 1.2pt solid var(--dore); margin-bottom: 9pt; }
+  .entete p { margin: 2pt 0 0; color: var(--encre-doux); }
+  .etape { display: flex; gap: 10pt; margin: 0 0 8pt; padding: 8pt 10pt; border: 1pt solid var(--dore-pale); border-radius: 8pt; break-inside: avoid; }
+  .num { flex: 0 0 25pt; width: 25pt; height: 25pt; line-height: 25pt; text-align: center; border-radius: 50%; background: var(--foret); color: #fff; font-weight: 700; font-size: 13pt; margin-top: 1pt; }
+  .etape .corps { flex: 1; }
+  .etape ul { margin: 2pt 0 2pt; padding-left: 15pt; } .etape li { margin-bottom: 2pt; }
+  .code { display: inline-block; background: var(--creme-fonce); border-radius: 4pt; padding: 1pt 5pt; font-family: Consolas, monospace; font-size: 9.5pt; word-break: break-all; }
+  .bouton { display: inline-block; background: var(--rose); color: #fff; border-radius: 4pt; padding: 0 6pt; font-weight: 600; font-size: 10pt; }
+  .astuce { border-left: 3pt solid var(--dore); background: var(--creme-fonce); padding: 5pt 9pt; margin: 4pt 0 2pt; border-radius: 0 5pt 5pt 0; font-size: 10pt; }
+  .attention { border-left-color: var(--rose); background: var(--rose-doux); }
+  .apres { margin-top: 10pt; }
+  .apres h2 { border-bottom: 1.2pt solid var(--dore); padding-bottom: 3pt; margin-bottom: 5pt; }
+  .apres ul { margin: 0 0 6pt; padding-left: 15pt; } .apres li { margin-bottom: 3pt; }
+  .pied { margin-top: 10pt; padding-top: 5pt; border-top: 0.8pt solid var(--dore-pale); font-size: 9pt; color: var(--encre-doux); text-align: center; }
+  .saut { break-before: page; }
+</style>
+</head>
+<body>
+
+<div class="entete">
+  <div class="script">Fan 2 Harmonie</div>
+  <h1>Faire connaître votre site à Google</h1>
+  <p>6 étapes, environ 30 minutes, en plusieurs fois si vous voulez. Rien n’est dangereux : si vous hésitez, arrêtez-vous et écrivez-moi.</p>
+</div>
+
+<div class="etape">
+  <div class="num">1</div>
+  <div class="corps">
+    <h2>Ouvrir la Search Console</h2>
+    <p>C’est l’outil gratuit de Google qui permet de lui présenter votre site. Il faut un compte Google (celui de votre Gmail convient).</p>
+    <ul>
+      <li>Allez sur <a href="https://search.google.com/search-console">search.google.com/search-console</a> et connectez-vous.</li>
+      <li>Choisissez <strong>« Préfixe de l’URL »</strong> et écrivez : <span class="code">https://fan2harmonie.fr/</span> puis cliquez sur <span class="bouton">Continuer</span>.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="etape">
+  <div class="num">2</div>
+  <div class="corps">
+    <h2>Récupérer le code de vérification</h2>
+    <p>Google veut s’assurer que le site est bien à vous. Choisissez la méthode <strong>« Balise HTML »</strong> (si vous ne la voyez pas tout de suite, cherchez « Autres méthodes de validation »).</p>
+    <p>Google affiche alors une ligne qui ressemble à :</p>
+    <p><span class="code">&lt;meta name="google-site-verification" content="<strong>aBcD1234…</strong>"&gt;</span></p>
+    <div class="astuce attention"><strong>Copiez seulement le long code entre les guillemets</strong> (la partie en gras ci-dessus), pas toute la ligne. Laissez cette page Google ouverte.</div>
+  </div>
+</div>
+
+<div class="etape">
+  <div class="num">3</div>
+  <div class="corps">
+    <h2>Coller le code dans votre administration</h2>
+    <ul>
+      <li>Ouvrez <a href="https://fan2harmonie.fr/admin">fan2harmonie.fr/admin</a> et connectez-vous comme d’habitude (<strong>« Se connecter avec GitHub »</strong>).</li>
+      <li>Cliquez sur <strong>« Réglages du site »</strong>, puis <strong>« Référencement Google »</strong>.</li>
+      <li>Collez le code dans <strong>« Code de vérification Google »</strong>, puis cliquez sur <span class="bouton">Enregistrer</span>.</li>
+    </ul>
+    <div class="astuce">Le site se met à jour tout seul. <strong>Attendez environ 3 minutes</strong> avant l’étape suivante.</div>
+  </div>
+</div>
+
+<div class="etape">
+  <div class="num">4</div>
+  <div class="corps">
+    <h2>Valider chez Google</h2>
+    <p>Retournez sur la page de Google restée ouverte et cliquez sur <span class="bouton">Valider</span>. Un message de réussite apparaît (par exemple « Propriété validée »). Cliquez sur <strong>« Accéder à la propriété »</strong>.</p>
+    <div class="astuce">Si Google dit que la validation a échoué : attendez 5 minutes, vérifiez que vous avez collé <strong>seulement le code</strong>, puis réessayez. Toujours bloquée ? Écrivez-moi avec une capture d’écran.</div>
+  </div>
+</div>
+
+<div class="etape saut">
+  <div class="num">5</div>
+  <div class="corps">
+    <h2>Dire à Google où lire votre site</h2>
+    <ul>
+      <li>Dans le menu à gauche, cliquez sur <strong>« Sitemaps »</strong>. Écrivez <span class="code">sitemap-index.xml</span> dans la case, puis cliquez sur <span class="bouton">Envoyer</span>.</li>
+      <li>En haut de la page, dans la barre de recherche (« Inspecter n’importe quelle URL »), écrivez <span class="code">https://fan2harmonie.fr/</span> et validez.</li>
+      <li>Cliquez sur <strong>« Demander une indexation »</strong>. Google met parfois quelques minutes à répondre : c’est normal.</li>
+    </ul>
+    <div class="astuce">Les noms des boutons de Google peuvent un peu changer d’un jour à l’autre. Cherchez celui qui ressemble le plus.</div>
+  </div>
+</div>
+
+<div class="etape">
+  <div class="num">6</div>
+  <div class="corps">
+    <h2>Créer votre fiche « Google Business Profile » <em style="font-weight:400;font-size:11pt">(très utile)</em></h2>
+    <p>C’est elle qui fait apparaître votre activité sur la carte et dans les recherches comme « Qi Gong Rambouillet ».</p>
+    <ul>
+      <li>Allez sur <a href="https://business.google.com">business.google.com</a> et suivez les questions.</li>
+      <li>Votre activité : séances de Qi Gong, <strong>gratuites, en plein air</strong>. Indiquez le parc de Rambouillet comme lieu public et ajoutez l’adresse de votre site, des photos et vos jours de séance.</li>
+    </ul>
+    <div class="astuce attention"><strong>Ne donnez jamais votre adresse personnelle.</strong> Si Google en réclame une, choisissez de ne pas l’afficher (activité sans local) ou écrivez-moi avant de continuer.</div>
+  </div>
+</div>
+
+<div class="apres">
+  <h2>Et ensuite ?</h2>
+  <ul>
+    <li><strong>De la patience :</strong> votre page d’accueil peut apparaître en quelques jours ; pour une recherche comme « Qi Gong Rambouillet », comptez plusieurs semaines. C’est normal pour un site neuf.</li>
+    <li><strong>Faites parler du site :</strong> l’office de tourisme et la mairie de Rambouillet, une page Facebook, les associations de bien-être de la région. Vous pouvez aussi écrire l’adresse du site sur votre fanion.</li>
+    <li><strong>Un test :</strong> tapez <span class="code">site:fan2harmonie.fr</span> dans Google. Si votre site s’affiche, c’est gagné.</li>
+    <li><strong>À ne pas faire :</strong> acheter des liens, payer quelqu’un qui promet « la première place », ou publier de faux avis. Cela ferait plus de mal que de bien.</li>
+  </ul>
+  <p>Le meilleur moyen de progresser : un site vivant. Séances à jour, actualités avec de belles photos, et des élèves contents qui vous recommandent.</p>
+</div>
+
+<div class="pied">Fan 2 Harmonie · Qi Gong à Rambouillet · <a href="https://fan2harmonie.fr">fan2harmonie.fr</a></div>
+
+</body>
+</html>

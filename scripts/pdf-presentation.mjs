@@ -1,6 +1,8 @@
 /**
  * Génère docs/Fan2Harmonie-presentation-Stephanie.pdf depuis docs/presentation-stephanie.html (Chrome, via Playwright).
- * Usage : node scripts/pdf-presentation.mjs
+ * Usage : node scripts/pdf-presentation.mjs [source.html sortie.pdf]
+ *   Sans argument : la présentation. Avec deux arguments (chemins relatifs à la racine du dépôt) : un autre document,
+ *   par exemple node scripts/pdf-presentation.mjs docs/procedure-google-simple.html docs/Fan2Harmonie-Google-Stephanie.pdf
  * CHROME_PATH : Chrome à utiliser (par défaut, celui installé par Playwright).
  */
 import { pathToFileURL } from 'node:url';
@@ -8,8 +10,10 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const racine = path.resolve(import.meta.dirname, '..');
-const source = pathToFileURL(path.join(racine, 'docs/presentation-stephanie.html')).href;
-const sortie = path.join(racine, 'docs/Fan2Harmonie-presentation-Stephanie.pdf');
+const [argSource = 'docs/presentation-stephanie.html', argSortie = 'docs/Fan2Harmonie-presentation-Stephanie.pdf'] =
+  process.argv.slice(2);
+const source = pathToFileURL(path.join(racine, argSource)).href;
+const sortie = path.join(racine, argSortie);
 
 const navigateur = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
 const page = await navigateur.newPage();
