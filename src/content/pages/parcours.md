@@ -6,11 +6,11 @@ titre: Qui est Fan 2 Harmonie
 
 Je suis une femme dynamique, curieuse et passionnée, avec une énergie que j’ai longtemps aimée mettre au service de projets, d’activités et de défis.
 
-Pendant plus de 30 ans, j’ai mené une vie particulièrement active, entre mon travail, ma vie de famille avec mes trois enfants et de nombreuses activités physiques et dynamiques. J’aimais bouger, découvrir, entreprendre… et je ne m’arrêtais presque jamais !
+Pendant plus de 30 ans, j’ai mené une vie particulièrement active, entre mon travail, ma vie de famille avec mari et enfants et de nombreuses activités physiques et dynamiques. J’aimais bouger, découvrir, entreprendre… et je ne m’arrêtais presque jamais  !
 
 Puis, il y a cinq ans, j’ai ressenti le besoin de faire une pause. De ralentir. De prendre davantage soin de moi et d’écouter ce que mon corps et mon esprit me demandaient.
 
-J’ai alors choisi de réduire le nombre de mes activités et de découvrir une pratique vers laquelle je ne m’étais pourtant pas tournée auparavant : le Qi Gong. Une activité que j’avais même volontairement écartée dix ans plus tôt, pensant qu’elle ne correspondait pas à mon tempérament !
+J’ai alors choisi de réduire le nombre de mes activités et de découvrir une pratique vers laquelle je ne m’étais pourtant pas tournée auparavant : le Qi Gong. Une activité que j’avais même volontairement écartée dix ans plus tôt, pensant qu’elle ne correspondait pas à mon tempérament !
 
 Et pourtant… cette rencontre a profondément changé ma façon d’aborder ma vie, le mouvement et le bien-être.
 
