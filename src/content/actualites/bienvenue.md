@@ -1,6 +1,9 @@
 ---
 titre: Bienvenue sur le site de Fan 2 Harmonie
 date: 2026-10-04
+photos:
+  - image: /src/assets/actualites/photofacebook.webp
+    legende: Animation des samedi ou dimanche diffusée sur Facebook
 ---
 
-Bientôt seront mises des photos de ces événements
+À venir des photo des séances en plein air ...
