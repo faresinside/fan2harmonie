@@ -27,7 +27,7 @@
     "@astrojs/check": "0.9.10",
     "@astrojs/markdown-remark": "7.3.2",
     "@astrojs/sitemap": "3.7.4",
-    "@axe-core/playwright": "4.13.0",
+    "@axe-core/playwright": "4.14.0",
     "@fontsource-variable/cormorant": "5.3.0",
     "@fontsource-variable/source-sans-3": "5.3.0",
     "@fontsource/allura": "5.3.0",
