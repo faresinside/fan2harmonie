@@ -2,7 +2,7 @@
 titre: Le Qi Gong
 ---
 
-Le QI GONG est une pratique ancestrale chinoise qui est à la fois un art martial, une médecine traditionnelle Chinoise et le courant philosophique antique du taoïsme selon lequel le corps humain est un tout indissociable à la nature et à l’univers.
+Le QI GONG est une pratique ancestrale chinoise qui est à la fois un art martial, de la médecine traditionnelle Chinoise et le courant philosophique antique du taoïsme selon lequel le corps humain est un tout indissociable à la nature et à l’univers.
 
 La règle fondamentale de la médecine Chinoise veut que le sang circule partout et en tout.
 
