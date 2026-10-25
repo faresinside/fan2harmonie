@@ -1,6 +1,8 @@
 ---
 titre: Bienvenue sur le site de Fan 2 Harmonie
-date: 2026-10-04
+date: 2026-10-21
+photos:
+  - image: /src/assets/actualites/photofacebook.webp
 ---
 
-Bientôt seront mises des photos de ces événements
+À venir des photos de ces événements en plein air dans le joli parc de Rambouillet ...
