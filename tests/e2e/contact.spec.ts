@@ -428,7 +428,8 @@ test.describe('mentions légales', () => {
     const liens = page.locator('header nav a');
     expect(await liens.count()).toBeGreaterThanOrEqual(5);
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''));
-    for (const href of hrefs) expect(href).toMatch(/^\/#[a-z]+$/);
+    // Les liens du menu visent les sections de l'accueil, sauf « Les offres de séances » (page à part).
+    for (const href of hrefs) expect(href).toMatch(/^\/(#[a-z]+|offres-de-seances\/)$/);
     for (const attendu of ['/#rdv', '/#pratique', '/#qigong', '/#qui', '/#contact']) expect(hrefs).toContain(attendu);
 
     await page.locator('header nav a[href="/#pratique"]').click();
@@ -436,7 +437,7 @@ test.describe('mentions légales', () => {
     await expect(page.locator('#pratique')).toBeInViewport();
 
     // Toutes les ancres existent bien sur l'accueil.
-    for (const href of hrefs) await expect(page.locator(`[id="${href.slice(2)}"]`), href).toHaveCount(1);
+    for (const href of hrefs.filter((h) => h.startsWith('/#'))) await expect(page.locator(`[id="${href.slice(2)}"]`), href).toHaveCount(1);
   });
 
   test('le lien du pied de page « Mentions légales » mène à la page', async ({ page }) => {

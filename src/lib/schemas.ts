@@ -50,6 +50,8 @@ export const actualiteSchema = z.object({
 
 export const pageSchema = z.object({
   titre: z.string(),
+  /** Phrase d'accroche sous le titre (seulement la page « Les offres de séances »). */
+  accroche: z.string().max(200).optional(),
 });
 
 /** Icônes disponibles pour les bienfaits de l'accueil (composants Icon*.astro). */
@@ -107,6 +109,7 @@ const texteReglable = (max: number) => z.string().trim().min(1).max(max);
 export const menuSchema = z.object({
   rdv: texteReglable(30),
   pratique: texteReglable(30),
+  offres: texteReglable(30),
   qigong: texteReglable(30),
   qui: texteReglable(30),
   actualites: texteReglable(30),

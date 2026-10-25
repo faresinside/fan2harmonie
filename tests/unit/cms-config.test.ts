@@ -109,7 +109,9 @@ describe('config.yml de Sveltia CMS', () => {
 
   it('pages : champs de chaque fichier (hors corps) = clés du schéma Zod', () => {
     for (const f of collection('pages').files ?? []) {
-      expect(champsFrontMatter(f), f.name).toEqual(cles(pageSchema.shape));
+      // « accroche » (phrase sous le titre) n'existe que pour la page « Les offres de séances ».
+      const attendus = cles(pageSchema.shape).filter((c) => c !== 'accroche' || f.name === 'offres');
+      expect(champsFrontMatter(f), f.name).toEqual(attendus);
       expect(champ(f, 'body').widget, f.name).toBe('markdown');
     }
   });
@@ -140,13 +142,14 @@ describe('config.yml de Sveltia CMS', () => {
     expect(pages['create']).not.toBe(true);
     expect(pages['delete']).not.toBe(true);
     const fichiers = pages.files ?? [];
-    expect(fichiers.map((f) => f.name).sort()).toEqual(['parcours', 'pratique', 'qigong']);
+    expect(fichiers.map((f) => f.name).sort()).toEqual(['offres', 'parcours', 'pratique', 'qigong']);
     for (const f of fichiers) {
       expect(f.file).toBe(`src/content/pages/${f.name}.md`);
       expect(existsSync(path.join(RACINE, f.file)), f.file).toBe(true);
     }
     expect(Object.fromEntries(fichiers.map((f) => [f.name, f.label]))).toEqual({
       pratique: 'La pratique',
+      offres: 'Les offres de séances',
       qigong: 'Le Qi Gong',
       parcours: 'Mon parcours',
     });
@@ -466,18 +469,21 @@ describe('config.yml de Sveltia CMS', () => {
   });
 
   it('éditeur Markdown : sans HTML ni composants, mode texte enrichi seul, aide sur les paragraphes', () => {
-    const editeurs: Champ[] = [
-      champ(collection('actualites'), 'body'),
-      ...(collection('pages').files ?? []).map((f) => champ(f, 'body')),
+    const editeurs: [string, Champ][] = [
+      ['actualites', champ(collection('actualites'), 'body')],
+      ...(collection('pages').files ?? []).map((f): [string, Champ] => [f.name, champ(f, 'body')]),
     ];
-    for (const e of editeurs) {
+    // La page « Les offres de séances » (titre de page en h1) écrit ses offres en titres de niveau 2 ; les autres
+    // textes sont dans une section de l'accueil (h2) et n'ont que le niveau 3.
+    for (const [nom, e] of editeurs) {
       expect(e.label).toBe('Texte');
       expect(e['editor_components']).toEqual([]);
       expect(e['modes']).toEqual(['rich_text']);
       const boutons = e['buttons'] as string[];
       expect(boutons).not.toContain('code');
       expect(boutons).not.toContain('heading-one');
-      expect(boutons).not.toContain('heading-two');
+      if (nom === 'offres') expect(boutons).toContain('heading-two');
+      else expect(boutons).not.toContain('heading-two');
       expect(e.hint).toContain('Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.');
     }
   });

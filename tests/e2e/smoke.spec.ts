@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
+import { parse } from 'yaml';
+
+/** Infos de l'accueil telles qu'écrites dans src/content/reglages/accueil.md (modifiables dans l'administration). */
+const infosAccueil = (parse(readFileSync('src/content/reglages/accueil.md', 'utf8').split('---')[1] ?? '') as { infos: string[] }).infos;
 
 test("la page d'accueil répond et a un h1", async ({ page }) => {
   await page.goto('/');
@@ -27,10 +32,8 @@ test("l'accueil affiche les textes réglés (titre, infos, bouton, bienfaits dan
 
   await expect(accueil.locator('.accueil__accent')).toHaveText('1 heure pour vous…');
   await expect(accueil.locator('.accueil__devise')).toHaveText('Respirez, Bougez, Équilibrez-vous');
-  await expect(accueil.locator('.accueil__infos')).toHaveText(
-    'Parc de Rambouillet · samedis ou dimanches à 16h00 · gratuit',
-  );
-  await expect(accueil.locator('.accueil__infos [aria-hidden="true"]')).toHaveCount(2);
+  await expect(accueil.locator('.accueil__infos')).toHaveText(infosAccueil.join(' · '));
+  await expect(accueil.locator('.accueil__infos [aria-hidden="true"]')).toHaveCount(infosAccueil.length - 1);
 
   const bouton = accueil.getByRole('link', { name: 'Venez essayer' });
   await expect(bouton).toHaveAttribute('href', '#rdv');

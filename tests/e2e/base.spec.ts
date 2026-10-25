@@ -57,9 +57,12 @@ test.describe('mise en page de base', () => {
     await expect(page.locator('meta[property="og:description"]')).toHaveAttribute('content', ref.description);
     // Ni horaire ni jour dans le titre et la description : ils changeraient sans que Google le sache.
     expect(`${ref.titre} ${ref.description}`).not.toMatch(/\d\s?h\s?\d{0,2}|\d{1,2}:\d{2}/);
-    // Le code de vérification n'est rendu que s'il est renseigné (le contenu de départ n'en a pas).
-    expect(ref.verificationGoogle).toBeUndefined();
-    await expect(page.locator('meta[name="google-site-verification"]')).toHaveCount(0);
+    // Le code de vérification n'est rendu que s'il est renseigné dans le réglage (et tel quel).
+    if (ref.verificationGoogle) {
+      await expect(page.locator('meta[name="google-site-verification"]')).toHaveAttribute('content', ref.verificationGoogle);
+    } else {
+      await expect(page.locator('meta[name="google-site-verification"]')).toHaveCount(0);
+    }
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
     await expect(page.locator('h1')).toHaveCount(1);
   });
@@ -84,7 +87,7 @@ test.describe('mise en page de base', () => {
   test('plan du site : date de modification (lastmod) sur l’accueil seulement', async ({ request }) => {
     const xml = await (await request.get('/sitemap-0.xml')).text();
     const urls = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((m) => m[1] ?? '');
-    expect(urls).toHaveLength(2);
+    expect(urls).toHaveLength(3);
     const loc = (u: string) => /<loc>([^<]+)<\/loc>/.exec(u)?.[1];
     const accueil = urls.find((u) => loc(u) === new URL('/', site.url).href) ?? '';
     const lastmod = /<lastmod>([^<]+)<\/lastmod>/.exec(accueil)?.[1];

@@ -187,6 +187,27 @@ collections:
             buttons: [bold, italic, link, heading-three, bulleted-list, numbered-list]
             editor_components: []
             hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+      - name: offres
+        label: Les offres de séances
+        file: src/content/pages/offres.md
+        fields:
+          - name: titre
+            label: Titre de la page
+            widget: string
+            hint: Le titre affiché en haut de la page « Les offres de séances ».
+          - name: accroche
+            label: Phrase d’accroche
+            widget: string
+            required: false
+            maxlength: 200
+            hint: Une phrase courte affichée sous le titre (200 caractères au maximum). Laissez vide pour ne rien afficher.
+          - name: body
+            label: Texte
+            widget: markdown
+            modes: [rich_text]
+            buttons: [bold, italic, link, heading-two, bulleted-list, numbered-list]
+            editor_components: []
+            hint: Chaque offre commence par un titre (bouton « Titre »). Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
       - name: qigong
         label: Le Qi Gong
         file: src/content/pages/qigong.md
@@ -318,6 +339,12 @@ collections:
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section « La pratique », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+          - name: offres
+            label: Lien « Les offres de séances » du menu
+            widget: string
+            maxlength: 30
+            pattern: ['\S', 'Écrivez au moins un caractère visible.']
+            hint: Le mot affiché dans la barre de menu pour aller à la page des offres de séances, 30 caractères au maximum. L’ordre des liens ne change pas.
           - name: qigong
             label: Lien « Le Qi Gong » du menu
             widget: string

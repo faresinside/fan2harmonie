@@ -27,16 +27,21 @@ const menuEntree = await getEntry('reglagesMenu', 'menu');
 if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
 const menu = menuEntree.data;
 
-const liens = [
+/** Page « Les offres de séances » : seul lien du menu qui quitte l'accueil (les autres visent ses sections). */
+const PAGE_OFFRES = '/offres-de-seances/';
+
+const entrees: { ancre: string; libelle: string; page?: string }[] = [
   { ancre: 'rdv', libelle: menu.rdv },
   { ancre: 'pratique', libelle: menu.pratique },
+  { ancre: 'offres', libelle: menu.offres, page: PAGE_OFFRES },
   { ancre: 'qigong', libelle: menu.qigong },
   { ancre: 'qui', libelle: menu.qui },
   { ancre: 'actualites', libelle: menu.actualites },
   { ancre: 'contact', libelle: menu.contact },
-]
+];
+const liens = entrees
   .filter(({ ancre }) => actualites || ancre !== 'actualites')
-  .map(({ ancre, libelle }) => ({ href: `${prefixe}#${ancre}`, libelle }));
+  .map(({ ancre, libelle, page }) => ({ href: page ?? `${prefixe}#${ancre}`, libelle }));
 ---
 
 <header class="entete" data-entete>
@@ -56,7 +61,7 @@ const liens = [
         {
           liens.map(({ href, libelle }) => (
             <li>
-              <a href={href}>{libelle}</a>
+              <a href={href} aria-current={href === Astro.url.pathname ? 'page' : undefined}>{libelle}</a>
             </li>
           ))
         }
@@ -240,7 +245,7 @@ const liens = [
    * ---------- Mobile, une fois le menu branché : panneau déroulant ----------
    * La classe « js » est posée sur <html> par le script qui branche le bouton, et seulement s'il a réussi.
    */
-  @media (max-width: 63.99rem) {
+  @media (max-width: 71.99rem) {
     :global(.js) .entete {
       position: sticky;
     }
@@ -294,7 +299,7 @@ const liens = [
     }
   }
 
-  @media (max-width: 63.99rem) and (prefers-reduced-motion: no-preference) {
+  @media (max-width: 71.99rem) and (prefers-reduced-motion: no-preference) {
     :global(.js) [data-ouvert] .entete__nav {
       animation: deroule var(--duree) var(--ease-sortie);
     }
@@ -308,7 +313,7 @@ const liens = [
   }
 
   /* ---------- Grand écran : liens en ligne ---------- */
-  @media (min-width: 64rem) {
+  @media (min-width: 72rem) {
     .entete {
       position: sticky;
     }
@@ -318,8 +323,9 @@ const liens = [
       padding: 0;
     }
 
+    /* Sept liens : menu en rangée à partir de 72 rem (1152 px), écart resserré jusqu'à 80 rem, puis élargi (plus bas). */
     .entete__nav .entete__liens {
-      gap: var(--s-4);
+      gap: var(--s-2);
     }
 
     .entete__nav .entete__liens a {
@@ -343,6 +349,18 @@ const liens = [
 
     .entete__nav .entete__liens a:hover::after {
       transform: scaleX(1);
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .entete__nav .entete__liens {
+      gap: var(--s-3);
+    }
+  }
+
+  @media (min-width: 90rem) {
+    .entete__nav .entete__liens {
+      gap: var(--s-4);
     }
   }
 </style>

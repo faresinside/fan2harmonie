@@ -21,19 +21,20 @@ test.describe('structure de la page', () => {
     }
   });
 
-  test('menu : les six libellés d’aujourd’hui, dans l’ordre, vers leurs ancres', async ({ page }) => {
+  test('menu : les sept libellés d’aujourd’hui, dans l’ordre, vers leurs ancres (et la page des offres)', async ({ page }) => {
     await page.goto('/');
     const liens = page.locator('header nav a');
     await expect(liens).toHaveText([
       'Rendez-vous',
       'La pratique',
+      'Les offres de séances',
       'Le Qi Gong',
       'Qui est Fan 2 Harmonie',
       'Actualités',
       'Contact',
     ]);
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-    expect(hrefs).toEqual(['#rdv', '#pratique', '#qigong', '#qui', '#actualites', '#contact']);
+    expect(hrefs).toEqual(['#rdv', '#pratique', '/offres-de-seances/', '#qigong', '#qui', '#actualites', '#contact']);
   });
 
   test('titres des sections réglables : « Prochains rendez-vous », « Actualités », « Contactez-moi »', async ({ page }) => {

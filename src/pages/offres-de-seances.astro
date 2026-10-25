@@ -1,0 +1,104 @@
+---
+/**
+ * Page « Les offres de séances » (/offres-de-seances/) : accroche et texte venant de src/content/pages/offres.md,
+ * modifiables dans l'administration (« Textes des pages »). Même en-tête et même pied de page que les autres pages.
+ */
+import { getCollection, getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Separateur from '../components/Separateur.astro';
+
+const entree = await getEntry('pages', 'offres');
+if (!entree) throw new Error('Texte manquant : src/content/pages/offres.md');
+const { Content } = await render(entree);
+const { titre, accroche } = entree.data;
+const avecActualites = (await getCollection('actualites')).length > 0;
+---
+
+<Base
+  titre={`${titre} — Fan 2 Harmonie`}
+  description="Les séances de Fan 2 Harmonie : Qi Gong gratuit en plein air à Rambouillet et réveil articulaire et musculaire en milieu professionnel."
+>
+  <Header actualites={avecActualites} surAccueil={false} />
+
+  <main id="contenu" tabindex="-1" class="offres">
+    <div class="offres__entete">
+      <div class="container">
+        <Separateur class="offres__ornement" />
+        <p class="script offres__accent">Fan&nbsp;2&nbsp;Harmonie</p>
+        <h1>{titre}</h1>
+        {accroche && <p class="offres__accroche">{accroche}</p>}
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="offres__corps prose">
+        <Content />
+      </div>
+      <p class="offres__retour">
+        <a class="bouton bouton--contour" href="/">Retour à l’accueil</a>
+      </p>
+    </div>
+  </main>
+
+  <Footer />
+</Base>
+
+<style>
+  .offres {
+    padding-bottom: var(--s-section);
+    background-color: var(--creme);
+  }
+
+  .offres__entete {
+    padding-block: var(--s-6) var(--s-5);
+    background-color: var(--creme-fonce);
+    text-align: center;
+  }
+
+  .offres__entete :global(.offres__ornement) {
+    margin-bottom: var(--s-3);
+  }
+
+  .offres__accent {
+    color: var(--rose);
+    font-size: clamp(2.125rem, 1.8rem + 1.4vw, 2.875rem);
+    margin-bottom: 0.15em;
+  }
+
+  .offres__accroche {
+    max-width: 38rem;
+    margin: var(--s-3) auto 0;
+    font-family: var(--police-titre, inherit);
+    font-style: italic;
+    font-size: var(--fs-lg, 1.25rem);
+    color: var(--encre-doux);
+    text-wrap: balance;
+  }
+
+  .offres__corps {
+    margin-inline: auto;
+    padding-top: var(--s-6);
+  }
+
+  /* Chaque offre (titre de niveau 2) est séparée de la précédente par le fil ondoyant du site. */
+  .offres__corps :global(h2) {
+    margin-top: var(--s-7, 3rem);
+    padding-top: var(--s-5);
+    font-size: var(--fs-h3);
+    font-weight: 600;
+    background: var(--trait-onde) top left / min(12rem, 60%) 6px no-repeat;
+  }
+
+  .offres__corps :global(h2:first-child) {
+    margin-top: 0;
+    padding-top: 0;
+    background: none;
+  }
+
+  .offres__retour {
+    margin-top: var(--s-8);
+    text-align: center;
+  }
+</style>

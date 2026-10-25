@@ -8,7 +8,7 @@ import { animationsTerminees, REGLES_WCAG, sansDebordement, sansViolationAxe } f
  * mise en page de 320 à 1920 px, mouvement réduit. Lighthouse : `npm run lighthouse` (lighthouserc.json).
  */
 
-const PAGES = ['/', '/mentions-legales/'];
+const PAGES = ['/', '/offres-de-seances/', '/mentions-legales/'];
 
 // ---------------------------------------------------------------------------------------------------------
 test.describe('plan du site et robots.txt', () => {
@@ -38,7 +38,9 @@ test.describe('plan du site et robots.txt', () => {
       expect(reponse.status()).toBe(200);
       adresses.push(...locs(await reponse.text()));
     }
-    expect(adresses.sort()).toEqual([new URL('/', site.url).href, new URL('/mentions-legales/', site.url).href]);
+    expect(adresses.sort()).toEqual(
+      ['/', '/mentions-legales/', '/offres-de-seances/'].map((chemin) => new URL(chemin, site.url).href).sort(),
+    );
     expect(adresses.join(' ')).not.toContain('/admin');
   });
 });
@@ -148,7 +150,7 @@ test.describe('clavier', () => {
 
 // ---------------------------------------------------------------------------------------------------------
 test.describe('mise en page', () => {
-  for (const largeur of [320, 360, 390, 768, 1024, 1280, 1920]) {
+  for (const largeur of [320, 360, 390, 768, 1024, 1151, 1152, 1280, 1440, 1920]) {
     for (const chemin of PAGES) {
       test(`${chemin} à ${largeur} px : aucun débordement, aucun contenu coupé`, async ({ page }) => {
         await page.setViewportSize({ width: largeur, height: 900 });
@@ -181,7 +183,7 @@ test.describe('mise en page', () => {
     }
   }
 
-  for (const largeur of [320, 360, 390, 768, 1024, 1280, 1920]) {
+  for (const largeur of [320, 360, 390, 768, 1024, 1151, 1152, 1280, 1440, 1920]) {
     test(`en-tête à ${largeur} px : une seule rangée, marque, bouton et liens sans chevauchement`, async ({ page }) => {
       await page.setViewportSize({ width: largeur, height: 900 });
       await page.goto('/');

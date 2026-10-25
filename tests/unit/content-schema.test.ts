@@ -184,6 +184,7 @@ describe('menuSchema', () => {
   const base = {
     rdv: 'Rendez-vous',
     pratique: 'La pratique',
+    offres: 'Les offres de séances',
     qigong: 'Le Qi Gong',
     qui: 'Qui est Fan 2 Harmonie',
     actualites: 'Actualités',
@@ -192,7 +193,7 @@ describe('menuSchema', () => {
     titreActualites: 'Actualités',
     titreContact: 'Contactez-moi',
   };
-  const libelles = ['rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'] as const;
+  const libelles = ['rdv', 'pratique', 'offres', 'qigong', 'qui', 'actualites', 'contact'] as const;
   const titres = ['titreRdv', 'titreActualites', 'titreContact'] as const;
 
   it('accepte les valeurs actuelles du site', () => {

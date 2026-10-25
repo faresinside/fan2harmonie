@@ -60,7 +60,9 @@ describe('contenus : conformes aux schémas du site', () => {
     const r = actualiteSchema.safeParse(fm);
     expect(r.success, JSON.stringify(r.error?.issues)).toBe(true);
     for (const photo of (fm['photos'] as Array<{ image: string }> | undefined) ?? []) {
-      expect(existsSync(path.resolve(RACINE, path.dirname(f), photo.image)), photo.image).toBe(true);
+      // Chemin relatif au fichier (« ../../assets/… ») ou commençant par « / » (« /src/assets/… », écrit par l'administration) : racine du projet.
+      const fichier = photo.image.startsWith('/') ? path.join(RACINE, photo.image) : path.resolve(RACINE, path.dirname(f), photo.image);
+      expect(existsSync(fichier), photo.image).toBe(true);
     }
   });
 
