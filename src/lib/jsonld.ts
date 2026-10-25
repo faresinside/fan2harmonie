@@ -30,6 +30,10 @@ export interface Seance {
 /** Description fixe d'une séance : indépendante de la description du référencement (qui ne décrit que le site). */
 const DESCRIPTION_SEANCE = 'Séance de Qi Gong gratuite en plein air, ouverte à tous, à tout âge et à tous niveaux.';
 
+/** Région du lieu habituel (Rambouillet, Yvelines) et zone d'intervention : des faits, jamais « Paris ». */
+export const REGION = 'Île-de-France';
+export const ZONE_INTERVENTION = 'Yvelines';
+
 /** Décalage de Paris par rapport à UTC à une date et une heure locales : « +02:00 » l'été, « +01:00 » l'hiver. */
 export function decalageParis(date: string, heure: string): string {
   const approx = new Date(`${date}T${heure}:00Z`);
@@ -63,7 +67,7 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
         ? {
             '@type': 'Place',
             name: s.lieu,
-            address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' },
+            address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressRegion: REGION, addressCountry: 'FR' },
             geo: { '@type': 'GeoCoordinates', latitude: infos.lieu.lat, longitude: infos.lieu.lon },
           }
         : { '@type': 'Place', name: s.lieu, address: s.lieu },
@@ -87,4 +91,51 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
       ...evenements,
     ],
   };
+}
+
+/**
+ * Données de la page « Les offres de séances » : les deux services proposés (séances en plein air, séances de réveil
+ * articulaire en milieu professionnel), leur zone d'intervention (les Yvelines, dans la région Île-de-France) et le fil
+ * d'Ariane. Les noms et descriptions suivent le texte de la page (src/content/pages/offres.md) ; aucun prix n'est affirmé,
+ * hormis la gratuité des séances en plein air (écrite sur la page).
+ */
+export function donneesOffres(infos: { nom: string; url: string; urlPage: string; organisateur: string }) {
+  const fournisseur = { '@type': 'Person', name: infos.organisateur, url: infos.url };
+  const zone = {
+    '@type': 'AdministrativeArea',
+    name: ZONE_INTERVENTION,
+    containedInPlace: { '@type': 'AdministrativeArea', name: REGION },
+  };
+  return [
+    {
+      '@type': 'Service',
+      '@id': `${infos.urlPage}#plein-air`,
+      name: 'Qi Gong en pleine nature',
+      serviceType: 'Séances de Qi Gong en plein air',
+      description:
+        'Séances de Qi Gong d’une heure en extérieur, gratuites, accessibles à tous, à tout âge et à toutes conditions physiques.',
+      provider: fournisseur,
+      areaServed: zone,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR', url: infos.urlPage },
+      url: infos.urlPage,
+    },
+    {
+      '@type': 'Service',
+      '@id': `${infos.urlPage}#milieu-professionnel`,
+      name: 'Séances matinales de réveil articulaire et musculaire en milieu professionnel',
+      serviceType: 'Réveil articulaire et musculaire',
+      description:
+        'Séances courtes de 30 à 45 minutes, en début de journée, pour les agents et collaborateurs des collectivités, entreprises, établissements publics et associations.',
+      provider: fournisseur,
+      areaServed: zone,
+      url: infos.urlPage,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: infos.nom, item: infos.url },
+        { '@type': 'ListItem', position: 2, name: 'Les offres de séances', item: infos.urlPage },
+      ],
+    },
+  ];
 }

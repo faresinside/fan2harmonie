@@ -52,6 +52,17 @@ test.describe('page des offres', () => {
     await expect(page.locator('#pratique')).toBeVisible();
   });
 
+  test('données structurées : deux services (Yvelines, Île-de-France), fil d’Ariane, WebSite ; rien de la zone « Paris »', async ({ page }) => {
+    await page.goto('/offres-de-seances/');
+    const scripts = await page.locator('script[type="application/ld+json"]').allTextContents();
+    expect(scripts).toHaveLength(1);
+    const graphe = (JSON.parse(scripts[0] ?? '') as { '@graph': { '@type': string }[] })['@graph'];
+    expect(graphe.map((n) => n['@type'])).toEqual(['WebSite', 'Service', 'Service', 'BreadcrumbList']);
+    expect(scripts[0]).toContain('Yvelines');
+    expect(scripts[0]).toContain('Île-de-France');
+    expect(scripts[0]).not.toMatch(/Paris/);
+  });
+
   test('adresse canonique, indexable, dans le plan du site', async ({ page, request }) => {
     await page.goto('/offres-de-seances/');
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/offres-de-seances\/$/);

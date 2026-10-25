@@ -24,11 +24,13 @@ interface Props {
   noindex?: boolean;
   /** Séances à venir (accueil) : décrites à Google comme des évènements gratuits. */
   seances?: Seance[];
+  /** Éléments de données structurées propres à la page (services, fil d'Ariane), ajoutés à ceux du site. */
+  donneesPage?: object[];
   /** Code de vérification Google Search Console (réglages « Référencement Google ») : balise rendue seulement s'il est valide. */
   verificationGoogle?: string | undefined;
 }
 
-const { titre, description, noindex = false, seances = [], verificationGoogle } = Astro.props;
+const { titre, description, noindex = false, seances = [], donneesPage = [], verificationGoogle } = Astro.props;
 const codeGoogle = codeVerificationGoogle(verificationGoogle);
 
 const absolue = (chemin: string) => new URL(chemin, site.url).href;
@@ -54,6 +56,7 @@ const jsonLd = donneesSite(
   },
   seances,
 );
+(jsonLd['@graph'] as object[]).push(...donneesPage);
 ---
 
 <!doctype html>

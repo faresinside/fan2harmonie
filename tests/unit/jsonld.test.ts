@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decalageParis, donneesSite, serialiserJsonLd, type Seance } from '../../src/lib/jsonld';
+import { decalageParis, donneesOffres, donneesSite, serialiserJsonLd, type Seance } from '../../src/lib/jsonld';
 
 const infos = {
   nom: 'Fan 2 Harmonie',
@@ -64,7 +64,7 @@ describe('donneesSite', () => {
       location: {
         '@type': 'Place',
         name: 'Parc test',
-        address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressCountry: 'FR' },
+        address: { '@type': 'PostalAddress', addressLocality: 'Rambouillet', addressRegion: 'Île-de-France', addressCountry: 'FR' },
         geo: { '@type': 'GeoCoordinates', latitude: 48.1, longitude: 1.2 },
       },
       image: ['https://www.exemple.fr/_astro/hero.jpg'],
@@ -132,5 +132,38 @@ describe('serialiserJsonLd', () => {
   it('reste du JSON valide qui redonne les données d’origine', () => {
     const donnees = { name: 'Fan 2 Harmonie', note: 'a < b & c', geo: { latitude: 48.64703 } };
     expect(JSON.parse(serialiserJsonLd(donnees))).toEqual(donnees);
+  });
+});
+
+describe('donneesOffres', () => {
+  const noeuds = donneesOffres({ nom: 'Fan 2 Harmonie', url: 'https://www.exemple.fr/', urlPage: 'https://www.exemple.fr/offres-de-seances/', organisateur: 'Stéphanie Gabalda' });
+
+  it('deux services (plein air, milieu professionnel) et un fil d’Ariane', () => {
+    expect(noeuds.map((n) => n['@type'])).toEqual(['Service', 'Service', 'BreadcrumbList']);
+    expect(noeuds.map((n) => (n as { name?: string }).name).slice(0, 2)).toEqual([
+      'Qi Gong en pleine nature',
+      'Séances matinales de réveil articulaire et musculaire en milieu professionnel',
+    ]);
+  });
+
+  it('zone desservie : les Yvelines, dans la région Île-de-France ; jamais Paris', () => {
+    for (const service of noeuds.slice(0, 2) as { areaServed: unknown }[]) {
+      expect(service.areaServed).toEqual({ '@type': 'AdministrativeArea', name: 'Yvelines', containedInPlace: { '@type': 'AdministrativeArea', name: 'Île-de-France' } });
+    }
+    expect(JSON.stringify(noeuds)).not.toMatch(/Paris/);
+  });
+
+  it('gratuité affirmée seulement pour les séances en plein air ; aucun prix pour le milieu professionnel', () => {
+    const [pleinAir, pro] = noeuds as { offers?: { price: string } }[];
+    expect(pleinAir?.offers?.price).toBe('0');
+    expect(pro).not.toHaveProperty('offers');
+  });
+
+  it('fil d’Ariane : accueil puis page', () => {
+    const fil = noeuds[2] as { itemListElement: { position: number; item: string }[] };
+    expect(fil.itemListElement.map((e) => [e.position, e.item])).toEqual([
+      [1, 'https://www.exemple.fr/'],
+      [2, 'https://www.exemple.fr/offres-de-seances/'],
+    ]);
   });
 });
