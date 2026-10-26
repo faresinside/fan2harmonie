@@ -11,6 +11,8 @@ Ces séances contribuent à améliorer le bien-être au travail, à favoriser la
 
 ## Séances en pleine nature : un moment pour soi
 
+**Prendre un temps pour soi** 
+
 Je propose une pratique de Qi Gong en extérieur, au cœur de la nature, dans un cadre propice à la détente, à la respiration et au ressourcement.
 
 Le Qi Gong est un art énergétique chinois alliant mouvements doux, respiration consciente et concentration. Cette pratique favorise la circulation de l’énergie, améliore la souplesse, l’équilibre et la coordination, tout en procurant un profond sentiment de calme et de bien-être.
