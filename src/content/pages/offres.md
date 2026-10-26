@@ -1,5 +1,5 @@
 ---
-titre: Activités proposées sous forme de séances
+titre: Activités proposées sous forme de séances d'1H
 accroche: Quelques minutes en mouvement pour une journée plus sereine et plus efficace et pour prendre soin de son corps
 ---
 
