@@ -1,5 +1,5 @@
 ---
-titre: Les offres de séances
+titre: Les activités
 accroche: Quelques minutes en mouvement pour une journée plus sereine et plus efficace et pour prendre soin de son corps
 ---
 
