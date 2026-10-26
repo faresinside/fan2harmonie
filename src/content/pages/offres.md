@@ -3,7 +3,7 @@ titre: Les activités
 accroche: Quelques minutes en mouvement pour une journée plus sereine et plus efficace et pour prendre soin de son corps
 ---
 
-## Les séances
+## Les séances de Qi Gong
 
 Inspirées des techniques de préparation physique douce, du Qi Gong et des exercices de mobilité, les séances proposées intègrent un temps d’éveil corporel et articulaire comprenant des exercices respiratoires, l’apprentissage de mouvements de Qi Gong (postures, étirements) favorisant l’équilibre et l’ancrage. Elles représentent un temps de relaxation et de recentrage grâce à des techniques simples de concentration et de gestion du stress.
 
