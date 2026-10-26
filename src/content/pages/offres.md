@@ -9,7 +9,7 @@ Inspirées des techniques de préparation physique douce, du Qi Gong et des exer
 
 Ces séances contribuent à améliorer le bien-être au travail, à favoriser la concentration dès le début de la journée, à prévenir certaines douleurs liées aux postures prolongées, à développer la mobilité et la souplesse et enfin à renforcer la cohésion et la convivialité entre les participants.
 
-## Seances en pleine nature : un moment pour soi
+## Séances en pleine nature : un moment pour soi
 
 Je propose une pratique de Qi Gong en extérieur, au cœur de la nature, dans un cadre propice à la détente, à la respiration et au ressourcement.
 
