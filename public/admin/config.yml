@@ -179,7 +179,7 @@ collections:
           - name: titre
             label: Titre de la section
             widget: string
-            hint: Le titre affiché en haut de la section.
+            hint: Le titre affiché en haut de la section. C’est aussi le mot du menu (sauf si un mot plus court est choisi dans « Réglages du site », « Menu et titres »).
           - name: body
             label: Texte
             widget: markdown
@@ -194,7 +194,7 @@ collections:
           - name: titre
             label: Titre de la page
             widget: string
-            hint: Le titre affiché en haut de la page « Les offres de séances ».
+            hint: Le titre affiché en haut de la page. C’est aussi le mot du menu (sauf si un mot plus court est choisi dans « Réglages du site », « Menu et titres »).
           - name: accroche
             label: Phrase d’accroche
             widget: string
@@ -334,29 +334,33 @@ collections:
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le mot affiché dans la barre de menu pour aller à la section des rendez-vous, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
           - name: pratique
-            label: Lien « La pratique » du menu
+            label: Mot du menu pour « La pratique » (facultatif)
             widget: string
+            required: false
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la section « La pratique », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Laissez VIDE, le menu reprend alors le titre de la page (rubrique « Textes des pages »), il n’y a rien d’autre à changer. N’écrivez un mot ici que pour avoir dans le menu un mot plus court que le titre, 30 caractères au maximum.
           - name: offres
-            label: Lien « Les offres de séances » du menu
+            label: Mot du menu pour « Les offres de séances » (facultatif)
             widget: string
+            required: false
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la page des offres de séances, 30 caractères au maximum. L’ordre des liens ne change pas.
+            hint: Laissez VIDE, le menu reprend alors le titre de la page (rubrique « Textes des pages »), il n’y a rien d’autre à changer. N’écrivez un mot ici que pour avoir dans le menu un mot plus court que le titre, 30 caractères au maximum.
           - name: qigong
-            label: Lien « Le Qi Gong » du menu
+            label: Mot du menu pour « Le Qi Gong » (facultatif)
             widget: string
+            required: false
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la section « Le Qi Gong », 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Laissez VIDE, le menu reprend alors le titre de la page (rubrique « Textes des pages »), il n’y a rien d’autre à changer. N’écrivez un mot ici que pour avoir dans le menu un mot plus court que le titre, 30 caractères au maximum.
           - name: qui
-            label: Lien « Qui est Fan 2 Harmonie » du menu
+            label: Mot du menu pour « Qui est Fan 2 Harmonie » (facultatif)
             widget: string
+            required: false
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la section de présentation, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Laissez VIDE, le menu reprend alors le titre de la page (rubrique « Textes des pages »), il n’y a rien d’autre à changer. N’écrivez un mot ici que pour avoir dans le menu un mot plus court que le titre, 30 caractères au maximum.
           - name: actualites
             label: Lien « Actualités » du menu
             widget: string

@@ -8,6 +8,7 @@
 import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import logo from '../assets/logo/logo.png';
+import { motDuMenu as mot } from '../lib/menu';
 
 interface Props {
   /** Faux quand il n'y a aucune actualité : la section est retirée de la page, le lien aussi. */
@@ -27,15 +28,28 @@ const menuEntree = await getEntry('reglagesMenu', 'menu');
 if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
 const menu = menuEntree.data;
 
+// Titres des pages de texte (« Textes des pages ») : le menu les reprend, sauf mot plus court choisi dans les réglages du menu.
+const titrePage = async (id: 'pratique' | 'offres' | 'qigong' | 'parcours') => {
+  const entree = await getEntry('pages', id);
+  if (!entree) throw new Error(`Texte manquant : src/content/pages/${id}.md`);
+  return entree.data.titre;
+};
+const [titrePratique, titreOffres, titreQigong, titreParcours] = await Promise.all([
+  titrePage('pratique'),
+  titrePage('offres'),
+  titrePage('qigong'),
+  titrePage('parcours'),
+]);
+
 /** Page « Les offres de séances » : seul lien du menu qui quitte l'accueil (les autres visent ses sections). */
 const PAGE_OFFRES = '/offres-de-seances/';
 
 const entrees: { ancre: string; libelle: string; page?: string }[] = [
   { ancre: 'rdv', libelle: menu.rdv },
-  { ancre: 'pratique', libelle: menu.pratique },
-  { ancre: 'offres', libelle: menu.offres, page: PAGE_OFFRES },
-  { ancre: 'qigong', libelle: menu.qigong },
-  { ancre: 'qui', libelle: menu.qui },
+  { ancre: 'pratique', libelle: mot(menu.pratique, titrePratique) },
+  { ancre: 'offres', libelle: mot(menu.offres, titreOffres), page: PAGE_OFFRES },
+  { ancre: 'qigong', libelle: mot(menu.qigong, titreQigong) },
+  { ancre: 'qui', libelle: mot(menu.qui, titreParcours) },
   { ancre: 'actualites', libelle: menu.actualites },
   { ancre: 'contact', libelle: menu.contact },
 ];

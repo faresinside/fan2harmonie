@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { animationsTerminees, REGLES_WCAG, sansViolationAxe } from './outils';
+import { animationsTerminees, motsDuMenu, REGLES_WCAG, sansViolationAxe } from './outils';
 
 /**
  * Page 404 (src/pages/404.astro → dist/404.html), servie par l'hébergeur pour toute adresse inconnue et pour
@@ -47,15 +47,7 @@ for (const largeur of [390, 1280]) {
 test('page 404 : les libellés du menu sont ceux des réglages, vers les sections de l’accueil', async ({ page }) => {
   await page.goto(INCONNUE);
   const liens = page.locator('header nav a');
-  await expect(liens).toHaveText([
-    'Rendez-vous',
-    'La pratique',
-    'Les offres de séances',
-    'Le Qi Gong',
-    'Qui est Fan 2 Harmonie',
-    'Actualités',
-    'Contact',
-  ]);
+  await expect(liens).toHaveText(motsDuMenu());
   const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
   expect(hrefs).toEqual(['/#rdv', '/#pratique', '/offres-de-seances/', '/#qigong', '/#qui', '/#actualites', '/#contact']);
 });

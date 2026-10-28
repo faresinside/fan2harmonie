@@ -105,13 +105,16 @@ const texteReglable = (max: number) => z.string().trim().min(1).max(max);
 /**
  * Menu du haut et titres des sections de l'accueil (src/content/reglages/menu.md).
  * Seuls les mots changent : l'ordre des liens et les sections visées sont fixes.
+ * Les mots du menu des quatre pages de texte (pratique, offres, qigong, qui) sont FACULTATIFS : absents, le menu reprend
+ * le titre de la page (src/content/pages/*.md), de sorte qu'il n'y a qu'un endroit à modifier. Ils servent seulement à
+ * avoir un mot de menu plus court que le titre.
  */
 export const menuSchema = z.object({
   rdv: texteReglable(30),
-  pratique: texteReglable(30),
-  offres: texteReglable(30),
-  qigong: texteReglable(30),
-  qui: texteReglable(30),
+  pratique: texteReglable(30).optional(),
+  offres: texteReglable(30).optional(),
+  qigong: texteReglable(30).optional(),
+  qui: texteReglable(30).optional(),
   actualites: texteReglable(30),
   contact: texteReglable(30),
   titreRdv: texteReglable(60),

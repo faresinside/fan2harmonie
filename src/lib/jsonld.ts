@@ -99,7 +99,7 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
  * d'Ariane. Les noms et descriptions suivent le texte de la page (src/content/pages/offres.md) ; aucun prix n'est affirmé,
  * hormis la gratuité des séances en plein air (écrite sur la page).
  */
-export function donneesOffres(infos: { nom: string; url: string; urlPage: string; organisateur: string }) {
+export function donneesOffres(infos: { nom: string; url: string; urlPage: string; titrePage: string; organisateur: string }) {
   const fournisseur = { '@type': 'Person', name: infos.organisateur, url: infos.url };
   const zone = {
     '@type': 'AdministrativeArea',
@@ -134,7 +134,7 @@ export function donneesOffres(infos: { nom: string; url: string; urlPage: string
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: infos.nom, item: infos.url },
-        { '@type': 'ListItem', position: 2, name: 'Les offres de séances', item: infos.urlPage },
+        { '@type': 'ListItem', position: 2, name: infos.titrePage, item: infos.urlPage },
       ],
     },
   ];

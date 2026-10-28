@@ -28,3 +28,35 @@ export async function sansDebordement(page: Page) {
 export async function animationsTerminees(page: Page) {
   await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
 }
+
+// ---------------------------------------------------------------------------------------------------------
+// Contenu modifiable dans /admin : les tests le LISENT au lieu de recopier ses valeurs (l'éditrice les change).
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
+import { motDuMenu } from '../../src/lib/menu';
+
+/** En-tête YAML d'un fichier Markdown du site (chemin relatif à la racine du projet). */
+export const enTeteMd = <T>(chemin: string): T => parse(readFileSync(chemin, 'utf8').split('---')[1] ?? '') as T;
+
+/** Titres de niveau 2 (« ## … ») du texte Markdown d'un fichier. */
+export const titresNiveau2 = (chemin: string): string[] =>
+  readFileSync(chemin, 'utf8').split('\n').filter((l) => l.startsWith('## ')).map((l) => l.slice(3).trim());
+
+/**
+ * Mots du menu, dans l'ordre : ceux de menu.md ; pour les pages de texte, le mot choisi s'il existe, sinon le titre de la
+ * page (coupé à 30 caractères, comme src/components/Header.astro).
+ */
+export function motsDuMenu(): string[] {
+  const menu = enTeteMd<Record<string, string | undefined>>('src/content/reglages/menu.md');
+  const titre = (id: string) => enTeteMd<{ titre: string }>(`src/content/pages/${id}.md`).titre;
+  const mot = motDuMenu;
+  return [
+    menu['rdv'] ?? '',
+    mot(menu['pratique'], titre('pratique')),
+    mot(menu['offres'], titre('offres')),
+    mot(menu['qigong'], titre('qigong')),
+    mot(menu['qui'], titre('parcours')),
+    menu['actualites'] ?? '',
+    menu['contact'] ?? '',
+  ];
+}

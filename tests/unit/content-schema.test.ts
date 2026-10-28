@@ -200,6 +200,17 @@ describe('menuSchema', () => {
     expect(menuSchema.safeParse(base).success).toBe(true);
   });
 
+  it('mots du menu des pages de texte facultatifs (le menu reprend alors le titre de la page) ; les autres obligatoires', () => {
+    const { pratique, offres, qigong, qui, ...obligatoires } = base;
+    void [pratique, offres, qigong, qui];
+    expect(menuSchema.safeParse(obligatoires).success).toBe(true);
+    for (const cle of ['rdv', 'actualites', 'contact'] as const) {
+      const { [cle]: _retire, ...sans } = base;
+      void _retire;
+      expect(menuSchema.safeParse(sans).success, cle).toBe(false);
+    }
+  });
+
   it.each(libelles)('libellé « %s » : 30 caractères acceptés, 31 refusés', (cle) => {
     expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(30) }).success).toBe(true);
     expect(menuSchema.safeParse({ ...base, [cle]: 'a'.repeat(31) }).success).toBe(false);

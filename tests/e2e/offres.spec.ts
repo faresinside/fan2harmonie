@@ -2,52 +2,59 @@
  * Page « Les offres de séances » (/offres-de-seances/) et son lien dans le menu : texte venant de
  * src/content/pages/offres.md, modifiable dans l'administration.
  */
+import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { sansDebordement, sansViolationAxe } from './outils';
+import { motDuMenu } from '../../src/lib/menu';
+import { enTeteMd, motsDuMenu, sansDebordement, sansViolationAxe, titresNiveau2 } from './outils';
 
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
+const OFFRES = 'src/content/pages/offres.md';
+const motsOffres = () => motsDuMenu();
+
 test.describe('menu', () => {
-  test('« Les offres de séances » juste après « La pratique », vers la page dédiée ; les autres liens visent l’accueil', async ({ page }) => {
+  test('le mot du menu pour les offres vient de l’administration (titre de la page par défaut), juste après « La pratique », vers la page dédiée', async ({ page }) => {
+    const mots = motsOffres();
     await page.goto('/');
     const liens = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link');
-    const textes = await liens.allTextContents();
-    expect(textes.indexOf('Les offres de séances')).toBe(textes.indexOf('La pratique') + 1);
-    await expect(liens.filter({ hasText: 'Les offres de séances' })).toHaveAttribute('href', '/offres-de-seances/');
-    await expect(liens.filter({ hasText: 'La pratique' })).toHaveAttribute('href', '#pratique');
+    expect(await liens.allTextContents()).toEqual(mots);
+    await expect(liens.nth(2)).toHaveAttribute('href', '/offres-de-seances/');
+    await expect(liens.nth(1)).toHaveAttribute('href', '#pratique');
   });
 
   test('depuis la page des offres, les autres liens visent les sections de l’accueil, et le lien courant est signalé', async ({ page }) => {
     await page.goto('/offres-de-seances/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
-    await expect(nav.getByRole('link', { name: 'La pratique' })).toHaveAttribute('href', '/#pratique');
-    await expect(nav.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/#contact');
-    await expect(nav.getByRole('link', { name: 'Les offres de séances' })).toHaveAttribute('aria-current', 'page');
+    await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toHaveAttribute('href', '/#contact');
+    await expect(nav.getByRole('link').nth(1)).toHaveAttribute('href', '/#pratique');
+    await expect(nav.getByRole('link').nth(2)).toHaveAttribute('aria-current', 'page');
   });
 });
 
 test.describe('page des offres', () => {
-  test('titre, accroche, trois offres en titres de niveau 2, texte corrigé', async ({ page }) => {
+  test('titre, accroche et offres (titres de niveau 2) : ceux du fichier modifiable dans l’administration', async ({ page }) => {
+    const { titre, accroche } = enTeteMd<{ titre: string; accroche?: string }>(OFFRES);
     await page.goto('/offres-de-seances/');
-    await expect(page).toHaveTitle('Les offres de séances — Fan 2 Harmonie');
-    await expect(page.locator('h1')).toHaveText('Les offres de séances');
-    await expect(page.locator('.offres__accroche')).toContainText('Quelques minutes en mouvement pour une journée plus sereine');
-    const titres = await page.locator('main h2').allTextContents();
-    expect(titres).toEqual([
-      'Les séances',
-      'Qi Gong en pleine nature : un moment pour soi',
-      'Séances matinales de réveil articulaire et musculaire en milieu professionnel',
-    ]);
-    const texte = await page.locator('main').innerText();
-    for (const corrige of ['Inspirées des techniques', 'mouvements de Qi Gong (postures, étirements)', 'développer la mobilité', 'grâce à des techniques simples', 'gratuite et sans prérequis']) {
-      expect(texte, corrige).toContain(corrige);
-    }
-    for (const faute of ['Inspirés', 'ddévelopper', 'de par techniques', 'Qi (postures']) expect(texte, faute).not.toContain(faute);
+    await expect(page).toHaveTitle(`${titre} — Fan 2 Harmonie`);
+    await expect(page.locator('h1')).toHaveText(titre);
+    if (accroche) await expect(page.locator('.offres__accroche')).toHaveText(accroche);
+    else await expect(page.locator('.offres__accroche')).toHaveCount(0);
+    expect(await page.locator('main h2').allTextContents()).toEqual(titresNiveau2(OFFRES));
+  });
+
+  test('le titre de la page est aussi le mot du menu, sauf mot plus court choisi dans les réglages du menu', async ({ page }) => {
+    const mots = motsOffres();
+    await page.goto('/offres-de-seances/');
+    const { titre } = enTeteMd<{ titre: string }>(OFFRES);
+    const reglage = enTeteMd<{ offres?: string }>('src/content/reglages/menu.md').offres;
+    expect(mots[2]).toBe(motDuMenu(reglage, titre));
+    await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link').nth(2)).toHaveText(mots[2] ?? '');
   });
 
   test('le lien « La pratique » mène à la section de l’accueil', async ({ page }) => {
     await page.goto('/offres-de-seances/');
-    await page.locator('main').getByRole('link', { name: 'La pratique' }).click();
+    test.skip(!readFileSync(OFFRES, 'utf8').includes('](/#pratique)'), 'le texte actuel n’a plus de lien vers La pratique');
+    await page.locator('main a[href="/#pratique"]').first().click();
     await expect(page).toHaveURL(/\/#pratique$/);
     await expect(page.locator('#pratique')).toBeVisible();
   });

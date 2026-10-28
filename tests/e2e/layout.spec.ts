@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { motsDuMenu } from './outils';
 
 const ANCRES = ['accueil', 'rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'];
 
@@ -24,15 +25,8 @@ test.describe('structure de la page', () => {
   test('menu : les sept libellés d’aujourd’hui, dans l’ordre, vers leurs ancres (et la page des offres)', async ({ page }) => {
     await page.goto('/');
     const liens = page.locator('header nav a');
-    await expect(liens).toHaveText([
-      'Rendez-vous',
-      'La pratique',
-      'Les offres de séances',
-      'Le Qi Gong',
-      'Qui est Fan 2 Harmonie',
-      'Actualités',
-      'Contact',
-    ]);
+    // Mots du menu : réglages du menu, ou titre de la page de texte (modifiables dans l'administration).
+    await expect(liens).toHaveText(motsDuMenu());
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
     expect(hrefs).toEqual(['#rdv', '#pratique', '/offres-de-seances/', '#qigong', '#qui', '#actualites', '#contact']);
   });

@@ -136,7 +136,7 @@ describe('serialiserJsonLd', () => {
 });
 
 describe('donneesOffres', () => {
-  const noeuds = donneesOffres({ nom: 'Fan 2 Harmonie', url: 'https://www.exemple.fr/', urlPage: 'https://www.exemple.fr/offres-de-seances/', organisateur: 'Stéphanie Gabalda' });
+  const noeuds = donneesOffres({ nom: 'Fan 2 Harmonie', url: 'https://www.exemple.fr/', urlPage: 'https://www.exemple.fr/offres-de-seances/', titrePage: 'Activités proposées', organisateur: 'Stéphanie Gabalda' });
 
   it('deux services (plein air, milieu professionnel) et un fil d’Ariane', () => {
     expect(noeuds.map((n) => n['@type'])).toEqual(['Service', 'Service', 'BreadcrumbList']);

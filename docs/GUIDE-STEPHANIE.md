@@ -84,7 +84,7 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 **Mon parcours**. Modifiez le texte comme dans un traitement de texte, puis **Enregistrer**.
 
 - Pour passer à la ligne, laissez **une ligne vide** entre deux paragraphes (appuyez deux fois sur « Entrée »).
-- **Les offres de séances** ont leur propre page : chaque offre commence par un titre (bouton **Titre**). Le nom du lien du menu se change dans **Réglages du site**, **Menu et titres**.
+- **Les offres de séances** ont leur propre page : chaque offre commence par un titre (bouton **Titre**). Le menu reprend le titre de la page : il n’y a qu’un endroit à modifier.
 
 ## h) Modifier la page d’accueil
 

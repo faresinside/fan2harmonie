@@ -372,6 +372,8 @@ describe('config.yml de Sveltia CMS', () => {
       expect(acceptees.length, 'longueurs acceptées non contiguës').toBe(max - min + 1);
       return { min, max };
     };
+    /** Mots du menu des pages de texte : facultatifs (le menu reprend alors le titre de la page). */
+    const MOTS_FACULTATIFS = new Set(['pratique', 'offres', 'qigong', 'qui']);
     const chaine = (n: number) => 'a'.repeat(n);
     const liste = (n: number) => Array.from({ length: n }, () => 'a');
 
@@ -394,7 +396,14 @@ describe('config.yml de Sveltia CMS', () => {
       // Menu : six libellés (30 caractères au plus) et trois titres de section (60 au plus), tous obligatoires.
       const menu = fichier('menu');
       for (const nom of Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>) {
-        verifieChaine(`menu.${nom}`, champ(menu, nom), menuSchema.shape[nom]);
+        if (MOTS_FACULTATIFS.has(nom)) {
+          // Mot du menu facultatif : absent, le menu reprend le titre de la page ; sinon 30 caractères au plus.
+          expect(champ(menu, nom).required, `menu.${nom} : facultatif`).toBe(false);
+          expect(champ(menu, nom)['maxlength'], `menu.${nom} : maxlength`).toBe(30);
+          expect(champ(menu, nom).hint, `menu.${nom} : aide`).toContain('Laissez VIDE');
+        } else {
+          verifieChaine(`menu.${nom}`, champ(menu, nom), menuSchema.shape[nom] as never);
+        }
       }
       const ref = fichier('referencement');
       verifieChaine('referencement.titre', champ(ref, 'titre'), referencementSchema.shape.titre);
