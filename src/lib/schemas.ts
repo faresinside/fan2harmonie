@@ -50,7 +50,7 @@ export const actualiteSchema = z.object({
 
 export const pageSchema = z.object({
   titre: z.string(),
-  /** Phrase d'accroche sous le titre (seulement la page « Les offres de séances »). */
+  /** Phrase d'accroche sous le titre (seulement la page « Activités proposées »). */
   accroche: z.string().max(200).optional(),
 });
 

@@ -109,7 +109,7 @@ describe('config.yml de Sveltia CMS', () => {
 
   it('pages : champs de chaque fichier (hors corps) = clés du schéma Zod', () => {
     for (const f of collection('pages').files ?? []) {
-      // « accroche » (phrase sous le titre) n'existe que pour la page « Les offres de séances ».
+      // « accroche » (phrase sous le titre) n'existe que pour la page « Activités proposées ».
       const attendus = cles(pageSchema.shape).filter((c) => c !== 'accroche' || f.name === 'offres');
       expect(champsFrontMatter(f), f.name).toEqual(attendus);
       expect(champ(f, 'body').widget, f.name).toBe('markdown');
@@ -149,7 +149,7 @@ describe('config.yml de Sveltia CMS', () => {
     }
     expect(Object.fromEntries(fichiers.map((f) => [f.name, f.label]))).toEqual({
       pratique: 'La pratique',
-      offres: 'Les offres de séances',
+      offres: 'Activités proposées (page des séances)',
       qigong: 'Le Qi Gong',
       parcours: 'Mon parcours',
     });
@@ -482,7 +482,7 @@ describe('config.yml de Sveltia CMS', () => {
       ['actualites', champ(collection('actualites'), 'body')],
       ...(collection('pages').files ?? []).map((f): [string, Champ] => [f.name, champ(f, 'body')]),
     ];
-    // La page « Les offres de séances » (titre de page en h1) écrit ses offres en titres de niveau 2 ; les autres
+    // La page « Activités proposées » (titre de page en h1) écrit ses offres en titres de niveau 2 ; les autres
     // textes sont dans une section de l'accueil (h2) et n'ont que le niveau 3.
     for (const [nom, e] of editeurs) {
       expect(e.label).toBe('Texte');

@@ -188,7 +188,7 @@ collections:
             editor_components: []
             hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
       - name: offres
-        label: Les offres de séances
+        label: Activités proposées (page des séances)
         file: src/content/pages/offres.md
         fields:
           - name: titre
@@ -341,7 +341,7 @@ collections:
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Laissez VIDE, le menu reprend alors le titre de la page (rubrique « Textes des pages »), il n’y a rien d’autre à changer. N’écrivez un mot ici que pour avoir dans le menu un mot plus court que le titre, 30 caractères au maximum.
           - name: offres
-            label: Mot du menu pour « Les offres de séances » (facultatif)
+            label: Mot du menu pour la page des séances (facultatif)
             widget: string
             required: false
             maxlength: 30

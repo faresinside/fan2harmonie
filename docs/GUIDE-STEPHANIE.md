@@ -80,11 +80,11 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 
 ![Textes des pages](images/guide/textes-des-pages.png)
 
-À gauche, cliquez sur **Textes des pages**, puis sur la section à corriger : **La pratique**, **Les offres de séances**, **Le Qi Gong** ou
+À gauche, cliquez sur **Textes des pages**, puis sur la section à corriger : **La pratique**, **Activités proposées**, **Le Qi Gong** ou
 **Mon parcours**. Modifiez le texte comme dans un traitement de texte, puis **Enregistrer**.
 
 - Pour passer à la ligne, laissez **une ligne vide** entre deux paragraphes (appuyez deux fois sur « Entrée »).
-- **Les offres de séances** ont leur propre page : chaque offre commence par un titre (bouton **Titre**). Le menu reprend le titre de la page : il n’y a qu’un endroit à modifier.
+- **Activités proposées** a sa propre page : chaque offre commence par un titre (bouton **Titre**). Le menu reprend le titre de la page : il n’y a qu’un endroit à modifier.
 
 ## h) Modifier la page d’accueil
 

@@ -428,7 +428,7 @@ test.describe('mentions légales', () => {
     const liens = page.locator('header nav a');
     expect(await liens.count()).toBeGreaterThanOrEqual(5);
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href') ?? ''));
-    // Les liens du menu visent les sections de l'accueil, sauf « Les offres de séances » (page à part).
+    // Les liens du menu visent les sections de l'accueil, sauf « Activités proposées » (page à part).
     for (const href of hrefs) expect(href).toMatch(/^\/(#[a-z]+|offres-de-seances\/)$/);
     for (const attendu of ['/#rdv', '/#pratique', '/#qigong', '/#qui', '/#contact']) expect(hrefs).toContain(attendu);
 

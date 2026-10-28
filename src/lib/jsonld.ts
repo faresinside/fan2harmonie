@@ -94,7 +94,7 @@ export function donneesSite(infos: InfosSite, seances: readonly Seance[]) {
 }
 
 /**
- * Données de la page « Les offres de séances » : les deux services proposés (séances en plein air, séances de réveil
+ * Données de la page « Activités proposées » : les deux services proposés (séances en plein air, séances de réveil
  * articulaire en milieu professionnel), leur zone d'intervention (les Yvelines, dans la région Île-de-France) et le fil
  * d'Ariane. Les noms et descriptions suivent le texte de la page (src/content/pages/offres.md) ; aucun prix n'est affirmé,
  * hormis la gratuité des séances en plein air (écrite sur la page).

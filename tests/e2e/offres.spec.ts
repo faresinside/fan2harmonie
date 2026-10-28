@@ -1,5 +1,5 @@
 /**
- * Page « Les offres de séances » (/offres-de-seances/) et son lien dans le menu : texte venant de
+ * Page « Activités proposées » (/offres-de-seances/) et son lien dans le menu : texte venant de
  * src/content/pages/offres.md, modifiable dans l'administration.
  */
 import { readFileSync } from 'node:fs';
