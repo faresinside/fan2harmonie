@@ -2,7 +2,7 @@
 accroche: 1 heure pour vous…
 titre: Qi Gong
 sousTitre: Animation découverte
-devise: Respirez, Bougez, Équilibrez-vous ... Prenez un moment pour vous
+devise: Respirez, Bougez, Équilibrez-vous ... Prenez un moment rien qu'à vous
 infos:
   - Parc de Rambouillet
   - Week-end 2026/2027 ... Dates & Détails sur ces pages
