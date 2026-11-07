@@ -6,7 +6,7 @@ devise: Respirez, Bougez, Équilibrez-vous ... Prenez un moment rien qu'à vous
 infos:
   - Parc de Rambouillet
   - Week-end 2026/2027 ... Dates & Détails sur ces pages
-  - Ouvert à tous et tout âge
+  - Ouvert à tout âge
 bouton: Venez essayer
 bienfaits:
   - icone: souffle
