@@ -41,7 +41,7 @@ Particulièrement adaptées aux collectivités territoriales, entreprises, étab
 
 ### 
 
-## Une parenthèse de bien'-être au cœur du quotidien 
+## Une parenthèse de bien-être au cœur du quotidien 
 
 Aujourd’hui, je souhaite élargir cette démarche auprès des associations , des collectivités territoriales, des maisons de retraite, ou encore, auprès des écoles élémentaires, en proposant des séances adaptées aux besoins et aux capacités de chacun. 
 
