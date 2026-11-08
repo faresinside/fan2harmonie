@@ -5,7 +5,7 @@ sousTitre: Animation découverte
 devise: Respirez, Bougez, Équilibrez-vous ... Un moment rien qu'à vous
 infos:
   - Parc de Rambouillet
-  - Week-end 2026 ... Dates & Détails sur ces pages
+  - Week-end ... Dates & Détails sur ces pages
   - Ouvert à tout âge
 bouton: Venez essayer
 bienfaits:
