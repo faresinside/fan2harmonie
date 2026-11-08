@@ -31,10 +31,18 @@ La proposition de cette séance est détaillée dans l’onglet [La pratique](/#
 
 **Bien commencer sa journée grâce au réveil corporel**
 
-Je propose des séances de réveil articulaire et musculaire destinées aux agents et collaborateurs souhaitant débuter leur journée dans les meilleures conditions physiques et mentales.
+J'anime des séances de réveil articulaire et musculaire, en milieu professionnel, offrant aux participants un temps privilégié pour se recentrer, relâcher les tensions et démarrer leur journée dans une dynamique positive et ainsi débuter leur journée dans les meilleures conditions physiques et mentales.
 
 Réalisées en début de journée, à partir de 8h00, ces séances courtes et dynamiques permettent de préparer le corps à l’activité professionnelle, de mobiliser les principales articulations et de réduire les tensions liées à la sédentarité ou aux contraintes du poste de travail.
 
 D’une durée de 30 à 45 minutes, elles peuvent être organisées en intérieur ou en extérieur selon les possibilités offertes par la collectivité ou l’établissement.
 
 Particulièrement adaptées aux collectivités territoriales, entreprises, établissements publics ou associations, ces séances s’inscrivent pleinement dans une démarche de qualité de vie au travail, de prévention santé et de promotion du bien-être des agents.
+
+### Une parenthèse de bien-être au cœur du quotidien
+
+Aujourd’hui, je souhaite élargir cette démarche auprès des associations , des collectivités territoriales, des maisons de retraite, ou encore, auprès des écoles élémentaires, en proposant des séances adaptées aux besoins et aux capacités de chacun. 
+
+Organisées entre 12h00 et 14h00 ou à partir de 18h00, elles constituent une véritable parenthèse de bien-être, favorisant la détente, la mobilité, l’équilibre et l’harmonie entre le corps et l’esprit.
+
+**Le Qi Gong est une invitation à prendre soin de soi, à mieux vivre ensemble et à intégrer le bien-être au cœur du quotidien.**
