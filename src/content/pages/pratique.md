@@ -23,3 +23,5 @@ Si besoin, n’hésitez pas à me contacter depuis « [contactez-moi](#contact)
 
 J’espère que le temps le permettra\
 Venez nombreux
+
+### Une parenthèse de bien-être au cœur du quotidien
