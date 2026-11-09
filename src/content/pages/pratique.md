@@ -13,6 +13,7 @@ Je vous invite à un moment de bien-être et d’harmonie à travers la pratique
 - Alternance de postures statiques et en mouvement 
 - Des mouvements doux dans le respect de notre corps
 - Des auto-massages
+- Des tapotements
 - Du relâchement 
 - Respiration consciente
 - Intention 
@@ -21,9 +22,11 @@ La pratique du Qi Gong réchauffe, maintient, participe à la mobilité des arti
 
 Les mouvements statiques permettent de s'enraciner dans la terre pour se nourrir de son énergie Yin et d'être en union avec notre environnement tandis que les postures en mouvement font circuler le QI.
 
-Les auto-massages, par les pressions, stimulent les organes et lIssent les 12 méridiens qui parcourent notre corps.
+Les auto-massages, par les pressions, stimulent les organes et les 12 méridiens qui parcourent notre corps.
 
-Cette pratique est accessible à tous et à tout âge. Elle est également possible en cas de douleurs articulaires. Les exercices sont adaptés selon les possibilités de chacun. Il n'est jamais demandé d'aller au-delà de ses capacités et de s'arrêter en cas de douleurs. 
+Les tapotements stimulent notre defense immunitaire.
+
+Cette pratique est accessible à tous et à tout âge. Elle est également possible en cas de douleurs articulaires ou musculaires. Les exercices sont adaptés selon les possibilités de chacun. Il n'est jamais demandé d'aller au-delà de ses capacités et de s'arrêter en cas de douleurs. 
 
 Des vêtements souples et des chaussures plates sont conseillés pour pratiquer
 
