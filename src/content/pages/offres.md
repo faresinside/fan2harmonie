@@ -7,7 +7,7 @@ accroche: Quelques minutes en mouvement pour une journée plus sereine et plus e
 
 Inspirées des techniques de préparation physique douce, du Qi Gong et des exercices de mobilité, les séances proposées intègrent un temps d’éveil corporel et articulaire comprenant des exercices respiratoires, l’apprentissage de mouvements de Qi Gong (postures, étirements) favorisant l’équilibre et l’ancrage. Elles représentent un temps de relaxation et de recentrage grâce à des techniques simples de concentration et de gestion du stress.
 
-Ces séances contribuent à améliorer le bien-être au travail, à favoriser la concentration dès le début de la journée, à prévenir certaines douleurs liées aux postures prolongées, à développer la mobilité et la souplesse et enfin à renforcer la cohésion et la convivialité entre les participants.
+Ces séances contribuent à améliorer le bien-être en famille, entre amis, au travail, à favoriser la concentration dès le début de la journée, à prévenir certaines douleurs liées aux postures prolongées ou aux mauvaises habitudes, à développer la mobilité et la souplesse et enfin à renforcer la cohésion et la convivialité entre les participants.
 
 ## Séances en pleine nature : un moment pour soi
 
@@ -37,7 +37,7 @@ Réalisées en début de journée, à partir de 8h00, ces séances courtes et dy
 
 D’une durée de 30 à 45 minutes, elles peuvent être organisées en intérieur ou en extérieur selon les possibilités offertes par la collectivité ou l’établissement.
 
-Particulièrement adaptées aux collectivités territoriales, entreprises, établissements publics ou associations, ces séances s’inscrivent pleinement dans une démarche de qualité de vie au travail, de prévention santé et de promotion du bien-être des agents.
+Particulièrement adaptées aux collectivités territoriales, entreprises, établissements publics s’inscrivent pleinement dans une démarche de qualité de vie au travail, de prévention santé et de promotion du bien-être des agents.
 
 ### 
 
@@ -45,6 +45,6 @@ Particulièrement adaptées aux collectivités territoriales, entreprises, étab
 
 Aujourd’hui, je souhaite élargir cette démarche auprès des associations , des collectivités territoriales, des maisons de retraite, ou encore, auprès des écoles élémentaires, en proposant des séances adaptées aux besoins et aux capacités de chacun. 
 
-Organisées entre 12h00 et 14h00 ou à partir de 18h00, elles constituent une véritable parenthèse de bien-être, favorisant la détente, la mobilité, l’équilibre et l’harmonie entre le corps et l’esprit.
+Organisées entre 7h30 et 8h30, ou entre 12h00 et 14h00, ou à partir de 18h00 en semaine , ou encore, le week-end, elles constituent une véritable parenthèse de bien-être, favorisant la détente, la mobilité, l’équilibre et l’harmonie entre le corps et l’esprit.
 
 **Le Qi Gong est une invitation à prendre soin de soi, à mieux vivre ensemble et à intégrer le bien-être au cœur du quotidien.**
