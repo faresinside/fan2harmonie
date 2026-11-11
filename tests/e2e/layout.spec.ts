@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { enTeteMd, motsDuMenu } from './outils';
+import { enTeteMd, hrefsDuMenu, motsDuMenu } from './outils';
 
 const ANCRES = ['accueil', 'rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'];
 
@@ -28,7 +28,7 @@ test.describe('structure de la page', () => {
     // Mots du menu : réglages du menu, ou titre de la page de texte (modifiables dans l'administration).
     await expect(liens).toHaveText(motsDuMenu());
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-    expect(hrefs).toEqual(['#rdv', '/offres-de-seances/', '#pratique', '#qigong', '#actualites', '#qui', '#contact']);
+    expect(hrefs).toEqual(hrefsDuMenu());
   });
 
   test('titres des sections réglables : « Prochains rendez-vous », « Actualités », « Contactez-moi »', async ({ page }) => {

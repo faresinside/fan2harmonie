@@ -200,6 +200,11 @@ describe('menuSchema', () => {
     expect(menuSchema.safeParse(base).success).toBe(true);
   });
 
+  it('ordre des liens : facultatif, seulement des liens connus', () => {
+    expect(menuSchema.safeParse({ ...base, ordre: ['contact', 'rdv'] }).success).toBe(true);
+    expect(menuSchema.safeParse({ ...base, ordre: ['accueil'] }).success).toBe(false);
+  });
+
   it('mots du menu des pages de texte facultatifs (le menu reprend alors le titre de la page) ; les autres obligatoires', () => {
     const { pratique, offres, qigong, qui, ...obligatoires } = base;
     void [pratique, offres, qigong, qui];

@@ -33,7 +33,7 @@ export async function animationsTerminees(page: Page) {
 // Contenu modifiable dans /admin : les tests le LISENT au lieu de recopier ses valeurs (l'éditrice les change).
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
-import { motDuMenu } from '../../src/lib/menu';
+import { motDuMenu, ordreDuMenu } from '../../src/lib/menu';
 
 /** En-tête YAML d'un fichier Markdown du site (chemin relatif à la racine du projet). */
 export const enTeteMd = <T>(chemin: string): T => parse(readFileSync(chemin, 'utf8').split('---')[1] ?? '') as T;
@@ -42,21 +42,32 @@ export const enTeteMd = <T>(chemin: string): T => parse(readFileSync(chemin, 'ut
 export const titresNiveau2 = (chemin: string): string[] =>
   readFileSync(chemin, 'utf8').split('\n').filter((l) => l.startsWith('## ')).map((l) => l.slice(3).trim());
 
+/** Liens du menu dans l'ordre réglé (src/content/reglages/menu.md) : identifiants de LIENS_MENU. */
+export function liensDuMenu(): string[] {
+  return ordreDuMenu(enTeteMd<{ ordre?: string[] }>('src/content/reglages/menu.md').ordre);
+}
+
+/** Adresse de chaque lien du menu ; prefixe « / » hors de l'accueil. */
+export function hrefsDuMenu(prefixe = ''): string[] {
+  return liensDuMenu().map((id) => (id === 'offres' ? '/offres-de-seances/' : `${prefixe}#${id}`));
+}
+
 /**
- * Mots du menu, dans l'ordre : ceux de menu.md ; pour les pages de texte, le mot choisi s'il existe, sinon le titre de la
+ * Mots du menu, dans l'ordre réglé : ceux de menu.md ; pour les pages de texte, le mot choisi s'il existe, sinon le titre de la
  * page (coupé à 30 caractères, comme src/components/Header.astro).
  */
 export function motsDuMenu(): string[] {
-  const menu = enTeteMd<Record<string, string | undefined>>('src/content/reglages/menu.md');
+  const menu = enTeteMd<Record<string, string | undefined> & { ordre?: string[] }>('src/content/reglages/menu.md');
   const titre = (id: string) => enTeteMd<{ titre: string }>(`src/content/pages/${id}.md`).titre;
   const mot = motDuMenu;
-  return [
-    menu['rdv'] ?? '',
-    mot(menu['offres'], titre('offres')),
-    mot(menu['pratique'], titre('pratique')),
-    mot(menu['qigong'], titre('qigong')),
-    menu['actualites'] ?? '',
-    mot(menu['qui'], titre('parcours')),
-    menu['contact'] ?? '',
-  ];
+  const mots: Record<string, string> = {
+    rdv: menu['rdv'] ?? '',
+    offres: mot(menu['offres'], titre('offres')),
+    pratique: mot(menu['pratique'], titre('pratique')),
+    qigong: mot(menu['qigong'], titre('qigong')),
+    actualites: menu['actualites'] ?? '',
+    qui: mot(menu['qui'], titre('parcours')),
+    contact: menu['contact'] ?? '',
+  };
+  return ordreDuMenu(menu.ordre).map((id) => mots[id] ?? '');
 }

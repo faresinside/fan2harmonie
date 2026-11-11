@@ -332,7 +332,7 @@ collections:
             widget: string
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la section des rendez-vous, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Le mot affiché dans la barre de menu pour aller à la section des rendez-vous, 30 caractères au maximum. La section visée ne change pas (l’ordre se règle plus bas, « Ordre des liens du menu »).
           - name: pratique
             label: Mot du menu pour « La pratique » (facultatif)
             widget: string
@@ -366,13 +366,13 @@ collections:
             widget: string
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller à la section des actualités (le lien disparaît s’il n’y a aucune actualité), 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Le mot affiché dans la barre de menu pour aller à la section des actualités (le lien disparaît s’il n’y a aucune actualité), 30 caractères au maximum. La section visée ne change pas (l’ordre se règle plus bas, « Ordre des liens du menu »).
           - name: contact
             label: Lien « Contact » du menu
             widget: string
             maxlength: 30
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
-            hint: Le mot affiché dans la barre de menu pour aller au formulaire de contact, 30 caractères au maximum. L’ordre des liens et la section visée ne changent pas.
+            hint: Le mot affiché dans la barre de menu pour aller au formulaire de contact, 30 caractères au maximum. La section visée ne change pas (l’ordre se règle plus bas, « Ordre des liens du menu »).
           - name: titreRdv
             label: Titre de la section « Prochains rendez-vous »
             widget: string
@@ -391,6 +391,28 @@ collections:
             maxlength: 60
             pattern: ['\S', 'Écrivez au moins un caractère visible.']
             hint: Le titre affiché en haut de la section du formulaire de contact, 60 caractères au maximum.
+          - name: ordre
+            label: Ordre des liens du menu
+            widget: list
+            required: false
+            allow_add: false
+            allow_remove: false
+            min: 7
+            max: 7
+            default: [rdv, offres, pratique, qigong, actualites, qui, contact]
+            hint: Pour changer l’ordre du menu, attrapez un lien par sa poignée (les petits points à gauche) et faites-le glisser à sa nouvelle place. Le premier de la liste est le premier lien du menu.
+            field:
+              name: lien
+              label: Lien
+              widget: select
+              options:
+                - { label: Rendez-vous, value: rdv }
+                - { label: Activités proposées (page des séances), value: offres }
+                - { label: La pratique, value: pratique }
+                - { label: Le Qi Gong, value: qigong }
+                - { label: Actualités, value: actualites }
+                - { label: Qui est Fan 2 Harmonie, value: qui }
+                - { label: Contact, value: contact }
       - name: referencement
         label: Référencement Google
         file: src/content/reglages/referencement.md

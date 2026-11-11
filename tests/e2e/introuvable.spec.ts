@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
-import { animationsTerminees, motsDuMenu, REGLES_WCAG, sansViolationAxe } from './outils';
+import { animationsTerminees, hrefsDuMenu, motsDuMenu, REGLES_WCAG, sansViolationAxe } from './outils';
 
 /**
  * Page 404 (src/pages/404.astro → dist/404.html), servie par l'hébergeur pour toute adresse inconnue et pour
@@ -49,7 +49,7 @@ test('page 404 : les libellés du menu sont ceux des réglages, vers les section
   const liens = page.locator('header nav a');
   await expect(liens).toHaveText(motsDuMenu());
   const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-  expect(hrefs).toEqual(['/#rdv', '/offres-de-seances/', '/#pratique', '/#qigong', '/#actualites', '/#qui', '/#contact']);
+  expect(hrefs).toEqual(hrefsDuMenu('/'));
 });
 
 test('construction : dist/404.html, absente du plan du site ; .htaccess et .user.ini copiés tels quels', async ({ request }) => {

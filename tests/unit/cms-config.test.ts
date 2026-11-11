@@ -16,6 +16,7 @@ import {
   referencementSchema,
   rendezvousSchema,
 } from '../../src/lib/schemas';
+import { LIENS_MENU } from '../../src/lib/menu';
 
 /** Configuration de Sveltia CMS (public/admin/config.yml), lue comme le ferait le CMS. */
 type Champ = {
@@ -374,6 +375,10 @@ describe('config.yml de Sveltia CMS', () => {
     };
     /** Mots du menu des pages de texte : facultatifs (le menu reprend alors le titre de la page). */
     const MOTS_FACULTATIFS = new Set(['pratique', 'offres', 'qigong', 'qui']);
+    /** Champs texte du menu : tous sauf « ordre » (liste, vérifiée à part). */
+    const textesMenu = () => (Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>).filter(
+      (nom): nom is Exclude<typeof nom, 'ordre'> => nom !== 'ordre',
+    );
     const chaine = (n: number) => 'a'.repeat(n);
     const liste = (n: number) => Array.from({ length: n }, () => 'a');
 
@@ -395,7 +400,7 @@ describe('config.yml de Sveltia CMS', () => {
       verifieChaine('lieu.nom', champ(fichier('lieu'), 'nom'), lieuSchema.shape.nom);
       // Menu : six libellés (30 caractères au plus) et trois titres de section (60 au plus), tous obligatoires.
       const menu = fichier('menu');
-      for (const nom of Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>) {
+      for (const nom of textesMenu()) {
         if (MOTS_FACULTATIFS.has(nom)) {
           // Mot du menu facultatif : absent, le menu reprend le titre de la page ; sinon 30 caractères au plus.
           expect(champ(menu, nom).required, `menu.${nom} : facultatif`).toBe(false);
@@ -449,11 +454,26 @@ describe('config.yml de Sveltia CMS', () => {
       }
     });
 
-    it('menu : pas de corps Markdown, que des champs texte, motif refusant le vide et les espaces seuls comme le schéma', () => {
+    it('menu : ordre des liens = liste des sept liens, à réordonner seulement (ni ajout ni suppression)', () => {
+      const ordre = champ(fichier('menu'), 'ordre');
+      expect(ordre.widget).toBe('list');
+      expect(ordre.required).toBe(false);
+      expect(ordre['allow_add']).toBe(false);
+      expect(ordre['allow_remove']).toBe(false);
+      expect(ordre['allow_reorder']).not.toBe(false);
+      expect([ordre['min'], ordre['max']]).toEqual([LIENS_MENU.length, LIENS_MENU.length]);
+      expect(ordre['default']).toEqual([...LIENS_MENU]);
+      const lien = ordre['field'] as Champ & { options: { label: string; value: string }[] };
+      expect(lien.widget).toBe('select');
+      expect(lien.options.map((o) => o.value).sort()).toEqual([...LIENS_MENU].sort());
+      expect(menuSchema.shape.ordre.safeParse(ordre['default']).success).toBe(true);
+    });
+
+    it('menu : pas de corps Markdown, que des champs texte (sauf l’ordre), motif refusant le vide et les espaces seuls comme le schéma', () => {
       const menu = fichier('menu');
       expect(menu.fields.map((f) => f.name)).not.toContain('body');
-      for (const f of menu.fields) expect(f.widget, f.name).toBe('string');
-      for (const nom of Object.keys(menuSchema.shape) as Array<keyof typeof menuSchema.shape>) {
+      for (const f of menu.fields.filter((f) => f.name !== 'ordre')) expect(f.widget, f.name).toBe('string');
+      for (const nom of textesMenu()) {
         const f = champ(menu, nom);
         expect(f.pattern?.[1], `${nom} : message du motif`).toMatch(/caractère visible/);
         for (const ko of ['', '   ']) {

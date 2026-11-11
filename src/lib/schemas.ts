@@ -1,4 +1,5 @@
 // `astro/zod` : même instance de Zod que celle utilisée par les collections Astro.
+import { LIENS_MENU } from './menu';
 import { z } from 'astro/zod';
 
 /** Format HH:MM, 00:00 à 23:59 (réutilisable, p. ex. par la config du CMS). */
@@ -104,7 +105,7 @@ const texteReglable = (max: number) => z.string().trim().min(1).max(max);
 
 /**
  * Menu du haut et titres des sections de l'accueil (src/content/reglages/menu.md).
- * Seuls les mots changent : l'ordre des liens et les sections visées sont fixes.
+ * Les mots et l'ordre des liens changent ; les sections visées sont fixes.
  * Les mots du menu des quatre pages de texte (pratique, offres, qigong, qui) sont FACULTATIFS : absents, le menu reprend
  * le titre de la page (src/content/pages/*.md), de sorte qu'il n'y a qu'un endroit à modifier. Ils servent seulement à
  * avoir un mot de menu plus court que le titre.
@@ -120,6 +121,8 @@ export const menuSchema = z.object({
   titreRdv: texteReglable(60),
   titreActualites: texteReglable(60),
   titreContact: texteReglable(60),
+  /** Ordre des liens du menu (identifiants de LIENS_MENU) ; absent, l'ordre par défaut. Voir ordreDuMenu. */
+  ordre: z.array(z.enum(LIENS_MENU)).optional(),
 });
 
 export type Menu = z.infer<typeof menuSchema>;

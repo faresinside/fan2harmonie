@@ -8,7 +8,7 @@
 import { Image } from 'astro:assets';
 import { getEntry } from 'astro:content';
 import logo from '../assets/logo/logo.png';
-import { motDuMenu as mot } from '../lib/menu';
+import { motDuMenu as mot, ordreDuMenu } from '../lib/menu';
 
 interface Props {
   /** Faux quand il n'y a aucune actualité : la section est retirée de la page, le lien aussi. */
@@ -23,7 +23,7 @@ interface Props {
 const { actualites = true, surAccueil = true } = Astro.props;
 const prefixe = surAccueil ? '' : '/';
 
-// Mots du menu (réglages « Menu et titres ») : l'ordre et les sections visées restent fixes.
+// Mots et ordre du menu (réglages « Menu et titres ») : les sections visées restent fixes.
 const menuEntree = await getEntry('reglagesMenu', 'menu');
 if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
 const menu = menuEntree.data;
@@ -44,15 +44,16 @@ const [titrePratique, titreOffres, titreQigong, titreParcours] = await Promise.a
 /** Page « Activités proposées » : seul lien du menu qui quitte l'accueil (les autres visent ses sections). */
 const PAGE_OFFRES = '/offres-de-seances/';
 
-const entrees: { ancre: string; libelle: string; page?: string }[] = [
-  { ancre: 'rdv', libelle: menu.rdv },
-  { ancre: 'offres', libelle: mot(menu.offres, titreOffres), page: PAGE_OFFRES },
-  { ancre: 'pratique', libelle: mot(menu.pratique, titrePratique) },
-  { ancre: 'qigong', libelle: mot(menu.qigong, titreQigong) },
-  { ancre: 'actualites', libelle: menu.actualites },
-  { ancre: 'qui', libelle: mot(menu.qui, titreParcours) },
-  { ancre: 'contact', libelle: menu.contact },
-];
+const parLien = {
+  rdv: { ancre: 'rdv', libelle: menu.rdv },
+  offres: { ancre: 'offres', libelle: mot(menu.offres, titreOffres), page: PAGE_OFFRES },
+  pratique: { ancre: 'pratique', libelle: mot(menu.pratique, titrePratique) },
+  qigong: { ancre: 'qigong', libelle: mot(menu.qigong, titreQigong) },
+  actualites: { ancre: 'actualites', libelle: menu.actualites },
+  qui: { ancre: 'qui', libelle: mot(menu.qui, titreParcours) },
+  contact: { ancre: 'contact', libelle: menu.contact },
+} satisfies Record<string, { ancre: string; libelle: string; page?: string }>;
+const entrees: { ancre: string; libelle: string; page?: string }[] = ordreDuMenu(menu.ordre).map((id) => parLien[id]);
 const liens = entrees
   .filter(({ ancre }) => actualites || ancre !== 'actualites')
   .map(({ ancre, libelle, page }) => ({ href: page ?? `${prefixe}#${ancre}`, libelle }));

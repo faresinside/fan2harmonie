@@ -93,7 +93,7 @@ le titre, le sous-titre, la devise, les petites lignes d’informations pratique
 (pour chacun, choisissez le dessin et écrivez quelques mots). Les limites de longueur sont indiquées sous chaque
 champ. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
 
-**Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». Ni l’ordre des liens ni les sections visées ne changent.
+**Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». **« Ordre des liens du menu »** change l’ordre : faites glisser chaque lien par ses petits points.
 
 ## i) Modifier le lieu
 
