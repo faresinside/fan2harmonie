@@ -49,7 +49,7 @@ test('page 404 : les libellés du menu sont ceux des réglages, vers les section
   const liens = page.locator('header nav a');
   await expect(liens).toHaveText(motsDuMenu());
   const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-  expect(hrefs).toEqual(['/#rdv', '/#pratique', '/offres-de-seances/', '/#qigong', '/#qui', '/#actualites', '/#contact']);
+  expect(hrefs).toEqual(['/#rdv', '/offres-de-seances/', '/#pratique', '/#qigong', '/#actualites', '/#qui', '/#contact']);
 });
 
 test('construction : dist/404.html, absente du plan du site ; .htaccess et .user.ini copiés tels quels', async ({ request }) => {

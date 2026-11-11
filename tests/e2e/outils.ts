@@ -52,11 +52,11 @@ export function motsDuMenu(): string[] {
   const mot = motDuMenu;
   return [
     menu['rdv'] ?? '',
-    mot(menu['pratique'], titre('pratique')),
     mot(menu['offres'], titre('offres')),
+    mot(menu['pratique'], titre('pratique')),
     mot(menu['qigong'], titre('qigong')),
-    mot(menu['qui'], titre('parcours')),
     menu['actualites'] ?? '',
+    mot(menu['qui'], titre('parcours')),
     menu['contact'] ?? '',
   ];
 }

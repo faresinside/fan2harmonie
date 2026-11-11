@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test';
 import { parse } from 'yaml';
 
 /** Infos de l'accueil telles qu'écrites dans src/content/reglages/accueil.md (modifiables dans l'administration). */
-const infosAccueil = (parse(readFileSync('src/content/reglages/accueil.md', 'utf8').split('---')[1] ?? '') as { infos: string[] }).infos;
+const reglagesAccueil = parse(readFileSync('src/content/reglages/accueil.md', 'utf8').split('---')[1] ?? '') as { infos: string[]; devise: string };
+const infosAccueil = reglagesAccueil.infos;
 
 test("la page d'accueil répond et a un h1", async ({ page }) => {
   await page.goto('/');
@@ -31,7 +32,7 @@ test("l'accueil affiche les textes réglés (titre, infos, bouton, bienfaits dan
   await expect(page.locator('h1 .sr-only')).toHaveText(':');
 
   await expect(accueil.locator('.accueil__accent')).toHaveText('1 heure pour vous…');
-  await expect(accueil.locator('.accueil__devise')).toHaveText('Respirez, Bougez, Équilibrez-vous');
+  await expect(accueil.locator('.accueil__devise')).toHaveText(reglagesAccueil.devise);
   await expect(accueil.locator('.accueil__infos')).toHaveText(infosAccueil.join(' · '));
   await expect(accueil.locator('.accueil__infos [aria-hidden="true"]')).toHaveCount(infosAccueil.length - 1);
 

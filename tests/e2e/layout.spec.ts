@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { motsDuMenu } from './outils';
+import { enTeteMd, motsDuMenu } from './outils';
 
 const ANCRES = ['accueil', 'rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'];
 
@@ -28,7 +28,7 @@ test.describe('structure de la page', () => {
     // Mots du menu : réglages du menu, ou titre de la page de texte (modifiables dans l'administration).
     await expect(liens).toHaveText(motsDuMenu());
     const hrefs = await liens.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-    expect(hrefs).toEqual(['#rdv', '#pratique', '/offres-de-seances/', '#qigong', '#qui', '#actualites', '#contact']);
+    expect(hrefs).toEqual(['#rdv', '/offres-de-seances/', '#pratique', '#qigong', '#actualites', '#qui', '#contact']);
   });
 
   test('titres des sections réglables : « Prochains rendez-vous », « Actualités », « Contactez-moi »', async ({ page }) => {
@@ -74,11 +74,10 @@ test.describe('structure de la page', () => {
 });
 
 test.describe('textes de Stéphanie', () => {
-  test('La pratique : texte corrigé', async ({ page }) => {
+  test('La pratique : texte du fichier modifiable dans l’administration', async ({ page }) => {
     await page.goto('/');
     const pratique = page.locator('#pratique');
-    await expect(pratique).toContainText('Gratuite et accessible à tous');
-    await expect(pratique).toContainText('Mouvements doux dans le respect de notre corps');
+    await expect(pratique).toContainText(enTeteMd<{ titre: string }>('src/content/pages/pratique.md').titre);
     // Les dates vivent dans la collection « rendezvous », pas dans le texte.
     await expect(pratique).not.toContainText('Samedi 3 octobre');
   });

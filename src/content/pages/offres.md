@@ -39,8 +39,6 @@ D’une durée de 30 à 45 minutes, elles peuvent être organisées en intérieu
 
 Particulièrement adaptées aux collectivités territoriales, entreprises, établissements publics s’inscrivent pleinement dans une démarche de qualité de vie au travail, de prévention santé et de promotion du bien-être des agents.
 
-### 
-
 ## Une parenthèse de bien-être au cœur du quotidien 
 
 Aujourd’hui, je souhaite élargir cette démarche auprès des associations , des collectivités territoriales, des maisons de retraite, ou encore, auprès des écoles élémentaires, en proposant des séances adaptées aux besoins et aux capacités de chacun. 

@@ -13,21 +13,21 @@ const OFFRES = 'src/content/pages/offres.md';
 const motsOffres = () => motsDuMenu();
 
 test.describe('menu', () => {
-  test('le mot du menu pour les offres vient de l’administration (titre de la page par défaut), juste après « La pratique », vers la page dédiée', async ({ page }) => {
+  test('le mot du menu pour les offres vient de l’administration (titre de la page par défaut), juste après « Rendez-vous », vers la page dédiée', async ({ page }) => {
     const mots = motsOffres();
     await page.goto('/');
     const liens = page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link');
     expect(await liens.allTextContents()).toEqual(mots);
-    await expect(liens.nth(2)).toHaveAttribute('href', '/offres-de-seances/');
-    await expect(liens.nth(1)).toHaveAttribute('href', '#pratique');
+    await expect(liens.nth(1)).toHaveAttribute('href', '/offres-de-seances/');
+    await expect(liens.nth(2)).toHaveAttribute('href', '#pratique');
   });
 
   test('depuis la page des offres, les autres liens visent les sections de l’accueil, et le lien courant est signalé', async ({ page }) => {
     await page.goto('/offres-de-seances/');
     const nav = page.getByRole('navigation', { name: 'Navigation principale' });
     await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toHaveAttribute('href', '/#contact');
-    await expect(nav.getByRole('link').nth(1)).toHaveAttribute('href', '/#pratique');
-    await expect(nav.getByRole('link').nth(2)).toHaveAttribute('aria-current', 'page');
+    await expect(nav.getByRole('link').nth(2)).toHaveAttribute('href', '/#pratique');
+    await expect(nav.getByRole('link').nth(1)).toHaveAttribute('aria-current', 'page');
   });
 });
 
@@ -47,8 +47,8 @@ test.describe('page des offres', () => {
     await page.goto('/offres-de-seances/');
     const { titre } = enTeteMd<{ titre: string }>(OFFRES);
     const reglage = enTeteMd<{ offres?: string }>('src/content/reglages/menu.md').offres;
-    expect(mots[2]).toBe(motDuMenu(reglage, titre));
-    await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link').nth(2)).toHaveText(mots[2] ?? '');
+    expect(mots[1]).toBe(motDuMenu(reglage, titre));
+    await expect(page.getByRole('navigation', { name: 'Navigation principale' }).getByRole('link').nth(1)).toHaveText(mots[1] ?? '');
   });
 
   test('le lien « La pratique » mène à la section de l’accueil', async ({ page }) => {

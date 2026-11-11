@@ -46,11 +46,11 @@ const PAGE_OFFRES = '/offres-de-seances/';
 
 const entrees: { ancre: string; libelle: string; page?: string }[] = [
   { ancre: 'rdv', libelle: menu.rdv },
-  { ancre: 'pratique', libelle: mot(menu.pratique, titrePratique) },
   { ancre: 'offres', libelle: mot(menu.offres, titreOffres), page: PAGE_OFFRES },
+  { ancre: 'pratique', libelle: mot(menu.pratique, titrePratique) },
   { ancre: 'qigong', libelle: mot(menu.qigong, titreQigong) },
-  { ancre: 'qui', libelle: mot(menu.qui, titreParcours) },
   { ancre: 'actualites', libelle: menu.actualites },
+  { ancre: 'qui', libelle: mot(menu.qui, titreParcours) },
   { ancre: 'contact', libelle: menu.contact },
 ];
 const liens = entrees
