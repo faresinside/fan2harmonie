@@ -27,6 +27,9 @@ L’objectif est simple : prendre un temps pour soi, retrouver de l’énergie, 
 
 La proposition de cette séance est détaillée dans l’onglet [La pratique](/#pratique).
 
+J’espère que le temps le permettra\
+Venez nombreux
+
 ## Séances matinales de réveil articulaire et musculaire en milieu professionnel
 
 **Bien commencer sa journée grâce au réveil corporel**
