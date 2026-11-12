@@ -4,9 +4,9 @@ titre: La pratique
 
 ### La pratique du QI GONG 
 
-Envie de prendre du temps pour vous, de vous détendre, de faire union entre votre corps et votre esprit, avec son environnement, de respirer profondément et de retrouver votre énergie intérieure ?
+Envie de prendre du temps pour vous, de vous détendre, de faire union entre votre corps et votre esprit, avec son environnement, de respirer profondément et de retrouver votre énergie intérieure ?
 
-Je vous invite à un moment de bien-être et d’harmonie à travers la pratique du Qi Gong, en salle ou cœur de la nature à Rambouillet.
+Je vous invite à un moment de bien-être et d’harmonie à travers la pratique du Qi Gong, en salle ou au cœur de la nature à Rambouillet.
 
 **Au programme**
 
@@ -31,8 +31,5 @@ Cette pratique est accessible à tous et à tout âge. Elle est également possi
 Des vêtements souples et des chaussures plates sont conseillés pour pratiquer
 
 Si besoin, n’hésitez pas à me contacter depuis « [contactez-moi](#contact) »
-
-J’espère que le temps le permettra\
-Venez nombreux
 
 \###
