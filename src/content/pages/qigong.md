@@ -8,6 +8,8 @@ La règle fondamentale de la médecine Chinoise veut que le sang circule partout
 
 Le QI GONG est bien une pratique enracinée dans les principes de la médecine traditionnelle chinoise qui cherche à créer une harmonie profonde et une cohérence entre la conscience et le souffle vital aussi appelé le QI.
 
+Le QI GONG est un moyen pour éliminer les résistances afin que l'énergie cesse d'être gaspillée dans une lutte contre les blocages du corps, et, puisse circuler de manière harmonieuse.
+
 Le QI GONG s’appuie sur la compréhension des liens entre les émotions et les organes pour guider le QI. Il cherche à créer un équilibre et ainsi à améliorer la santé.
 
 De part sa pratique, nous apprenons à canaliser et à libérer nos émotions, notamment celles en souffrance et en profondeur.
