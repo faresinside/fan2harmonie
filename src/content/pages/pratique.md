@@ -33,5 +33,3 @@ Cette pratique est accessible à tous et à tout âge. Elle est également possi
 Des vêtements souples et des chaussures plates sont conseillés pour pratiquer
 
 Si besoin, n’hésitez pas à me contacter depuis « [contactez-moi](#contact) »
-
-\###
