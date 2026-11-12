@@ -293,7 +293,7 @@ collections:
                 hint: Un bienfait en quelques mots, 60 caractères au maximum.
             hint: Les bienfaits de la pratique affichés sur l’accueil. Entre 1 et 6.
       - name: lieu
-        label: Lieu de la pratique
+        label: Lieu de la pratique (paragraphe « Le lieu »)
         file: src/content/reglages/lieu.md
         fields:
           - name: nom
@@ -413,6 +413,191 @@ collections:
                 - { label: Actualités, value: actualites }
                 - { label: Qui est Fan 2 Harmonie, value: qui }
                 - { label: Contact, value: contact }
+      - name: textes
+        label: Petits textes du site
+        file: src/content/reglages/textes.md
+        fields:
+          - name: rdv
+            label: Section « Rendez-vous »
+            widget: object
+            collapsed: true
+            hint: Les petits textes autour de la liste des dates (les dates elles-mêmes se gèrent dans « Rendez-vous », à gauche).
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+              - name: aucuneDate
+                label: Message quand il n’y a aucune date
+                widget: string
+                maxlength: 60
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affiché quand aucun rendez-vous n’est prévu, 60 caractères au maximum.
+              - name: prochain
+                label: Étiquette du prochain rendez-vous
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affichée sur la première date à venir, 30 caractères au maximum.
+              - name: annule
+                label: Mention d’une séance annulée
+                widget: string
+                maxlength: 20
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affichée sur une séance annulée, 20 caractères au maximum.
+              - name: lienPratique
+                label: Lien vers « La pratique »
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le lien sous les dates qui mène à la section « La pratique », 40 caractères au maximum.
+              - name: lienContact
+                label: Lien vers le contact
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le lien sous les dates qui mène au formulaire de contact, 40 caractères au maximum.
+          - name: pratique
+            label: Section « La pratique » et le lieu
+            widget: object
+            collapsed: true
+            hint: Le texte de la section se modifie dans « Textes des pages ». Le paragraphe du lieu (comment s’y rendre) se modifie dans « Lieu de la pratique ».
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+              - name: titreLieu
+                label: Titre du paragraphe du lieu
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le titre au-dessus des indications pour venir (« Le lieu »), 40 caractères au maximum.
+              - name: lienCarte
+                label: Texte du lien vers la carte
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le lien qui ouvre le lieu dans Google Maps, 40 caractères au maximum.
+          - name: qigong
+            label: Section « Le Qi Gong »
+            widget: object
+            collapsed: true
+            hint: Le texte de la section se modifie dans « Textes des pages ».
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+          - name: actualites
+            label: Section « Actualités »
+            widget: object
+            collapsed: true
+            hint: Les actualités elles-mêmes se gèrent dans « Actualités », à gauche.
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+          - name: qui
+            label: Section « Qui est Fan 2 Harmonie »
+            widget: object
+            collapsed: true
+            hint: Le texte de la section se modifie dans « Textes des pages ».
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+          - name: contact
+            label: Section « Contact »
+            widget: object
+            collapsed: true
+            hint: La case à cocher sur les données personnelles et les messages d’erreur restent fixes (obligations légales).
+            fields:
+              - name: accent
+                label: Petit mot au-dessus du titre
+                widget: string
+                required: false
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le petit mot écrit à la main au-dessus du titre, 40 caractères au maximum. Laissez vide pour ne rien afficher.
+              - name: invitation
+                label: Phrase d’invitation
+                widget: string
+                maxlength: 100
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: La phrase à côté du formulaire, 100 caractères au maximum.
+              - name: reponse
+                label: Phrase sur la réponse
+                widget: string
+                maxlength: 100
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: La phrase sous l’invitation, 100 caractères au maximum.
+              - name: libelleEmail
+                label: Texte devant l’adresse e-mail
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affiché devant l’adresse e-mail de contact, 30 caractères au maximum.
+              - name: bouton
+                label: Bouton d’envoi
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le texte du bouton qui envoie le message, 30 caractères au maximum.
+              - name: merci
+                label: Message après l’envoi
+                widget: string
+                maxlength: 150
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affiché quand le message est bien parti, 150 caractères au maximum.
+          - name: activites
+            label: Page « Activités proposées »
+            widget: object
+            collapsed: true
+            hint: Le titre et le texte de la page se modifient dans « Textes des pages ».
+            fields:
+              - name: bouton
+                label: Bouton en bas de la page
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le bouton qui ramène à l’accueil, 30 caractères au maximum.
+              - name: descriptionGoogle
+                label: Description dans Google
+                widget: string
+                minlength: 50
+                maxlength: 160
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le texte affiché sous le titre de la page dans les résultats Google, entre 50 et 160 caractères.
+          - name: piedDePage
+            label: Pied de page
+            widget: object
+            collapsed: true
+            hint: Le bas de chaque page. Le lien « Mentions légales » reste fixe.
+            fields:
+              - name: signature
+                label: Phrase après « Fan 2 Harmonie »
+                widget: string
+                maxlength: 60
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affichée en bas de chaque page après « Fan 2 Harmonie · », 60 caractères au maximum.
       - name: referencement
         label: Référencement Google
         file: src/content/reglages/referencement.md

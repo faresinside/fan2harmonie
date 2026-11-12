@@ -12,12 +12,15 @@
  */
 import type { Rendezvous } from '../lib/schemas';
 import { formatDateFr, heureFr, isCancelled } from '../lib/rendezvous';
+import { petitsTextes } from '../lib/textes';
 
 interface Props {
   items: Rendezvous[];
 }
 
 const { items } = Astro.props;
+// Textes fixes de la section (réglages « Petits textes du site »).
+const { rdv: textes } = await petitsTextes();
 
 // Le prochain rendez-vous mis en avant est le premier non annulé (aucun si tous sont annulés).
 const indexProchain = items.findIndex((r) => !isCancelled(r));
@@ -33,10 +36,10 @@ const feuillets = items.map((r, i) => ({
 ---
 
 <div class="rdv-bloc">
-  <p class="rdv-vide" hidden={feuillets.length > 0}>Prochaines dates bientôt</p>
+  <p class="rdv-vide" hidden={feuillets.length > 0}>{textes.aucuneDate}</p>
   {
     feuillets.length > 0 && (
-      <ul class:list={['rdv-liste', { 'rdv-liste--deux-colonnes': indexProchain === 0 && feuillets.length > 1 }]} role="list">
+      <ul class:list={['rdv-liste', { 'rdv-liste--deux-colonnes': indexProchain === 0 && feuillets.length > 1 }]} role="list" data-etiquette={textes.prochain}>
         {feuillets.map((r) => (
           <li class:list={['rdv', { 'rdv--prochain': r.prochain, 'rdv--annule': r.annule }]} data-date={r.iso}>
             <time class="rdv__date" datetime={r.iso}>
@@ -65,8 +68,8 @@ const feuillets = items.map((r, i) => ({
             <div class="rdv__infos">
               {(r.prochain || r.annule) && (
                 <p class="rdv__mentions">
-                  {r.prochain && <span class="rdv__etiquette">Prochain rendez-vous</span>}
-                  {r.annule && <span class="rdv__annule">Annulé</span>}
+                  {r.prochain && <span class="rdv__etiquette">{textes.prochain}</span>}
+                  {r.annule && <span class="rdv__annule">{textes.annule}</span>}
                 </p>
               )}
               <p class="rdv__heure">
@@ -82,9 +85,9 @@ const feuillets = items.map((r, i) => ({
   }
 
   <p class="rdv-liens">
-    <a href="#pratique">Toutes les infos pratiques</a>
+    <a href="#pratique">{textes.lienPratique}</a>
     <span class="rdv-liens__point" aria-hidden="true">·</span>
-    <a href="#contact">Une question ?</a>
+    <a href="#contact">{textes.lienContact}</a>
   </p>
 </div>
 

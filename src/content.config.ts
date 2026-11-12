@@ -2,7 +2,7 @@ import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
 import { contentBase } from './lib/fixture';
-import { accueilSchema, actualiteSchema, lieuSchema, menuSchema, pageSchema, photoSchema, referencementSchema, rendezvousSchema } from './lib/schemas';
+import { accueilSchema, actualiteSchema, lieuSchema, menuSchema, pageSchema, photoSchema, referencementSchema, rendezvousSchema, textesSchema } from './lib/schemas';
 
 export const collections = {
   rendezvous: defineCollection({
@@ -35,5 +35,9 @@ export const collections = {
   reglagesMenu: defineCollection({
     loader: glob({ pattern: 'menu.md', base: contentBase('reglages') }),
     schema: menuSchema,
+  }),
+  reglagesTextes: defineCollection({
+    loader: glob({ pattern: 'textes.md', base: contentBase('reglages') }),
+    schema: textesSchema,
   }),
 };

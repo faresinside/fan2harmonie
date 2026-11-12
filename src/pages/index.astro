@@ -22,6 +22,7 @@ import IconLotus from '../components/IconLotus.astro';
 import { upcoming } from '../lib/rendezvous';
 import { resoudreLieu } from '../lib/lieu';
 import { dernieresActualites } from '../lib/actualites';
+import { petitsTextes } from '../lib/textes';
 
 async function page(id: 'pratique' | 'qigong' | 'parcours') {
   const entree = await getEntry('pages', id);
@@ -52,6 +53,8 @@ const referencement = referencementEntree.data;
 const menuEntree = await getEntry('reglagesMenu', 'menu');
 if (!menuEntree) throw new Error('Texte manquant : src/content/reglages/menu.md');
 const menu = menuEntree.data;
+// Petits textes (réglages « Petits textes du site ») : petits mots au-dessus des titres, textes du lieu.
+const textes = await petitsTextes();
 
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
@@ -87,16 +90,16 @@ const actualites = await Promise.all(
   <main id="contenu" tabindex="-1">
     <Hero accueil={accueil} />
 
-    <Section id="rdv" titre={menu.titreRdv} accent="Rejoignez-moi" ton="chaud" mise="centree">
+    <Section id="rdv" titre={menu.titreRdv} accent={textes.rdv.accent} ton="chaud" mise="centree">
       <RdvList items={rendezvous} />
     </Section>
 
-    <Section id="pratique" titre={pratique.titre} accent="au cœur de la nature">
+    <Section id="pratique" titre={pratique.titre} accent={textes.pratique.accent}>
       <IconSilhouette slot="illustration" />
       <div class="prose">
         <pratique.Content />
       </div>
-      <LienCarte gps={{ lat: lieu.latitude, lon: lieu.longitude }}>
+      <LienCarte gps={{ lat: lieu.latitude, lon: lieu.longitude }} titre={textes.pratique.titreLieu} lien={textes.pratique.lienCarte}>
         {
           avecIndications && (
             <div class="prose">
@@ -107,14 +110,14 @@ const actualites = await Promise.all(
       </LienCarte>
     </Section>
 
-    <Section id="qigong" titre={qigong.titre} accent="le souffle vital" ton="chaud">
+    <Section id="qigong" titre={qigong.titre} accent={textes.qigong.accent} ton="chaud">
       <IconSouffle slot="illustration" />
       <div class="prose">
         <qigong.Content />
       </div>
     </Section>
 
-    <Section id="qui" titre={parcours.titre} accent="un projet qui me ressemble">
+    <Section id="qui" titre={parcours.titre} accent={textes.qui.accent}>
       <IconLotus slot="illustration" />
       <div class="prose">
         <parcours.Content />
@@ -123,7 +126,7 @@ const actualites = await Promise.all(
 
     {
       actualites.length > 0 && (
-        <Section id="actualites" titre={menu.titreActualites} ton="chaud" mise="centree">
+        <Section id="actualites" titre={menu.titreActualites} accent={textes.actualites.accent} ton="chaud" mise="centree">
           <div class="actualites">
             {actualites.map(({ titre, date, photos, Content }) => (
               <ActualiteCard titre={titre} date={date} photos={photos}>
@@ -135,7 +138,7 @@ const actualites = await Promise.all(
       )
     }
 
-    <Section id="contact" titre={menu.titreContact} accent="une question ?" mise="centree">
+    <Section id="contact" titre={menu.titreContact} accent={textes.contact.accent} mise="centree">
       <ContactForm />
     </Section>
   </main>

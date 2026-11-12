@@ -1,6 +1,9 @@
 import { test, expect, type Page } from '@playwright/test';
 import { urlJeu } from '../fixtures/jeux';
-import { sansDebordement, sansViolationAxe } from './outils';
+import { sansDebordement, sansViolationAxe, petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 /**
  * Prochains rendez-vous et actualités, sur des jeux de contenus de test (tests/fixtures/jeux.ts).
@@ -15,7 +18,7 @@ test.describe('aucun rendez-vous à venir (jeu « vide »)', () => {
 
   test('affiche « Prochaines dates bientôt », aucune date passée', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt', { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate, { exact: true })).toBeVisible();
     await expect(rendezvous(page)).toHaveCount(0);
     await expect(page.locator('#rdv time')).toHaveCount(0);
     await expect(page.locator('#rdv')).not.toContainText('Rendez-vous passé');
@@ -45,7 +48,7 @@ test.describe('ni rendez-vous ni actualités, dossiers absents (jeu « aucun »)
   test('le site se construit : « Prochaines dates bientôt », pas de section ni de lien Actualités, textes des pages présents', async ({ page }) => {
     const reponse = await page.goto('/');
     expect(reponse?.status()).toBe(200);
-    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt', { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate, { exact: true })).toBeVisible();
     await expect(rendezvous(page)).toHaveCount(0);
     await expect(page.locator('#actualites')).toHaveCount(0);
     await expect(page.locator('header nav a[href="#actualites"]')).toHaveCount(0);
@@ -63,10 +66,10 @@ test.describe('rendez-vous annulé (jeu « annule »)', () => {
     await page.goto('/');
     await expect(rendezvous(page)).toHaveCount(3);
     const annule = rendezvous(page).filter({ hasText: '15 mars' });
-    await expect(annule.getByText('Annulé', { exact: true })).toBeVisible();
+    await expect(annule.getByText(T.rdv.annule, { exact: true })).toBeVisible();
     await expect(annule.locator('time[datetime="2099-03-15"]')).toBeVisible();
     for (const jour of ['14 mars', '21 mars']) {
-      await expect(rendezvous(page).filter({ hasText: jour }).getByText('Annulé', { exact: true })).toHaveCount(0);
+      await expect(rendezvous(page).filter({ hasText: jour }).getByText(T.rdv.annule, { exact: true })).toHaveCount(0);
     }
   });
 });
@@ -76,8 +79,8 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
 
   test('le premier porte la mention « Prochain rendez-vous », et lui seul', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(1);
-    await expect(rendezvous(page).first().getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText(T.rdv.prochain, { exact: true })).toHaveCount(1);
+    await expect(rendezvous(page).first().getByText(T.rdv.prochain, { exact: true })).toBeVisible();
   });
 
   test('jour, date, mois, heure « 16h00 », lieu et <time datetime>', async ({ page }) => {
@@ -97,8 +100,8 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
 
   test('liens vers les infos pratiques et le contact', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('#rdv a', { hasText: 'Toutes les infos pratiques' })).toHaveAttribute('href', '#pratique');
-    await expect(page.locator('#rdv a', { hasText: 'Une question ?' })).toHaveAttribute('href', '#contact');
+    await expect(page.locator('#rdv a', { hasText: T.rdv.lienPratique })).toHaveAttribute('href', '#pratique');
+    await expect(page.locator('#rdv a', { hasText: T.rdv.lienContact })).toHaveAttribute('href', '#contact');
   });
 
   test('actualités : plus récente d’abord, date en français, image avec texte alternatif', async ({ page }) => {
@@ -135,14 +138,14 @@ test.describe('premier rendez-vous annulé (jeu « annule-premier »)', () => {
   test('« Prochain rendez-vous » va au premier non annulé, l’annulé garde sa place et sa mention', async ({ page }) => {
     await page.goto('/');
     await expect(rendezvous(page)).toHaveCount(3);
-    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(1);
+    await expect(page.locator('#rdv').getByText(T.rdv.prochain, { exact: true })).toHaveCount(1);
     const premier = rendezvous(page).nth(0);
     await expect(premier.locator('time[datetime="2099-03-14"]')).toBeVisible();
-    await expect(premier.getByText('Annulé', { exact: true })).toBeVisible();
-    await expect(premier.getByText('Prochain rendez-vous', { exact: true })).toHaveCount(0);
+    await expect(premier.getByText(T.rdv.annule, { exact: true })).toBeVisible();
+    await expect(premier.getByText(T.rdv.prochain, { exact: true })).toHaveCount(0);
     const second = rendezvous(page).nth(1);
     await expect(second.locator('time[datetime="2099-03-15"]')).toBeVisible();
-    await expect(second.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+    await expect(second.getByText(T.rdv.prochain, { exact: true })).toBeVisible();
     // Mise en avant (carte, halo) : sur le second seulement.
     await expect(premier).not.toHaveClass(/rdv--prochain/);
     await expect(second).toHaveClass(/rdv--prochain/);
@@ -178,7 +181,7 @@ test.describe('premier rendez-vous annulé, grand écran (jeu « annule-premier 
     }
     const second = rendezvous(page).nth(1);
     await expect(second).toHaveClass(/rdv--prochain/);
-    await expect(second.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
+    await expect(second.getByText(T.rdv.prochain, { exact: true })).toBeVisible();
   });
 });
 
@@ -205,10 +208,10 @@ test.describe('tous les rendez-vous annulés (jeu « tout-annule »)', () => {
   test('aucune mention « Prochain rendez-vous », chacun marqué « Annulé »', async ({ page }) => {
     await page.goto('/');
     await expect(rendezvous(page)).toHaveCount(2);
-    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(0);
+    await expect(page.locator('#rdv').getByText(T.rdv.prochain, { exact: true })).toHaveCount(0);
     await expect(page.locator('#rdv .rdv--prochain')).toHaveCount(0);
     for (const item of await rendezvous(page).all()) {
-      await expect(item.getByText('Annulé', { exact: true })).toBeVisible();
+      await expect(item.getByText(T.rdv.annule, { exact: true })).toBeVisible();
     }
   });
 });
@@ -313,7 +316,7 @@ test.describe('contenu réel', () => {
   test('rendez-vous ou « Prochaines dates bientôt », jamais une zone vide', async ({ page }) => {
     await page.goto('/');
     const n = await rendezvous(page).count();
-    if (n === 0) await expect(page.locator('#rdv').getByText('Prochaines dates bientôt')).toBeVisible();
+    if (n === 0) await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate)).toBeVisible();
     else await expect(rendezvous(page).first()).toBeVisible();
   });
 
@@ -342,23 +345,23 @@ test.describe('rendez-vous passés depuis la construction : masqués dans le nav
     expect(await dates(page)).toEqual(['2099-03-14', '2099-03-15', '2099-03-21']);
     await expect(rendezvous(page).nth(0)).toBeHidden();
     await expect(rendezvous(page).nth(1)).toBeVisible();
-    await expect(rendezvous(page).nth(1).getByText('Annulé', { exact: true })).toBeVisible();
+    await expect(rendezvous(page).nth(1).getByText(T.rdv.annule, { exact: true })).toBeVisible();
     await expect(rendezvous(page).nth(1)).not.toHaveClass(/rdv--prochain/);
     const vingtEtUn = rendezvous(page).nth(2);
     await expect(vingtEtUn).toHaveClass(/rdv--prochain/);
-    await expect(vingtEtUn.getByText('Prochain rendez-vous', { exact: true })).toBeVisible();
-    await expect(page.locator('#rdv').getByText('Prochain rendez-vous', { exact: true })).toHaveCount(1);
+    await expect(vingtEtUn.getByText(T.rdv.prochain, { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText(T.rdv.prochain, { exact: true })).toHaveCount(1);
     await expect(rendezvous(page).nth(0)).not.toHaveClass(/rdv--prochain/);
     // Une colonne, et jamais de propriété CSS order.
     await expect(page.locator('#rdv .rdv-liste')).not.toHaveClass(/rdv-liste--deux-colonnes/);
     for (const li of await rendezvous(page).all()) expect(await li.evaluate((e) => getComputedStyle(e).order)).toBe('0');
-    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt')).toBeHidden();
+    await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate)).toBeHidden();
   });
 
   test('le 22 mars : tout est passé, « Prochaines dates bientôt » s’affiche', async ({ page }) => {
     await page.clock.setFixedTime(new Date('2099-03-22T08:00:00+01:00'));
     await page.goto('/');
-    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt', { exact: true })).toBeVisible();
+    await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate, { exact: true })).toBeVisible();
     for (const li of await rendezvous(page).all()) await expect(li).toBeHidden();
   });
 
@@ -386,6 +389,6 @@ test.describe('sans JavaScript : comportement de la construction inchangé (jeu 
     await expect(rendezvous(page)).toHaveCount(3);
     for (const li of await rendezvous(page).all()) await expect(li).toBeVisible();
     await expect(rendezvous(page).nth(0)).toHaveClass(/rdv--prochain/);
-    await expect(page.locator('#rdv').getByText('Prochaines dates bientôt')).toBeHidden();
+    await expect(page.locator('#rdv').getByText(T.rdv.aucuneDate)).toBeHidden();
   });
 });

@@ -12,6 +12,7 @@ import {
   dateSchema,
   lieuSchema,
   menuSchema,
+  textesSchema,
   pageSchema,
   referencementSchema,
   rendezvousSchema,
@@ -277,7 +278,7 @@ describe('config.yml de Sveltia CMS', () => {
       return f;
     };
 
-    it('collection de fichiers fixes (ni création ni suppression), quatre fichiers présents', () => {
+    it('collection de fichiers fixes (ni création ni suppression), cinq fichiers présents', () => {
       const r = collection('reglages');
       expect(r.label).toBe('Réglages du site');
       expect(r.folder).toBeUndefined();
@@ -285,17 +286,56 @@ describe('config.yml de Sveltia CMS', () => {
       expect(r['delete']).not.toBe(true);
       expect((r['editor'] as Record<string, unknown>)['preview']).toBe(false);
       const fichiers = r.files ?? [];
-      expect(fichiers.map((f) => f.name).sort()).toEqual(['accueil', 'lieu', 'menu', 'referencement']);
+      expect(fichiers.map((f) => f.name).sort()).toEqual(['accueil', 'lieu', 'menu', 'referencement', 'textes']);
       for (const f of fichiers) {
         expect(f.file).toBe(`src/content/reglages/${f.name}.md`);
         expect(existsSync(path.join(RACINE, f.file)), f.file).toBe(true);
       }
       expect(Object.fromEntries(fichiers.map((f) => [f.name, f.label]))).toEqual({
         accueil: 'Page d’accueil',
-        lieu: 'Lieu de la pratique',
+        lieu: 'Lieu de la pratique (paragraphe « Le lieu »)',
         menu: 'Menu et titres',
         referencement: 'Référencement Google',
+        textes: 'Petits textes du site',
       });
+    });
+
+    /** Bornes de longueur d'un texte : le champ du CMS impose celles du schéma. */
+    const verifieChaineTextes = (nom: string, c: Champ, schema: { safeParse: (v: unknown) => { success: boolean } }) => {
+      const ok = (n: number) => schema.safeParse('a'.repeat(n)).success;
+      const max = Array.from({ length: 301 }, (_, n) => n).filter(ok).pop();
+      const min = Array.from({ length: 301 }, (_, n) => n).find(ok);
+      expect(c['maxlength'], `${nom} : maxlength`).toBe(max);
+      if ((min ?? 0) > 1) expect(c['minlength'], `${nom} : minlength`).toBe(min);
+      expect(c.required, `${nom} : obligatoire`).not.toBe(false);
+    };
+
+    it('petits textes : chaque groupe et chaque champ du CMS = schéma Zod (longueurs, facultatif, motif, valeurs actuelles valides)', () => {
+      const textes = fichier('textes');
+      const forme = textesSchema.shape;
+      expect(textes.fields.map((f) => f.name).sort()).toEqual(cles(forme));
+      for (const groupe of textes.fields) {
+        expect(groupe.widget, groupe.name).toBe('object');
+        expect(groupe.hint, `${groupe.name} : aide`).toBeTruthy();
+        const schemaGroupe = forme[groupe.name as keyof typeof forme].shape as Record<string, { safeParse(v: unknown): { success: boolean } }>;
+        const champs = (groupe as { fields?: Champ[] }).fields ?? [];
+        expect(champs.map((c) => c.name).sort(), groupe.name).toEqual(Object.keys(schemaGroupe).sort());
+        for (const c of champs) {
+          const nom = `${groupe.name}.${c.name}`;
+          const schema = schemaGroupe[c.name];
+          expect(c.widget, nom).toBe('string');
+          expect(c.label && c.hint, `${nom} : libellé et aide`).toBeTruthy();
+          expect(motif(c).test('   '), `${nom} : espaces seuls refusés`).toBe(false);
+          if (c.name === 'accent') {
+            expect(c.required, `${nom} : facultatif`).toBe(false);
+            expect(c['maxlength'], `${nom} : maxlength`).toBe(40);
+          } else {
+            verifieChaineTextes(nom, c, schema as never);
+          }
+        }
+      }
+      const { frontmatter } = parseFrontmatter(readFileSync(path.join(RACINE, 'src/content/reglages/textes.md'), 'utf8'));
+      expect(textesSchema.safeParse(frontmatter).success).toBe(true);
     });
 
     it('champs de chaque fichier (hors corps) = clés du schéma Zod', () => {

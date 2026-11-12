@@ -35,7 +35,7 @@ function mettreEnAvant(li: HTMLElement): void {
   }
   const etiquette = document.createElement('span');
   etiquette.className = 'rdv__etiquette';
-  etiquette.textContent = 'Prochain rendez-vous';
+  etiquette.textContent = li.closest<HTMLElement>('.rdv-liste')?.dataset['etiquette'] ?? 'Prochain rendez-vous';
   memePortee(li, etiquette);
   mentions.prepend(etiquette);
 }

@@ -15,14 +15,18 @@ import { lienMailto } from '../lib/contact';
 import IconSouffle from './IconSouffle.astro';
 
 const mailto = lienMailto(site.email);
+import { petitsTextes } from '../lib/textes';
+
+// Textes de la section (réglages « Petits textes du site ») ; la case de consentement et les erreurs restent fixes.
+const { contact: textes } = await petitsTextes();
 ---
 
 <div class="contact">
   <div class="contact__mot">
-    <p class="contact__invitation">Si besoin, n’hésitez pas à me contacter.</p>
-    <p class="contact__reponse">Je vous réponds dès que possible.</p>
+    <p class="contact__invitation">{textes.invitation}</p>
+    <p class="contact__reponse">{textes.reponse}</p>
     <p class="contact__email">
-      <span class="contact__email-libelle">Par e-mail</span>
+      <span class="contact__email-libelle">{textes.libelleEmail}</span>
       <a href={mailto}>{site.email}</a>
     </p>
     <IconSouffle />
@@ -93,7 +97,7 @@ const mailto = lienMailto(site.email);
 
       <div class="formulaire__envoi">
         <button class="bouton bouton--rose formulaire__bouton" type="submit">
-          <span data-libelle>Envoyer mon message</span>
+          <span data-libelle>{textes.bouton}</span>
         </button>
         <!-- Zones annoncées par les lecteurs d'écran : présentes dès le chargement, vides jusqu'à l'envoi. -->
         <p class="formulaire__retour formulaire__retour--succes" role="status" aria-live="polite" tabindex="-1" data-succes></p>
@@ -104,7 +108,7 @@ const mailto = lienMailto(site.email);
         Textes des retours, copiés par le script dans les zones ci-dessus (masqués d'ici là).
         Pas de <template> : le compilateur d'Astro y dédouble les liens.
       -->
-      <div hidden data-modele-succes>Merci, votre message est bien parti. Je vous répondrai dès que possible.</div>
+      <div hidden data-modele-succes>{textes.merci}</div>
       <div hidden data-modele-erreur>
         <p>
           <strong>Le message n’a pas pu être envoyé.</strong> Vous pouvez réessayer, ou m’écrire directement à

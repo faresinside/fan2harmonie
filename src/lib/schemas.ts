@@ -126,3 +126,46 @@ export const menuSchema = z.object({
 });
 
 export type Menu = z.infer<typeof menuSchema>;
+
+/** Petit mot manuscrit au-dessus d'un titre de section : facultatif (vide, il n'y en a pas). */
+const accentReglable = texteReglable(40).optional();
+
+/**
+ * Petits textes du site (src/content/reglages/textes.md) : petits mots au-dessus des titres, textes fixes de la section
+ * des rendez-vous, du lieu, du contact, de la page des activités et du pied de page. Restent fixes, hors de ce fichier :
+ * la case de consentement et les mentions légales (obligations légales), les messages d'erreur du formulaire et les
+ * textes destinés aux lecteurs d'écran.
+ */
+export const textesSchema = z.object({
+  rdv: z.object({
+    accent: accentReglable,
+    aucuneDate: texteReglable(60),
+    prochain: texteReglable(30),
+    annule: texteReglable(20),
+    lienPratique: texteReglable(40),
+    lienContact: texteReglable(40),
+  }),
+  pratique: z.object({
+    accent: accentReglable,
+    titreLieu: texteReglable(40),
+    lienCarte: texteReglable(40),
+  }),
+  qigong: z.object({ accent: accentReglable }),
+  qui: z.object({ accent: accentReglable }),
+  actualites: z.object({ accent: accentReglable }),
+  contact: z.object({
+    accent: accentReglable,
+    invitation: texteReglable(100),
+    reponse: texteReglable(100),
+    libelleEmail: texteReglable(30),
+    bouton: texteReglable(30),
+    merci: texteReglable(150),
+  }),
+  activites: z.object({
+    bouton: texteReglable(30),
+    descriptionGoogle: z.string().trim().min(50).max(160),
+  }),
+  piedDePage: z.object({ signature: texteReglable(60) }),
+});
+
+export type Textes = z.infer<typeof textesSchema>;

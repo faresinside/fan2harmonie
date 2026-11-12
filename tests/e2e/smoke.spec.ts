@@ -1,6 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { parse } from 'yaml';
+import { petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 /** Infos de l'accueil telles qu'écrites dans src/content/reglages/accueil.md (modifiables dans l'administration). */
 const reglagesAccueil = parse(readFileSync('src/content/reglages/accueil.md', 'utf8').split('---')[1] ?? '') as { infos: string[]; devise: string };
@@ -15,7 +19,7 @@ test('le lieu de la pratique garde ses coordonnées et son lien Google Maps', as
   await page.goto('/');
   const pratique = page.locator('#pratique');
   await expect(pratique).toContainText('48,64703° N, 1,811268° E');
-  await expect(pratique.getByRole('link', { name: /Ouvrir dans Google Maps/ })).toHaveAttribute(
+  await expect(pratique.getByRole('link', { name: T.pratique.lienCarte })).toHaveAttribute(
     'href',
     'https://www.google.com/maps/search/?api=1&query=48.64703,1.811268',
   );

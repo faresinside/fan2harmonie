@@ -1,7 +1,10 @@
 import { test, expect, type Page } from '@playwright/test';
 import { site } from '../../src/config/site';
 import { urlJeu } from '../fixtures/jeux';
-import { animationsTerminees, REGLES_WCAG, sansDebordement, sansViolationAxe } from './outils';
+import { animationsTerminees, REGLES_WCAG, sansDebordement, sansViolationAxe, petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 /**
  * Portes de qualité : plan du site et robots.txt, accessibilité (axe, clavier, focus visible),
@@ -137,7 +140,7 @@ test.describe('clavier', () => {
         if (largeur === 360) expect(elements).toContain('button « Menu »');
         else expect(elements).toContain('Le Qi Gong');
         if (chemin === '/') {
-          for (const champ of ['input#contact-nom', 'input#contact-email', 'textarea#contact-message', 'input#contact-consentement', 'Envoyer mon message']) {
+          for (const champ of ['input#contact-nom', 'input#contact-email', 'textarea#contact-message', 'input#contact-consentement', T.contact.bouton]) {
             expect(elements).toContain(champ);
           }
         }

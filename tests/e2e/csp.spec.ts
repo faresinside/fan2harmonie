@@ -6,6 +6,10 @@
  */
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
+import { petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 const htaccess = readFileSync('public/.htaccess', 'utf8');
 const CSP = /^\s*Header always set Content-Security-Policy "([^"]+)" env=!SANS_CSP$/m.exec(htaccess)?.[1] ?? '';
@@ -81,7 +85,7 @@ test('/ : le formulaire de contact fonctionne sous la CSP (connect-src self)', a
   await f.getByLabel('Votre adresse e-mail').fill('camille@example.org');
   await f.getByLabel('Votre message').fill('Bonjour !');
   await f.getByRole('checkbox').check();
-  await f.getByRole('button', { name: 'Envoyer mon message' }).click();
-  await expect(page.locator('#contact').getByRole('status')).toHaveText('Merci, votre message est bien parti. Je vous répondrai dès que possible.');
+  await f.getByRole('button', { name: T.contact.bouton }).click();
+  await expect(page.locator('#contact').getByRole('status')).toHaveText(T.contact.merci);
   expect(violations).toEqual([]);
 });

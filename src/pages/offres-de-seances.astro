@@ -10,11 +10,13 @@ import Footer from '../components/Footer.astro';
 import Separateur from '../components/Separateur.astro';
 import { site } from '../config/site';
 import { donneesOffres } from '../lib/jsonld';
+import { petitsTextes } from '../lib/textes';
 
 const entree = await getEntry('pages', 'offres');
 if (!entree) throw new Error('Texte manquant : src/content/pages/offres.md');
 const { Content } = await render(entree);
 const { titre, accroche } = entree.data;
+const { activites: textes } = await petitsTextes();
 const avecActualites = (await getCollection('actualites')).length > 0;
 const donneesPage = donneesOffres({
   nom: site.nom,
@@ -28,7 +30,7 @@ const donneesPage = donneesOffres({
 <Base
   titre={`${titre} — Fan 2 Harmonie`}
   donneesPage={donneesPage}
-  description="Les séances de Fan 2 Harmonie : Qi Gong gratuit en plein air à Rambouillet et réveil articulaire et musculaire en milieu professionnel."
+  description={textes.descriptionGoogle}
 >
   <Header actualites={avecActualites} surAccueil={false} />
 
@@ -47,7 +49,7 @@ const donneesPage = donneesOffres({
         <Content />
       </div>
       <p class="offres__retour">
-        <a class="bouton bouton--contour" href="/">Retour à l’accueil</a>
+        <a class="bouton bouton--contour" href="/">{textes.bouton}</a>
       </p>
     </div>
   </main>

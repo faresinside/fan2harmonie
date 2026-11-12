@@ -1,5 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
-import { enTeteMd, hrefsDuMenu, motsDuMenu } from './outils';
+import { enTeteMd, hrefsDuMenu, motsDuMenu, petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 const ANCRES = ['accueil', 'rdv', 'pratique', 'qigong', 'qui', 'actualites', 'contact'];
 
@@ -52,7 +55,7 @@ test.describe('structure de la page', () => {
 
   test('lien « Ouvrir dans Google Maps » (simple lien, pas de carte intégrée) aux coordonnées du site', async ({ page }) => {
     await page.goto('/');
-    const lien = page.locator('a', { hasText: 'Ouvrir dans Google Maps' });
+    const lien = page.locator('a', { hasText: T.pratique.lienCarte });
     await expect(lien).toHaveCount(1);
     const href = (await lien.getAttribute('href')) ?? '';
     expect(href).toBe('https://www.google.com/maps/search/?api=1&query=48.64703,1.811268');

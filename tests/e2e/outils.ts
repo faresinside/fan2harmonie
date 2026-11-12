@@ -34,9 +34,13 @@ export async function animationsTerminees(page: Page) {
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import { motDuMenu, ordreDuMenu } from '../../src/lib/menu';
+import type { Textes } from '../../src/lib/schemas';
 
 /** En-tête YAML d'un fichier Markdown du site (chemin relatif à la racine du projet). */
 export const enTeteMd = <T>(chemin: string): T => parse(readFileSync(chemin, 'utf8').split('---')[1] ?? '') as T;
+
+/** Petits textes du site (réglages « Petits textes du site ») : les tests lisent les valeurs actuelles, jamais en dur. */
+export const petitsTextes = () => enTeteMd<Textes>('src/content/reglages/textes.md');
 
 /** Titres de niveau 2 (« ## … ») du texte Markdown d'un fichier. */
 export const titresNiveau2 = (chemin: string): string[] =>

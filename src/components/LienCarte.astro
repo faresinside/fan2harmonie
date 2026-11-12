@@ -7,19 +7,22 @@ import { coordonneesFr, lienCarte, type Gps } from '../lib/carte';
 
 interface Props {
   gps: Gps;
+  /** Titre du bloc et texte du lien (réglages « Petits textes du site »). */
+  titre: string;
+  lien: string;
 }
 
-const { gps } = Astro.props;
+const { gps, titre, lien } = Astro.props;
 ---
 
 <div class="lieu">
-  <p class="lieu__titre">Le lieu</p>
+  <p class="lieu__titre">{titre}</p>
   <slot />
   <p class="lieu__gps">
     Coordonnées GPS : <span class="lieu__coordonnees">{coordonneesFr(gps)}</span>
   </p>
   <a class="lieu__lien" href={lienCarte(gps)} target="_blank" rel="noopener noreferrer">
-    Ouvrir dans Google Maps <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
+    {lien} <span class="lieu__aide">(s’ouvre dans un nouvel onglet)</span>
   </a>
 </div>
 

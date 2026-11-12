@@ -2,7 +2,10 @@ import { existsSync } from 'node:fs';
 import { test, expect, type Page, type Route } from '@playwright/test';
 import { site } from '../../src/config/site';
 import { lienMailto } from '../../src/lib/contact';
-import { REGLES_WCAG, sansDebordement, sansViolationAxe } from './outils';
+import { REGLES_WCAG, sansDebordement, sansViolationAxe, petitsTextes } from './outils';
+
+/** Petits textes actuels du site (modifiables dans l'administration). */
+const T = petitsTextes();
 
 /**
  * Formulaire de contact (#contact) et page /mentions-legales.
@@ -15,7 +18,7 @@ import { REGLES_WCAG, sansDebordement, sansViolationAxe } from './outils';
 test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
 const formulaire = (page: Page) => page.locator('#contact form');
-const bouton = (page: Page) => formulaire(page).getByRole('button', { name: 'Envoyer mon message' });
+const bouton = (page: Page) => formulaire(page).getByRole('button', { name: T.contact.bouton });
 
 /** Adresse d'envoi résolue par le navigateur (attribut action du formulaire). */
 async function adresseEnvoi(page: Page): Promise<string> {
@@ -88,8 +91,8 @@ test.describe('formulaire de contact : structure', () => {
   test('texte d’accueil : mots de Stéphanie et adresse e-mail', async ({ page }) => {
     await page.goto('/');
     const contact = page.locator('#contact');
-    await expect(contact).toContainText('Si besoin, n’hésitez pas à me contacter');
-    await expect(contact).toContainText('Je vous réponds dès que possible.');
+    await expect(contact).toContainText(T.contact.invitation);
+    await expect(contact).toContainText(T.contact.reponse);
     await expect(contact.locator(`a[href="${lienMailto(site.email)}"]`).first()).toBeVisible();
   });
 });
@@ -221,7 +224,7 @@ test.describe('envoi avec JavaScript', () => {
     liberer();
 
     const statut = page.locator('#contact').getByRole('status');
-    await expect(statut).toHaveText('Merci, votre message est bien parti. Je vous répondrai dès que possible.');
+    await expect(statut).toHaveText(T.contact.merci);
     await expect(statut).toHaveAttribute('aria-live', 'polite');
     await expect(statut).toBeFocused();
     await expect(bouton(page)).toBeEnabled();
