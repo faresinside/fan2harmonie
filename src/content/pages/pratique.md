@@ -18,7 +18,7 @@ Je vous invite à un moment de bien-être et d’harmonie à travers la pratique
 - Respiration consciente
 - Intention 
 
-La pratique du Qi Gong réchauffe, maintient, participe à la mobilité des articulations, à la souplesse du corps. 
+La pratique du Qi Gong réchauffe, maintient en place les organes, transforme, fait circuler le sang en lien avec l'énergie. Il protège à travers l'activation du système immunitaire. Il participe aussi à la mobilité des articulations, à la souplesse du corps. 
 
 Les mouvements statiques permettent de s'enraciner dans la terre pour se nourrir de son énergie Yin et d'être en union avec notre environnement tandis que les postures en mouvement font circuler le QI.
 
