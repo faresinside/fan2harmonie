@@ -20,13 +20,17 @@ Je vous invite à un moment de bien-être et d’harmonie à travers la pratique
 
 La pratique du Qi Gong réchauffe, maintient en place les organes, transforme, fait circuler le sang en lien avec l'énergie. Il protège à travers l'activation du système immunitaire. Il participe aussi à la mobilité des articulations, à la souplesse du corps. 
 
-Les mouvements statiques permettent de s'enraciner dans la terre pour se nourrir de son énergie Yin et d'être en union avec notre environnement tandis que les postures en mouvement font circuler le QI.
+Les postures statiques permettent de s'enraciner dans la terre pour se nourrir de son énergie Yin et d'être en union avec notre environnement.
+
+ Les postures en mouvement font circuler le QI.
 
 Les auto-massages, par les pressions, stimulent les organes et les 12 méridiens qui parcourent notre corps.
 
 Les tapotements stimulent notre défense immunitaire.
 
 La respiration est le pont entre le monde extérieur et l'énergie intérieure. Elle permet de calmer l'esprit.
+
+Le relâchement libère les tensions de la mâchoire, des épaules, de la poitrine, du ventre liées aux événements de notre journée.
 
 Cette pratique est accessible à tous et à tout âge. Elle est également possible en cas de douleurs articulaires ou musculaires. Les exercices sont adaptés selon les possibilités de chacun. Il n'est jamais demandé d'aller au-delà de ses capacités et de s'arrêter en cas de douleurs. 
 
