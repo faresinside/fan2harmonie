@@ -1,5 +1,5 @@
 ---
-nom: Parc de Rambouillet, près de la bergerie
+nom: Parc de Rambouillet, près de la bergerie test
 latitude: 48.64703
 longitude: 1.811268
 ---
