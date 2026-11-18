@@ -8,13 +8,12 @@ rdv:
   lienContact: Une question ?
 pratique:
   accent: au cœur de la nature
-  titreLieu: Le lieu
+  titreLieu: Le lieu - Par beau temps
   lienCarte: Ouvrir dans Google Maps
 qigong:
   accent: le souffle vital
 qui:
   accent: un projet qui me ressemble
-actualites: {}
 contact:
   accent: une question ?
   invitation: Si besoin, n’hésitez pas à me contacter.
