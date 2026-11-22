@@ -6,10 +6,14 @@ rdv:
   annule: Annulé
   lienPratique: Toutes les infos pratiques
   lienContact: Une question ?
+  autreLieu: Par mauvais temps
+  repli: Changement de lieu
 pratique:
   accent: au cœur de la nature
-  titreLieu: Le lieu - Par beau temps
+  titreLieu: Le lieu
   lienCarte: Ouvrir dans Google Maps
+  titreLieuHabituel: Par beau temps
+  titreAutreLieu: Par mauvais temps
 qigong:
   accent: le souffle vital
 qui:

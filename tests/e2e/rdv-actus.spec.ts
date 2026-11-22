@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { urlJeu } from '../fixtures/jeux';
-import { sansDebordement, sansViolationAxe, petitsTextes } from './outils';
+import { sansDebordement, sansViolationAxe, petitsTextes, enTeteMd } from './outils';
 
 /** Petits textes actuels du site (modifiables dans l'administration). */
 const T = petitsTextes();
@@ -88,7 +88,10 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
     const premier = rendezvous(page).nth(0);
     await expect(premier.locator('time[datetime="2099-03-14"]')).toHaveText(/samedi\s*14\s*mars/);
     await expect(premier).toContainText('16h00');
-    await expect(premier).toContainText('Parc de Rambouillet, près de la bergerie');
+    // Fiche sans lieu : le lieu habituel des réglages, puis le rappel de l'autre lieu (par mauvais temps) s'il y en a un.
+    const lieu = enTeteMd<{ nom: string; autreLieu?: { nom?: string } }>('src/content/reglages/lieu.md');
+    await expect(premier).toContainText(lieu.nom);
+    if (lieu.autreLieu?.nom) await expect(premier.locator('.rdv__autre')).toHaveText(`${T.rdv.autreLieu} : ${lieu.autreLieu.nom}`);
     await expect(premier).toContainText('Pensez à une tenue souple');
     await expect(rendezvous(page).nth(1).locator('time[datetime="2099-03-15"]')).toHaveText(/dimanche\s*15\s*mars/);
     const troisieme = rendezvous(page).nth(2);

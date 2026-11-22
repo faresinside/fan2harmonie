@@ -31,6 +31,8 @@ export const rendezvousSchema = z.object({
   heure: z.string().regex(HEURE_REGEX),
   /** Facultatif : absent ou vide, la séance a lieu au lieu habituel (réglages « Lieu de la pratique »). */
   lieu: z.string().optional(),
+  /** Coché le jour même : la séance a lieu à l'autre lieu (par mauvais temps) des réglages « Lieu de la pratique ». */
+  repli: z.boolean().default(false),
   remarque: z.string().optional(),
   annule: z.boolean().default(false),
 });
@@ -84,10 +86,10 @@ export const lieuSchema = z.object({
   nom: z.string().min(1).max(120),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  /** Autre lieu, par exemple en cas de mauvais temps : affiché seulement si les indications sont remplies. */
+  /** Autre lieu, par exemple par mauvais temps : affiché seulement si son nom est rempli. Tout facultatif. */
   autreLieu: z
     .object({
-      titre: z.string().trim().max(40).optional(),
+      nom: z.string().trim().max(120).optional(),
       indications: z.string().trim().max(500).optional(),
       latitude: z.number().min(-90).max(90).optional(),
       longitude: z.number().min(-180).max(180).optional(),
@@ -153,11 +155,15 @@ export const textesSchema = z.object({
     annule: texteReglable(20),
     lienPratique: texteReglable(60),
     lienContact: texteReglable(40),
+    autreLieu: texteReglable(30),
+    repli: texteReglable(40),
   }),
   pratique: z.object({
     accent: accentReglable,
     titreLieu: texteReglable(40),
     lienCarte: texteReglable(40),
+    titreLieuHabituel: texteReglable(40),
+    titreAutreLieu: texteReglable(40),
   }),
   // Groupes faits seulement d'un petit mot facultatif : vides, l'administration les retire du fichier à l'enregistrement.
   qigong: z.object({ accent: accentReglable }).default({}),

@@ -46,6 +46,8 @@ Ouvrez le rendez-vous dans la liste, activez **« Séance annulée »** (l’int
 puis **Enregistrer**. La séance reste affichée sur le site, barrée, avec la mention **« Annulé »** : vos élèves
 savent ainsi qu’elle n’a pas lieu.
 
+Mauvais temps : activez **« Au lieu par mauvais temps »**, le site affiche l’autre lieu.
+
 ## d) Supprimer un rendez-vous
 
 Pour retirer une séance du site : dans la liste des rendez-vous, cochez la case devant la séance,
@@ -99,7 +101,7 @@ le titre, le sous-titre, la devise, les petites lignes d’informations pratique
 
 Dans **« Réglages du site »**, **« Lieu de la pratique »** : nom du lieu, latitude et longitude
 (dans Google Maps, un clic droit sur le lieu les affiche), indications pour s’y rendre. **« Autre lieu »** ajoute
-le lieu par mauvais temps (videz ses indications pour le retirer). Puis **Enregistrer**.
+le lieu par mauvais temps (videz son nom pour le retirer). Puis **Enregistrer**.
 
 Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil ».
 

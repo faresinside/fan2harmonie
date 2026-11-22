@@ -15,10 +15,13 @@ import { formatDateFr, heureFr, isCancelled } from '../lib/rendezvous';
 import { petitsTextes } from '../lib/textes';
 
 interface Props {
-  items: Rendezvous[];
+  /** `habituel` : la séance a lieu au lieu habituel (ni lieu propre, ni repli). */
+  items: (Rendezvous & { habituel?: boolean })[];
+  /** Nom de l'autre lieu (par mauvais temps), s'il y en a un : rappelé sous chaque séance au lieu habituel. */
+  autreLieu?: string | undefined;
 }
 
-const { items } = Astro.props;
+const { items, autreLieu } = Astro.props;
 // Textes fixes de la section (réglages « Petits textes du site »).
 const { rdv: textes } = await petitsTextes();
 
@@ -66,16 +69,22 @@ const feuillets = items.map((r, i) => ({
             </svg>
 
             <div class="rdv__infos">
-              {(r.prochain || r.annule) && (
+              {(r.prochain || r.annule || r.repli) && (
                 <p class="rdv__mentions">
                   {r.prochain && <span class="rdv__etiquette">{textes.prochain}</span>}
                   {r.annule && <span class="rdv__annule">{textes.annule}</span>}
+                  {r.repli && !r.annule && <span class="rdv__repli">{textes.repli}</span>}
                 </p>
               )}
               <p class="rdv__heure">
                 <time datetime={r.heure}>{r.heureAffichee}</time>
               </p>
               <p class="rdv__lieu">{r.lieu}</p>
+              {autreLieu && r.habituel && !r.annule && (
+                <p class="rdv__autre">
+                  {textes.autreLieu} : {autreLieu}
+                </p>
+              )}
               {r.remarque && <p class="rdv__remarque">{r.remarque}</p>}
             </div>
           </li>
@@ -234,6 +243,22 @@ const feuillets = items.map((r, i) => ({
 
   .rdv__lieu {
     color: var(--encre);
+  }
+
+  .rdv__autre {
+    font-size: var(--fs-sm);
+    color: var(--encre-doux);
+  }
+
+  .rdv__repli {
+    display: inline-block;
+    padding: 0.125rem 0.625rem 0.1875rem;
+    border: 1px solid var(--foret);
+    border-radius: var(--r-pilule);
+    background: var(--blanc);
+    color: var(--foret);
+    font-size: var(--fs-xs);
+    font-weight: 700;
   }
 
   .rdv__remarque {

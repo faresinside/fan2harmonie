@@ -20,7 +20,7 @@ import IconSilhouette from '../components/IconSilhouette.astro';
 import IconSouffle from '../components/IconSouffle.astro';
 import IconLotus from '../components/IconLotus.astro';
 import { upcoming } from '../lib/rendezvous';
-import { resoudreLieu } from '../lib/lieu';
+import { lieuDeSeance } from '../lib/lieu';
 import { dernieresActualites } from '../lib/actualites';
 import { petitsTextes } from '../lib/textes';
 
@@ -58,17 +58,26 @@ const textes = await petitsTextes();
 
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
-// Autre lieu (par mauvais temps) : affiché seulement si ses indications sont remplies ; GPS seulement si complet.
+// Autre lieu (par mauvais temps) : affiché seulement si son nom est rempli ; GPS seulement si les deux nombres le sont.
 const autre = lieu.autreLieu;
-const autreParagraphes = (autre?.indications ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
-const autreGps =
-  autre?.latitude !== undefined && autre?.longitude !== undefined ? { lat: autre.latitude, lon: autre.longitude } : undefined;
+const autreNom = autre?.nom?.trim() || undefined;
+const autreLieu = autreNom
+  ? {
+      titre: textes.pratique.titreAutreLieu,
+      nom: autreNom,
+      paragraphes: (autre?.indications ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean),
+      gps:
+        autre?.latitude !== undefined && autre?.longitude !== undefined
+          ? { lat: autre.latitude, lon: autre.longitude }
+          : undefined,
+    }
+  : undefined;
 
 // Lieu résolu une fois pour toutes : liste des rendez-vous et données structurées affichent le même nom.
 const rendezvous = upcoming(
   (await getCollection('rendezvous')).map((r) => r.data),
   new Date(),
-).map((r) => ({ ...r, lieu: resoudreLieu(r.lieu, lieu.nom) }));
+).map((r) => ({ ...r, ...lieuDeSeance(r, lieu.nom, autreNom) }));
 
 const actualites = await Promise.all(
   dernieresActualites(await getCollection('actualites')).map(async (a) => ({
@@ -96,7 +105,7 @@ const actualites = await Promise.all(
     <Hero accueil={accueil} />
 
     <Section id="rdv" titre={menu.titreRdv} accent={textes.rdv.accent} ton="chaud" mise="centree">
-      <RdvList items={rendezvous} />
+      <RdvList items={rendezvous} autreLieu={autreNom} />
     </Section>
 
     <Section id="pratique" titre={pratique.titre} accent={textes.pratique.accent}>
@@ -104,7 +113,13 @@ const actualites = await Promise.all(
       <div class="prose">
         <pratique.Content />
       </div>
-      <LienCarte gps={{ lat: lieu.latitude, lon: lieu.longitude }} titre={textes.pratique.titreLieu} lien={textes.pratique.lienCarte}>
+      <LienCarte
+        gps={{ lat: lieu.latitude, lon: lieu.longitude }}
+        titre={textes.pratique.titreLieu}
+        lien={textes.pratique.lienCarte}
+        titreHabituel={textes.pratique.titreLieuHabituel}
+        autre={autreLieu}
+      >
         {
           avecIndications && (
             <div class="prose">
@@ -113,17 +128,6 @@ const actualites = await Promise.all(
           )
         }
       </LienCarte>
-      {
-        autreParagraphes.length > 0 && (
-          <LienCarte gps={autreGps} titre={autre?.titre || 'Autre lieu'} lien={textes.pratique.lienCarte}>
-            <div class="prose">
-              {autreParagraphes.map((p) => (
-                <p>{p}</p>
-              ))}
-            </div>
-          </LienCarte>
-        )
-      }
     </Section>
 
     <Section id="qigong" titre={qigong.titre} accent={textes.qigong.accent} ton="chaud">

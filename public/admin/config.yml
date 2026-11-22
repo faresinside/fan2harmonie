@@ -63,7 +63,7 @@ collections:
     slug:
       template: '{{fields.date}}'
       editable: false
-    summary: "{{date | date('DD/MM/YYYY')}} — {{heure}}{{annule | ternary(' — annulée', '')}}"
+    summary: "{{date | date('DD/MM/YYYY')}} — {{heure}}{{repli | ternary(' — mauvais temps', '')}}{{annule | ternary(' — annulée', '')}}"
     sortable_fields:
       fields: [date]
       default:
@@ -90,6 +90,11 @@ collections:
         widget: string
         required: false
         hint: Laissez vide pour le lieu habituel (celui de « Lieu de la pratique » dans les réglages du site), sauf si la séance a lieu ailleurs.
+      - name: repli
+        label: Au lieu par mauvais temps
+        widget: boolean
+        default: false
+        hint: Cochez si, à cause de la météo, la séance a lieu à l’autre lieu (« Autre lieu » dans « Lieu de la pratique »). Le site l’affiche avec la mention « Changement de lieu ».
       - name: remarque
         label: Remarque
         widget: string
@@ -324,18 +329,18 @@ collections:
             editor_components: []
             hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
           - name: autreLieu
-            label: Autre lieu (par exemple en cas de mauvais temps)
+            label: Autre lieu (par mauvais temps)
             widget: object
             required: false
             collapsed: true
-            hint: Affiché sous le lieu habituel, seulement si les indications sont remplies. Videz les indications pour le retirer du site.
+            hint: Le lieu de repli quand il fait mauvais. Affiché à côté du lieu habituel seulement si son nom est rempli ; videz le nom pour le retirer du site.
             fields:
-              - name: titre
-                label: Titre
+              - name: nom
+                label: Nom du lieu
                 widget: string
                 required: false
-                maxlength: 40
-                hint: Par exemple « Par mauvais temps », 40 caractères au maximum.
+                maxlength: 120
+                hint: Par exemple « Jardin de la Motte, à Rambouillet », 120 caractères au maximum. Rappelé sous chaque rendez-vous.
               - name: indications
                 label: Indications
                 widget: text
@@ -495,6 +500,18 @@ collections:
                 maxlength: 40
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
                 hint: Le lien sous les dates qui mène au formulaire de contact, 40 caractères au maximum.
+              - name: autreLieu
+                label: Rappel du lieu par mauvais temps
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: 'Écrit sous chaque rendez-vous avant le nom de l’autre lieu (« Par mauvais temps : … »), 30 caractères au maximum.'
+              - name: repli
+                label: Mention d’un changement de lieu
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Affichée sur une séance déplacée à l’autre lieu (case « Au lieu par mauvais temps »), 40 caractères au maximum.
           - name: pratique
             label: Section « La pratique » et le lieu
             widget: object
@@ -520,6 +537,18 @@ collections:
                 maxlength: 40
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
                 hint: Le lien qui ouvre le lieu dans Google Maps, 40 caractères au maximum.
+              - name: titreLieuHabituel
+                label: Titre du lieu habituel
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: 'Quand il y a un autre lieu : le titre de l’encadré du lieu habituel (« Par beau temps »), 40 caractères au maximum.'
+              - name: titreAutreLieu
+                label: Titre de l’autre lieu
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le titre de l’encadré de l’autre lieu (« Par mauvais temps »), 40 caractères au maximum.
           - name: qigong
             label: Section « Le Qi Gong »
             widget: object
