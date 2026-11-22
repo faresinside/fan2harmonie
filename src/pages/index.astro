@@ -58,6 +58,11 @@ const textes = await petitsTextes();
 
 /** Indications d'accès (corps du fichier) : le bloc n'apparaît que si Stéphanie en a écrit. */
 const avecIndications = Boolean(lieuEntree.body?.trim());
+// Autre lieu (par mauvais temps) : affiché seulement si ses indications sont remplies ; GPS seulement si complet.
+const autre = lieu.autreLieu;
+const autreParagraphes = (autre?.indications ?? '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+const autreGps =
+  autre?.latitude !== undefined && autre?.longitude !== undefined ? { lat: autre.latitude, lon: autre.longitude } : undefined;
 
 // Lieu résolu une fois pour toutes : liste des rendez-vous et données structurées affichent le même nom.
 const rendezvous = upcoming(
@@ -108,6 +113,17 @@ const actualites = await Promise.all(
           )
         }
       </LienCarte>
+      {
+        autreParagraphes.length > 0 && (
+          <LienCarte gps={autreGps} titre={autre?.titre || 'Autre lieu'} lien={textes.pratique.lienCarte}>
+            <div class="prose">
+              {autreParagraphes.map((p) => (
+                <p>{p}</p>
+              ))}
+            </div>
+          </LienCarte>
+        )
+      }
     </Section>
 
     <Section id="qigong" titre={qigong.titre} accent={textes.qigong.accent} ton="chaud">

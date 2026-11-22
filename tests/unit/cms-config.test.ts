@@ -317,7 +317,9 @@ describe('config.yml de Sveltia CMS', () => {
       for (const groupe of textes.fields) {
         expect(groupe.widget, groupe.name).toBe('object');
         expect(groupe.hint, `${groupe.name} : aide`).toBeTruthy();
-        const schemaGroupe = forme[groupe.name as keyof typeof forme].shape as Record<string, { safeParse(v: unknown): { success: boolean } }>;
+        // Groupes à valeur par défaut ({}) : leur forme est celle de l'objet enveloppé.
+        const brut = forme[groupe.name as keyof typeof forme];
+        const schemaGroupe = ('unwrap' in brut ? brut.unwrap() : brut).shape as Record<string, { safeParse(v: unknown): { success: boolean } }>;
         const champs = (groupe as { fields?: Champ[] }).fields ?? [];
         expect(champs.map((c) => c.name).sort(), groupe.name).toEqual(Object.keys(schemaGroupe).sort());
         for (const c of champs) {

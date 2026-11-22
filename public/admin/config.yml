@@ -323,6 +323,41 @@ collections:
             buttons: [bold, italic, link, bulleted-list]
             editor_components: []
             hint: Pour passer à la ligne, laissez une ligne vide entre deux paragraphes.
+          - name: autreLieu
+            label: Autre lieu (par exemple en cas de mauvais temps)
+            widget: object
+            required: false
+            collapsed: true
+            hint: Affiché sous le lieu habituel, seulement si les indications sont remplies. Videz les indications pour le retirer du site.
+            fields:
+              - name: titre
+                label: Titre
+                widget: string
+                required: false
+                maxlength: 40
+                hint: Par exemple « Par mauvais temps », 40 caractères au maximum.
+              - name: indications
+                label: Indications
+                widget: text
+                required: false
+                maxlength: 500
+                hint: Où c’est et comment s’y rendre, 500 caractères au maximum. Un retour à la ligne crée un nouveau paragraphe.
+              - name: latitude
+                label: Latitude (facultatif)
+                widget: number
+                value_type: float
+                required: false
+                min: -90
+                max: 90
+                hint: Pour afficher le lien Google Maps. Dans Google Maps, un clic droit sur le lieu donne ces deux nombres.
+              - name: longitude
+                label: Longitude (facultatif)
+                widget: number
+                value_type: float
+                required: false
+                min: -180
+                max: 180
+                hint: Le deuxième nombre donné par Google Maps. Sans latitude et longitude, pas de lien vers la carte.
       - name: menu
         label: Menu et titres
         file: src/content/reglages/menu.md
@@ -451,9 +486,9 @@ collections:
               - name: lienPratique
                 label: Lien vers « La pratique »
                 widget: string
-                maxlength: 40
+                maxlength: 60
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
-                hint: Le lien sous les dates qui mène à la section « La pratique », 40 caractères au maximum.
+                hint: Le lien sous les dates qui mène à la section « La pratique », 60 caractères au maximum.
               - name: lienContact
                 label: Lien vers le contact
                 widget: string

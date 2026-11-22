@@ -11,6 +11,7 @@ import {
   menuSchema,
   referencementSchema,
   rendezvousSchema,
+  textesSchema,
 } from '../../src/lib/schemas';
 
 describe('rendezvousSchema', () => {
@@ -98,6 +99,13 @@ describe('lieuSchema', () => {
 
   it('accepte un lieu valide', () => {
     expect(lieuSchema.safeParse(base).success).toBe(true);
+  });
+
+  it('autre lieu : facultatif, et un bloc vide ou incomplet (vidé dans l’administration) reste accepté', () => {
+    expect(lieuSchema.safeParse({ ...base, autreLieu: {} }).success).toBe(true);
+    expect(lieuSchema.safeParse({ ...base, autreLieu: { titre: 'Par mauvais temps', indications: 'Au jardin.' } }).success).toBe(true);
+    expect(lieuSchema.safeParse({ ...base, autreLieu: { indications: 'a'.repeat(501) } }).success).toBe(false);
+    expect(lieuSchema.safeParse({ ...base, autreLieu: { latitude: 91 } }).success).toBe(false);
   });
 
   it.each([90.1, -90.1])('rejette la latitude %s', (latitude) => {
@@ -261,5 +269,15 @@ describe('jeu de test « galerie »', () => {
 
   it('les cinq images existent', () => {
     for (const p of photosDe('cinq-photos')) expect(existsSync(path.join(dossier, p.image)), p.image).toBe(true);
+  });
+});
+
+describe('textesSchema', () => {
+  it('groupes faits seulement d’un petit mot : absents du fichier (retirés par l’administration quand vides), acceptés', () => {
+    const fichier = parseFrontmatter(readFileSync(path.join(process.cwd(), 'src/content/reglages/textes.md'), 'utf8')).frontmatter;
+    const { qigong: _q, qui: _u, actualites: _a, ...sansGroupes } = fichier as Record<string, unknown>;
+    const r = textesSchema.safeParse(sansGroupes);
+    expect(r.success).toBe(true);
+    expect(r.data?.actualites).toEqual({});
   });
 });

@@ -84,6 +84,15 @@ export const lieuSchema = z.object({
   nom: z.string().min(1).max(120),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
+  /** Autre lieu, par exemple en cas de mauvais temps : affiché seulement si les indications sont remplies. */
+  autreLieu: z
+    .object({
+      titre: z.string().trim().max(40).optional(),
+      indications: z.string().trim().max(500).optional(),
+      latitude: z.number().min(-90).max(90).optional(),
+      longitude: z.number().min(-180).max(180).optional(),
+    })
+    .optional(),
 });
 
 export type Lieu = z.infer<typeof lieuSchema>;
@@ -142,7 +151,7 @@ export const textesSchema = z.object({
     aucuneDate: texteReglable(60),
     prochain: texteReglable(30),
     annule: texteReglable(20),
-    lienPratique: texteReglable(40),
+    lienPratique: texteReglable(60),
     lienContact: texteReglable(40),
   }),
   pratique: z.object({
@@ -150,9 +159,10 @@ export const textesSchema = z.object({
     titreLieu: texteReglable(40),
     lienCarte: texteReglable(40),
   }),
-  qigong: z.object({ accent: accentReglable }),
-  qui: z.object({ accent: accentReglable }),
-  actualites: z.object({ accent: accentReglable }),
+  // Groupes faits seulement d'un petit mot facultatif : vides, l'administration les retire du fichier à l'enregistrement.
+  qigong: z.object({ accent: accentReglable }).default({}),
+  qui: z.object({ accent: accentReglable }).default({}),
+  actualites: z.object({ accent: accentReglable }).default({}),
   contact: z.object({
     accent: accentReglable,
     invitation: texteReglable(100),

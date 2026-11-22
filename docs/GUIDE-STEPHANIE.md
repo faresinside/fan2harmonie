@@ -97,9 +97,9 @@ le titre, le sous-titre, la devise, les petites lignes d’informations pratique
 
 ## i) Modifier le lieu
 
-Dans **« Réglages du site »**, cliquez sur **« Lieu de la pratique »** : le nom du lieu, sa latitude et sa longitude
-(deux nombres avec des décimales : dans Google Maps, un clic droit sur le lieu les affiche), et les indications pour
-s’y rendre. Le nom est le lieu habituel de vos rendez-vous ; les nombres servent au lien « Google Maps » du site. Puis **Enregistrer**.
+Dans **« Réglages du site »**, **« Lieu de la pratique »** : nom du lieu, latitude et longitude
+(dans Google Maps, un clic droit sur le lieu les affiche), indications pour s’y rendre. **« Autre lieu »** ajoute
+le lieu par mauvais temps (videz ses indications pour le retirer). Puis **Enregistrer**.
 
 Le nom du lieu est public : jamais d’adresse personnelle. Si le lieu change, modifiez aussi la première ligne de « Page d’accueil ».
 
