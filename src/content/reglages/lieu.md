@@ -13,5 +13,5 @@ autreLieu:
 ---
 
 Sous-bois dans le **Parc de Rambouillet**, au début de la rue de la ferme vers la bergerie\
-Vous pourrez vous garer au parking rue de la ferme.Le lieu se trouve gauche de ce parking.\
+Vous pourrez vous garer au parking rue de la ferme. Le lieu se trouve gauche de ce parking.\
 Vous me reconnaîtrez avec le fanion « Fan 2 Harmonie » (logo du site) !
