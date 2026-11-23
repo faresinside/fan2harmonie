@@ -5,7 +5,7 @@ longitude: 1.811268
 autreLieu:
   nom: Jardin de la Motte, à Rambouillet
   indications: |-
-    Si le temps ne le permet pas (humidité ou pluie). Au bout de la sente du Hasard, au croisement des rues Gambetta et Maurice Dechy.
+    Par mauvais temps (humidité ou pluie), RDV au bout de la sente du Hazard, proche du croisement des rues Gambetta et Maurice Dechy.
     Vous me reconnaîtrez avec le fanion « Fan 2 Harmonie » (logo du site) !
     Plus facile pour me trouver 😉
   latitude: 48.65002
