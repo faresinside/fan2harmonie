@@ -4,11 +4,13 @@ latitude: 48.64703
 longitude: 1.811268
 autreLieu:
   nom: Jardin de la Motte, à Rambouillet
-  indications: Si le temps ne le permet pas (humidité ou pluie). Au bout de la sente du Hasard, au croisement des rues Gambetta et Maurice Dechy.
+  indications: |-
+    Si le temps ne le permet pas (humidité ou pluie). Au bout de la sente du Hasard, au croisement des rues Gambetta et Maurice Dechy.
+     C'est plus facile pour me trouver !
   latitude: 48.65002
   longitude: 1.81918
 ---
 
 Sous-bois dans le **Parc de Rambouillet**, au début de la rue de la ferme vers la bergerie\
 Vous pourrez vous garer au parking rue de la ferme.Le lieu se trouve gauche de ce parking.\
-Il sera indiqué par le fanion « Fan 2 Harmonie » (logo du site). C'est plus facile pour me trouver !
+Il sera indiqué par le fanion « Fan 2 Harmonie » (logo du site).
