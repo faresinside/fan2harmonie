@@ -1,5 +1,5 @@
 ---
-nom: Parc de Rambouillet, dans un sous-bois au début de la rue de la ferme, en allant vers la bergerie nationale
+nom: Parc de Rambouillet
 latitude: 48.64703
 longitude: 1.811268
 autreLieu:
