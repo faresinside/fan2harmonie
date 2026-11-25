@@ -88,10 +88,14 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
     const premier = rendezvous(page).nth(0);
     await expect(premier.locator('time[datetime="2099-03-14"]')).toHaveText(/samedi\s*14\s*mars/);
     await expect(premier).toContainText('16h00');
-    // Fiche sans lieu : le lieu habituel des réglages, puis le rappel de l'autre lieu (par mauvais temps) s'il y en a un.
+    // Fiche sans lieu : le lieu habituel des réglages, en lien vers son encadré (« Le lieu ») ; aucun rappel de l'autre lieu.
     const lieu = enTeteMd<{ nom: string; autreLieu?: { nom?: string } }>('src/content/reglages/lieu.md');
-    await expect(premier).toContainText(lieu.nom);
-    if (lieu.autreLieu?.nom) await expect(premier.locator('.rdv__autre')).toHaveText(`${T.rdv.autreLieu} : ${lieu.autreLieu.nom}`);
+    const lienLieu = premier.locator('.rdv__lieu a');
+    await expect(lienLieu).toHaveText(lieu.nom);
+    const cible = (await lienLieu.getAttribute('href')) ?? '';
+    expect(cible).toBe(lieu.autreLieu?.nom ? '#lieu-habituel' : '#lieu');
+    await expect(page.locator(cible)).toHaveCount(1);
+    if (lieu.autreLieu?.nom) await expect(page.locator('#rdv')).not.toContainText(lieu.autreLieu.nom);
     await expect(premier).toContainText('Pensez à une tenue souple');
     await expect(rendezvous(page).nth(1).locator('time[datetime="2099-03-15"]')).toHaveText(/dimanche\s*15\s*mars/);
     const troisieme = rendezvous(page).nth(2);
@@ -104,6 +108,8 @@ test.describe('prochains rendez-vous (jeu « annule »)', () => {
   test('liens vers les infos pratiques et le contact', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('#rdv a', { hasText: T.rdv.lienPratique })).toHaveAttribute('href', '#pratique');
+    await expect(page.locator('#rdv .rdv-liens a', { hasText: T.rdv.lienLieu })).toHaveAttribute('href', '#lieu');
+    await expect(page.locator('#lieu')).toHaveCount(1);
     await expect(page.locator('#rdv a', { hasText: T.rdv.lienContact })).toHaveAttribute('href', '#contact');
   });
 

@@ -17,11 +17,14 @@ import { petitsTextes } from '../lib/textes';
 interface Props {
   /** `habituel` : la séance a lieu au lieu habituel (ni lieu propre, ni repli). */
   items: (Rendezvous & { habituel?: boolean })[];
-  /** Nom de l'autre lieu (par mauvais temps), s'il y en a un : rappelé sous chaque séance au lieu habituel. */
-  autreLieu?: string | undefined;
+  /** Vrai s'il y a un autre lieu (par mauvais temps) : le lieu de chaque séance mène alors à son propre encadré. */
+  avecAutreLieu?: boolean;
 }
 
-const { items, autreLieu } = Astro.props;
+const { items, avecAutreLieu = false } = Astro.props;
+/** Ancre de l'encadré du lieu d'une séance (« Le lieu », section « La pratique ») ; lieu propre à la séance : aucune. */
+const ancreLieu = (r: { habituel?: boolean; repli?: boolean }) =>
+  r.repli ? '#lieu-autre' : r.habituel ? (avecAutreLieu ? '#lieu-habituel' : '#lieu') : undefined;
 // Textes fixes de la section (réglages « Petits textes du site »).
 const { rdv: textes } = await petitsTextes();
 
@@ -79,12 +82,7 @@ const feuillets = items.map((r, i) => ({
               <p class="rdv__heure">
                 <time datetime={r.heure}>{r.heureAffichee}</time>
               </p>
-              <p class="rdv__lieu">{r.lieu}</p>
-              {autreLieu && r.habituel && !r.annule && (
-                <p class="rdv__autre">
-                  {textes.autreLieu} : {autreLieu}
-                </p>
-              )}
+              <p class="rdv__lieu">{ancreLieu(r) ? <a href={ancreLieu(r)}>{r.lieu}</a> : r.lieu}</p>
               {r.remarque && <p class="rdv__remarque">{r.remarque}</p>}
             </div>
           </li>
@@ -95,7 +93,7 @@ const feuillets = items.map((r, i) => ({
 
   <p class="rdv-liens">
     <a href="#pratique">{textes.lienPratique}</a>
-    <span class="rdv-liens__point" aria-hidden="true">·</span>
+    <a href="#lieu">{textes.lienLieu}</a>
     <a href="#contact">{textes.lienContact}</a>
   </p>
 </div>
@@ -245,9 +243,10 @@ const feuillets = items.map((r, i) => ({
     color: var(--encre);
   }
 
-  .rdv__autre {
-    font-size: var(--fs-sm);
-    color: var(--encre-doux);
+  .rdv__lieu a {
+    color: inherit;
+    text-decoration-color: color-mix(in srgb, var(--dore) 70%, transparent);
+    text-underline-offset: 0.2em;
   }
 
   .rdv__repli {
@@ -336,7 +335,7 @@ const feuillets = items.map((r, i) => ({
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--s-1) var(--s-2);
+    gap: 0 var(--s-4);
     margin-top: var(--s-5);
     font-size: var(--fs-sm);
   }
@@ -347,10 +346,6 @@ const feuillets = items.map((r, i) => ({
     font-weight: 600;
   }
 
-  .rdv-liens__point {
-    align-self: center;
-    color: var(--dore);
-  }
 
   @media (min-width: 30rem) {
     .rdv {

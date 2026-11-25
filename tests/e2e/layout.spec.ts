@@ -55,7 +55,8 @@ test.describe('structure de la page', () => {
 
   test('lien « Ouvrir dans Google Maps » (simple lien, pas de carte intégrée) aux coordonnées du site', async ({ page }) => {
     await page.goto('/');
-    const lien = page.locator('a', { hasText: T.pratique.lienCarte });
+    // Lien du lieu habituel (encadré « Par beau temps » s'il y a un autre lieu, sinon le bloc « Le lieu »).
+    const lien = page.locator('#lieu-habituel, #lieu:not(:has(#lieu-habituel))').locator('a', { hasText: T.pratique.lienCarte });
     await expect(lien).toHaveCount(1);
     const href = (await lien.getAttribute('href')) ?? '';
     expect(href).toBe('https://www.google.com/maps/search/?api=1&query=48.64703,1.811268');

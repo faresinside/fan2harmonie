@@ -94,7 +94,7 @@ collections:
         label: Au lieu par mauvais temps
         widget: boolean
         default: false
-        hint: Cochez si, à cause de la météo, la séance a lieu à l’autre lieu (« Autre lieu » dans « Lieu de la pratique »). Le site l’affiche avec la mention « Changement de lieu ».
+        hint: Cochez si, à cause de la météo, la séance a lieu à l’autre lieu (« Autre lieu » dans « Lieu de la pratique »). Le site l’affiche avec la mention « Changement de lieu » et le lien vers ce lieu.
       - name: remarque
         label: Remarque
         widget: string
@@ -333,14 +333,14 @@ collections:
             widget: object
             required: false
             collapsed: true
-            hint: Le lieu de repli quand il fait mauvais. Affiché à côté du lieu habituel seulement si son nom est rempli ; videz le nom pour le retirer du site.
+            hint: Le lieu de repli quand il fait mauvais. Affiché sous le lieu habituel seulement si son nom est rempli ; videz le nom pour le retirer du site.
             fields:
               - name: nom
                 label: Nom du lieu
                 widget: string
                 required: false
                 maxlength: 120
-                hint: Par exemple « Jardin de la Motte, à Rambouillet », 120 caractères au maximum. Rappelé sous chaque rendez-vous.
+                hint: Par exemple « Jardin de la Motte, à Rambouillet », 120 caractères au maximum. Affiché sur un rendez-vous coché « Au lieu par mauvais temps ».
               - name: indications
                 label: Indications
                 widget: text
@@ -493,19 +493,19 @@ collections:
                 widget: string
                 maxlength: 60
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
-                hint: Le lien sous les dates qui mène à la section « La pratique », 60 caractères au maximum.
+                hint: Le premier lien sous les dates, qui mène à la section « La pratique » (« Quelle pratique et tenue ? »), 60 caractères au maximum.
+              - name: lienLieu
+                label: Lien vers les lieux
+                widget: string
+                maxlength: 40
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Le lien sous les dates qui mène aux encadrés des lieux (« Où ? »), 40 caractères au maximum.
               - name: lienContact
                 label: Lien vers le contact
                 widget: string
                 maxlength: 40
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
                 hint: Le lien sous les dates qui mène au formulaire de contact, 40 caractères au maximum.
-              - name: autreLieu
-                label: Rappel du lieu par mauvais temps
-                widget: string
-                maxlength: 30
-                pattern: ['\S', 'Écrivez au moins un caractère visible.']
-                hint: 'Écrit sous chaque rendez-vous avant le nom de l’autre lieu (« Par mauvais temps : … »), 30 caractères au maximum.'
               - name: repli
                 label: Mention d’un changement de lieu
                 widget: string
@@ -662,6 +662,30 @@ collections:
                 maxlength: 60
                 pattern: ['\S', 'Écrivez au moins un caractère visible.']
                 hint: Affichée en bas de chaque page après « Fan 2 Harmonie · », 60 caractères au maximum.
+          - name: reseaux
+            label: Réseaux sociaux
+            widget: object
+            collapsed: true
+            hint: Les liens vers vos comptes, affichés dans la section « Contact » et en bas de chaque page. Un compte laissé vide n’est pas affiché.
+            fields:
+              - name: titre
+                label: Titre au-dessus des liens
+                widget: string
+                maxlength: 30
+                pattern: ['\S', 'Écrivez au moins un caractère visible.']
+                hint: Par exemple « Suivez-moi », 30 caractères au maximum.
+              - name: facebook
+                label: Adresse de votre page Facebook
+                widget: string
+                required: false
+                pattern: ['^https://(www\.|m\.)?(facebook|fb)\.com/[^\s]+$', 'Collez l’adresse complète de la page, qui commence par https://www.facebook.com/']
+                hint: 'Ouvrez votre page Facebook, copiez l’adresse dans la barre du navigateur et collez-la ici (elle commence par https://www.facebook.com/). Laissez vide pour ne rien afficher.'
+              - name: instagram
+                label: Adresse de votre compte Instagram
+                widget: string
+                required: false
+                pattern: ['^https://(www\.)?instagram\.com/[^\s]+$', 'Collez l’adresse complète du compte, qui commence par https://www.instagram.com/']
+                hint: 'Ouvrez votre profil Instagram, copiez l’adresse et collez-la ici (elle commence par https://www.instagram.com/). Laissez vide pour ne rien afficher.'
       - name: referencement
         label: Référencement Google
         file: src/content/reglages/referencement.md

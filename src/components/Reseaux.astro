@@ -1,0 +1,86 @@
+---
+/**
+ * Liens vers les comptes Facebook et Instagram de Stéphanie (réglages « Petits textes du site », groupe « Réseaux
+ * sociaux »). Simples liens, aucun bouton ni contenu chargé depuis ces réseaux : rien n'est envoyé à Facebook tant que le
+ * visiteur ne clique pas. Aucun compte rempli : rien n'est affiché.
+ */
+import { petitsTextes } from '../lib/textes';
+import IconeTrait from './IconeTrait.astro';
+
+interface Props {
+  class?: string | undefined;
+}
+
+const { class: classe } = Astro.props;
+const { reseaux } = await petitsTextes();
+const liens = [
+  { nom: 'Facebook', url: reseaux.facebook },
+  { nom: 'Instagram', url: reseaux.instagram },
+].filter((l): l is { nom: string; url: string } => Boolean(l.url));
+---
+
+{
+  liens.length > 0 && (
+    <div class:list={['reseaux', classe]}>
+      <p class="reseaux__titre">{reseaux.titre}</p>
+      <ul class="reseaux__liste" role="list">
+        {liens.map((l) => (
+          <li>
+            <a class="reseaux__lien" href={l.url} target="_blank" rel="noopener noreferrer me">
+              {l.nom === 'Facebook' ? (
+                <IconeTrait nom="facebook" class="reseaux__icone">
+                  <rect x="8" y="8" width="32" height="32" rx="8" />
+                  <path d="M27 40V25h5l1-5h-6v-3c0-1.7.8-2.5 2.5-2.5H33v-4.8c-1-.2-2.6-.4-4-.4-4.3 0-6.5 2.3-6.5 6.6V20h-4.5v5h4.5v15" />
+                </IconeTrait>
+              ) : (
+                <IconeTrait nom="instagram" class="reseaux__icone">
+                  <rect x="8" y="8" width="32" height="32" rx="9" />
+                  <circle cx="24" cy="24" r="7.5" />
+                  <circle cx="33.5" cy="14.5" r="1.2" />
+                </IconeTrait>
+              )}
+              <span>{l.nom}</span>
+              <span class="sr-only">(s’ouvre dans un nouvel onglet)</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+<style>
+  .reseaux__titre {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.85;
+  }
+
+  .reseaux__liste {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: inherit;
+    gap: var(--s-1) var(--s-3);
+    margin-top: 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reseaux__lien {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: inherit;
+  }
+
+  .reseaux :global(.reseaux__icone) {
+    flex: none;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+</style>

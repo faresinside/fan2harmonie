@@ -95,7 +95,7 @@ le titre, le sous-titre, la devise, les petites lignes d’informations pratique
 
 **Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». **« Ordre des liens du menu »** change l’ordre : faites glisser chaque lien par ses petits points.
 
-**Petits textes du site** : les petits mots au-dessus des titres et les textes autour des rendez-vous, du lieu, du contact et du pied de page.
+**Petits textes du site** : petits textes et liens du site, et vos **réseaux sociaux** (adresse Facebook, Instagram).
 
 ## i) Modifier le lieu
 

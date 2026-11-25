@@ -4,9 +4,9 @@ rdv:
   aucuneDate: Prochaines dates bientôt
   prochain: Prochain rendez-vous
   annule: Annulé
-  lienPratique: Toutes les infos pratiques
+  lienPratique: Quelle pratique et tenue ?
+  lienLieu: Où ?
   lienContact: Une question ?
-  autreLieu: Par mauvais temps
   repli: Changement de lieu
 pratique:
   accent: au cœur de la nature
@@ -30,4 +30,6 @@ activites:
   descriptionGoogle: 'Les séances de Fan 2 Harmonie : Qi Gong gratuit en plein air à Rambouillet et réveil articulaire et musculaire en milieu professionnel.'
 piedDePage:
   signature: Qi Gong à Rambouillet
+reseaux:
+  titre: Suivez-moi
 ---

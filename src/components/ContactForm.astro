@@ -13,6 +13,7 @@
 import { site } from '../config/site';
 import { lienMailto } from '../lib/contact';
 import IconSouffle from './IconSouffle.astro';
+import Reseaux from './Reseaux.astro';
 
 const mailto = lienMailto(site.email);
 import { petitsTextes } from '../lib/textes';
@@ -29,6 +30,7 @@ const { contact: textes } = await petitsTextes();
       <span class="contact__email-libelle">{textes.libelleEmail}</span>
       <a href={mailto}>{site.email}</a>
     </p>
+    <Reseaux class="contact__reseaux" />
     <IconSouffle />
   </div>
 
@@ -175,7 +177,7 @@ const { contact: textes } = await petitsTextes();
   }
 
   /* Souffle dessiné : illustration de grand écran seulement, comme dans les autres sections. */
-  .contact__mot :global(.icone) {
+  .contact__mot > :global(.icone) {
     display: none;
   }
 
@@ -436,11 +438,27 @@ const { contact: textes } = await petitsTextes();
       background-position: top left;
     }
 
-    .contact__mot :global(.icone) {
+    .contact__mot > :global(.icone) {
       display: block;
       margin-top: var(--s-6);
       color: var(--foret-doux);
       --taille-icone: 6.5rem;
+    }
+  }
+
+  .contact__mot :global(.contact__reseaux) {
+    margin-top: var(--s-3);
+    color: var(--encre-doux);
+    justify-content: center;
+  }
+
+  .contact__mot :global(.contact__reseaux .reseaux__liste) {
+    color: var(--foret);
+  }
+
+  @media (width >= 60rem) {
+    .contact__mot :global(.contact__reseaux) {
+      justify-content: flex-start;
     }
   }
 </style>

@@ -111,6 +111,10 @@ export const referencementSchema = z.object({
 
 export type Referencement = z.infer<typeof referencementSchema>;
 
+/** Adresse d'une page Facebook ou d'un compte Instagram (https, sur le site du réseau, sans espace). */
+export const FACEBOOK_REGEX = /^https:\/\/(www\.|m\.)?(facebook|fb)\.com\/[^\s]+$/;
+export const INSTAGRAM_REGEX = /^https:\/\/(www\.)?instagram\.com\/[^\s]+$/;
+
 /** Un libellé ou un titre modifiable : sans espaces autour, jamais vide (ni fait seulement d'espaces). */
 const texteReglable = (max: number) => z.string().trim().min(1).max(max);
 
@@ -154,8 +158,8 @@ export const textesSchema = z.object({
     prochain: texteReglable(30),
     annule: texteReglable(20),
     lienPratique: texteReglable(60),
+    lienLieu: texteReglable(40),
     lienContact: texteReglable(40),
-    autreLieu: texteReglable(30),
     repli: texteReglable(40),
   }),
   pratique: z.object({
@@ -182,6 +186,14 @@ export const textesSchema = z.object({
     descriptionGoogle: z.string().trim().min(50).max(160),
   }),
   piedDePage: z.object({ signature: texteReglable(60) }),
+  // Comptes facultatifs : vides, l'administration les retire du fichier ; aucun lien n'est alors affiché.
+  reseaux: z
+    .object({
+      titre: texteReglable(30),
+      facebook: z.string().trim().regex(FACEBOOK_REGEX).optional(),
+      instagram: z.string().trim().regex(INSTAGRAM_REGEX).optional(),
+    })
+    .default({ titre: 'Suivez-moi' }),
 });
 
 export type Textes = z.infer<typeof textesSchema>;

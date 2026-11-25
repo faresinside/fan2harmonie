@@ -13,6 +13,8 @@ import {
   lieuSchema,
   menuSchema,
   textesSchema,
+  FACEBOOK_REGEX,
+  INSTAGRAM_REGEX,
   pageSchema,
   referencementSchema,
   rendezvousSchema,
@@ -331,6 +333,22 @@ describe('config.yml de Sveltia CMS', () => {
           if (c.name === 'accent') {
             expect(c.required, `${nom} : facultatif`).toBe(false);
             expect(c['maxlength'], `${nom} : maxlength`).toBe(40);
+          } else if (groupe.name === 'reseaux' && c.name !== 'titre') {
+            // Adresse d'un compte : facultative, même motif que le schéma (refuse ce qui casserait la construction).
+            expect(c.required, `${nom} : facultatif`).toBe(false);
+            const regex = c.name === 'facebook' ? FACEBOOK_REGEX : INSTAGRAM_REGEX;
+            const exemples = [
+              'https://www.facebook.com/fan2harmonie',
+              'https://facebook.com/profile.php?id=123',
+              'https://www.instagram.com/fan2harmonie/',
+              'http://www.facebook.com/x',
+              'https://www.facebook.com.pirate.fr/x',
+              'https://www.instagram.com/',
+              'www.instagram.com/x',
+              'javascript:alert(1)',
+            ];
+            for (const e of exemples) expect(motif(c).test(e), `${nom} : ${e}`).toBe(regex.test(e));
+            expect(schema?.safeParse(undefined).success, `${nom} : absent accepté`).toBe(true);
           } else {
             verifieChaineTextes(nom, c, schema as never);
           }

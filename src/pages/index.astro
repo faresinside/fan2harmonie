@@ -105,7 +105,7 @@ const actualites = await Promise.all(
     <Hero accueil={accueil} />
 
     <Section id="rdv" titre={menu.titreRdv} accent={textes.rdv.accent} ton="chaud" mise="centree">
-      <RdvList items={rendezvous} autreLieu={autreNom} />
+      <RdvList items={rendezvous} avecAutreLieu={Boolean(autreNom)} />
     </Section>
 
     <Section id="pratique" titre={pratique.titre} accent={textes.pratique.accent}>

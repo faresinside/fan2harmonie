@@ -4,6 +4,7 @@ import { Image } from 'astro:assets';
 import logoBlanc from '../assets/logo/logo-blanc.png';
 import { site } from '../config/site';
 import { petitsTextes } from '../lib/textes';
+import Reseaux from './Reseaux.astro';
 
 const { piedDePage } = await petitsTextes();
 ---
@@ -12,6 +13,7 @@ const { piedDePage } = await petitsTextes();
   <div class="container pied__contenu">
     <Image src={logoBlanc} alt="" width={88} densities={[1, 2]} format="png" quality={80} class="pied__logo" />
     <p class="pied__signature">Fan 2 Harmonie <span aria-hidden="true">·</span> {piedDePage.signature}</p>
+    <Reseaux class="pied__reseaux" />
     <p class="pied__legal">
       <a href="/mentions-legales/">Mentions légales</a>
       <span aria-hidden="true">·</span>
@@ -45,6 +47,12 @@ const { piedDePage } = await petitsTextes();
     font-size: var(--fs-lg);
     font-weight: 500;
     letter-spacing: 0.02em;
+  }
+
+  .pied :global(.pied__reseaux) {
+    color: var(--creme);
+    margin-top: var(--s-3);
+    justify-content: center;
   }
 
   .pied__legal {

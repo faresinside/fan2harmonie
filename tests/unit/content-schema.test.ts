@@ -280,4 +280,16 @@ describe('textesSchema', () => {
     expect(r.success).toBe(true);
     expect(r.data?.actualites).toEqual({});
   });
+
+  it('réseaux sociaux : adresses https sur le bon site seulement, comptes facultatifs, groupe absent accepté', () => {
+    const r = textesSchema.shape.reseaux;
+    expect(r.safeParse({ titre: 'Suivez-moi' }).success).toBe(true);
+    expect(r.safeParse({ titre: 'Suivez-moi', facebook: 'https://www.facebook.com/fan2harmonie' }).success).toBe(true);
+    expect(r.safeParse({ titre: 'Suivez-moi', instagram: 'https://www.instagram.com/fan2harmonie/' }).success).toBe(true);
+    for (const facebook of ['http://www.facebook.com/x', 'https://www.facebook.com.pirate.fr/x', 'javascript:alert(1)', 'https://www.instagram.com/x']) {
+      expect(r.safeParse({ titre: 'Suivez-moi', facebook }).success, facebook).toBe(false);
+    }
+    expect(r.safeParse({ titre: 'Suivez-moi', instagram: 'https://www.facebook.com/x' }).success).toBe(false);
+    expect(r.safeParse(undefined).data).toEqual({ titre: 'Suivez-moi' });
+  });
 });
