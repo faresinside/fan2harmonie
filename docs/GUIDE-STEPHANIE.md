@@ -91,7 +91,7 @@ Dans la même fiche, le champ **« Photos »** accepte jusqu’à **12 photos**.
 ## h) Modifier la page d’accueil
 
 À gauche, cliquez sur **« Réglages du site »**, puis sur **« Page d’accueil »**. Vous y trouvez la phrase d’accroche,
-le titre, le sous-titre, la devise, les petites lignes d’informations pratiques, le texte du bouton et les bienfaits. Cliquez sur **Enregistrer** : rien ne change sur le site tant que vous n’avez pas enregistré.
+le titre, le sous-titre, la devise, les petites lignes d’informations pratiques, le bouton, les bienfaits et la **photo d’accueil**. Puis **Enregistrer** : rien ne change avant.
 
 **Menu et titres** : dans **« Réglages du site »**, la fiche **« Menu et titres »** change les mots du menu en haut de la page et les trois titres « Prochains rendez-vous », « Actualités » et « Contactez-moi ». **« Ordre des liens du menu »** change l’ordre : faites glisser chaque lien par ses petits points.
 

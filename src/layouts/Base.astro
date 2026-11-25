@@ -13,7 +13,7 @@ import { donneesSite, serialiserJsonLd, type Seance } from '../lib/jsonld';
 import { codeVerificationGoogle } from '../lib/referencement';
 import { jeton } from '../lib/jetons';
 import tokens from '../styles/tokens.css?raw';
-import hero from '../assets/photos/hero.jpg';
+import { photoAccueil } from '../lib/photo-accueil';
 import cormorantLatin from '@fontsource-variable/cormorant/files/cormorant-latin-wght-normal.woff2?url';
 import sourceSansLatin from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
 
@@ -39,7 +39,7 @@ const couleurTheme = jeton(tokens, 'creme');
 const canonique = absolue(Astro.url.pathname);
 
 // Image de partage (Open Graph) : la photo d'accueil recadrée (l'affiche n'est pas utilisée pour le partage).
-const imageOg = await getImage({ src: hero, width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 });
+const imageOg = await getImage({ src: await photoAccueil(), width: 1200, height: 630, fit: 'cover', format: 'jpg', quality: 80 });
 
 // Lieu habituel (réglages) : lu ici pour que toutes les pages, 404 et mentions légales comprises, aient les mêmes données.
 const lieu = await getEntry('reglagesLieu', 'lieu');

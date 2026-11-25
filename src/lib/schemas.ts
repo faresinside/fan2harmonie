@@ -77,6 +77,8 @@ export const accueilSchema = z.object({
     )
     .min(1)
     .max(6),
+  /** Facultatif : photo de l'accueil déposée dans l'administration (src/assets/photos) ; vide, la photo d'origine. */
+  photo: z.string().optional(),
 });
 
 export type Accueil = z.infer<typeof accueilSchema>;

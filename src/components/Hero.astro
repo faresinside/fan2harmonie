@@ -5,7 +5,7 @@
  */
 import { Image, Picture } from 'astro:assets';
 import logo from '../assets/logo/logo.png';
-import photo from '../assets/photos/hero.jpg';
+import { photoAccueil } from '../lib/photo-accueil';
 import IconSouffle from './IconSouffle.astro';
 import IconLotus from './IconLotus.astro';
 import IconSilhouette from './IconSilhouette.astro';
@@ -17,6 +17,8 @@ interface Props {
 }
 
 const { accueil } = Astro.props;
+// Photo choisie dans l'administration (« Photo d'accueil »), sinon la photo d'origine.
+const photo = await photoAccueil();
 
 /** Icône choisie dans l'administration → composant (liste fermée : ICONES_BIENFAIT). */
 const ICONES = {

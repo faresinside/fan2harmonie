@@ -297,6 +297,13 @@ collections:
                 maxlength: 60
                 hint: Un bienfait en quelques mots, 60 caractères au maximum.
             hint: Les bienfaits de la pratique affichés sur l’accueil. Entre 1 et 6.
+          - name: photo
+            label: Photo d’accueil (facultatif)
+            widget: image
+            required: false
+            media_folder: /src/assets/photos
+            public_folder: ../../assets/photos
+            hint: La grande photo en haut du site, aussi utilisée quand on partage le site. Une photo en largeur (paysage), floue ou calme, de préférence. Laissez vide pour garder la photo d’origine.
       - name: lieu
         label: Lieu de la pratique (paragraphe « Le lieu »)
         file: src/content/reglages/lieu.md
