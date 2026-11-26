@@ -1,6 +1,6 @@
 ---
 titre: Bienvenue sur le site de Fan 2 Harmonie
-date: 2026-10-21
+date: 2026-11-26
 photos:
   - image: /src/assets/actualites/photofacebook.webp
 ---
