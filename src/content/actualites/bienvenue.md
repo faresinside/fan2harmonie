@@ -5,4 +5,4 @@ photos:
   - image: /src/assets/actualites/photofacebook.webp
 ---
 
-J'espère  vous montrer prochainement des photos de ces événements en plein air ...
+J'espère  vous montrer prochainement des photos de ces événements en plein air ... Et suis impatiente de le faire !
